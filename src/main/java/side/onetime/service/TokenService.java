@@ -8,6 +8,7 @@ import side.onetime.dto.token.request.ReissueTokenRequest;
 import side.onetime.dto.token.response.ReissueTokenResponse;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.TokenErrorStatus;
+import side.onetime.global.lock.annotation.DistributedLock;
 import side.onetime.repository.RefreshTokenRepository;
 import side.onetime.util.JwtUtil;
 
@@ -20,16 +21,18 @@ public class TokenService {
     private final JwtUtil jwtUtil;
 
     /**
-     * 리프레시 토큰을 이용한 토큰 재발행 메서드.
+     * 리프레시 토큰으로 액세스/리프레시 토큰을 재발행 하는 메서드.
      *
-     * 주어진 리프레시 토큰의 유효성을 확인하고, 일치하는 브라우저 ID에 대해
-     * 새로운 액세스 토큰 및 리프레시 토큰을 발급합니다.
-     * 기존 토큰은 삭제되고 최신 토큰으로 갱신됩니다.
+     * - 토큰에서 userId, browserId 추출
+     * - Redis에서 기존 리프레시 토큰 유효성 검증
+     * - 새로운 토큰 발급 후 Redis에 갱신
+     * - 동시에 중복 재발행 요청이 들어오는 경우를 방지하기 위해 browserId 단위로 분산 락(@DistributedLock)을 적용함
      *
-     * @param reissueTokenRequest 클라이언트가 보낸 리프레시 토큰 요청 객체
-     * @return 새롭게 발급된 액세스 토큰 및 리프레시 토큰 응답 객체
-     * @throws CustomException 유효하지 않은 리프레시 토큰일 경우 예외 발생
+     * @param reissueTokenRequest 요청 객체 (리프레시 토큰 포함)
+     * @return 새 액세스/리프레시 토큰
+     * @throws CustomException 리프레시 토큰이 없거나 일치하지 않을 경우
      */
+    @DistributedLock(prefix = "lock:reissue", key = "#reissueTokenRequest.refreshToken", waitTime = 0)
     public ReissueTokenResponse reissueToken(ReissueTokenRequest reissueTokenRequest) {
         String refreshToken = reissueTokenRequest.refreshToken();
 
