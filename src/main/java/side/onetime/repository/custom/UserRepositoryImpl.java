@@ -28,50 +28,62 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
      * 인증된 유저의 계정을 삭제하고,
      * 유저가 생성한(즉, EventParticipation의 상태가 PARTICIPANT가 아닌) 이벤트를 함께 삭제합니다.
      *
-     * 삭제 순서: Selection → EventParticipation → Schedule → Member → Event
+     * 삭제 순서:
+     * 1. 유저가 생성한 이벤트의 Selection → EventParticipation → Schedule → Member → Event
+     * 2. 유저가 직접 소유한 Selection → FixedSelection
+     * 3. 최종적으로 User
      *
      * @param user 탈퇴할 유저
      */
     @Override
     public void withdraw(User user) {
-        // 유저가 생성한 이벤트(참여 상태가 PARTICIPANT가 아닌)를 조회
-        List<EventParticipation> participations = queryFactory
-                .selectFrom(QEventParticipation.eventParticipation)
+        // 유저가 생성한 이벤트 ID 리스트 조회
+        List<Long> eventIds = queryFactory
+                .select(QEventParticipation.eventParticipation.event.id)
+                .distinct()
+                .from(QEventParticipation.eventParticipation)
                 .where(
                         QEventParticipation.eventParticipation.user.eq(user)
                                 .and(QEventParticipation.eventParticipation.eventStatus.ne(EventStatus.PARTICIPANT))
                 )
                 .fetch();
 
-        // 삭제 쿼리 수행.
-        for (EventParticipation participation : participations) {
-            Event event = participation.getEvent();
-
+        if (!eventIds.isEmpty()) {
             queryFactory.delete(QSelection.selection)
-                    .where(QSelection.selection.schedule.event.eq(event))
+                    .where(QSelection.selection.schedule.event.id.in(eventIds))
                     .execute();
 
             queryFactory.delete(QEventParticipation.eventParticipation)
-                    .where(QEventParticipation.eventParticipation.event.eq(event))
+                    .where(QEventParticipation.eventParticipation.event.id.in(eventIds))
                     .execute();
 
             queryFactory.delete(QSchedule.schedule)
-                    .where(QSchedule.schedule.event.eq(event))
+                    .where(QSchedule.schedule.event.id.in(eventIds))
                     .execute();
 
             queryFactory.delete(QMember.member)
-                    .where(QMember.member.event.eq(event))
+                    .where(QMember.member.event.id.in(eventIds))
                     .execute();
 
             queryFactory.delete(QEvent.event)
-                    .where(QEvent.event.eq(event))
+                    .where(QEvent.event.id.in(eventIds))
                     .execute();
         }
+
+        // 유저 소유 Selection, FixedSelection, eventParticipation 삭제
+        queryFactory.delete(QSelection.selection)
+                .where(QSelection.selection.user.eq(user))
+                .execute();
 
         queryFactory.delete(QFixedSelection.fixedSelection)
                 .where(QFixedSelection.fixedSelection.user.eq(user))
                 .execute();
 
+        queryFactory.delete(QEventParticipation.eventParticipation)
+                .where(QEventParticipation.eventParticipation.user.eq(user))
+                .execute();
+
+        // 최종적으로 유저 삭제
         queryFactory.delete(QUser.user)
                 .where(QUser.user.eq(user))
                 .execute();
