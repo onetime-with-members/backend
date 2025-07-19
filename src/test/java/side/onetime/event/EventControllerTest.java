@@ -17,15 +17,16 @@ import org.springframework.test.web.servlet.ResultActions;
 import side.onetime.auth.service.CustomUserDetailsService;
 import side.onetime.configuration.ControllerTestConfig;
 import side.onetime.controller.EventController;
-import side.onetime.domain.User;
 import side.onetime.domain.enums.Category;
 import side.onetime.domain.enums.EventStatus;
 import side.onetime.dto.event.request.CreateEventRequest;
 import side.onetime.dto.event.request.ModifyUserCreatedEventRequest;
 import side.onetime.dto.event.response.*;
+import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
 import side.onetime.service.EventService;
 import side.onetime.util.JwtUtil;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -184,7 +185,18 @@ public class EventControllerTest extends ControllerTestConfig {
     public void getParticipants() throws Exception {
         // given
         String eventId = UUID.randomUUID().toString();
-        GetParticipantsResponse response = new GetParticipantsResponse(List.of("Member1", "User1", "Member2", "User2"));
+
+        List<GetParticipantsResponse.Participant> memberList = List.of(
+                GetParticipantsResponse.Participant.of(1L, "Member1"),
+                GetParticipantsResponse.Participant.of(2L, "Member2")
+        );
+
+        List<GetParticipantsResponse.Participant> userList = List.of(
+                GetParticipantsResponse.Participant.of(101L, "User1"),
+                GetParticipantsResponse.Participant.of(102L, "User2")
+        );
+
+        GetParticipantsResponse response = new GetParticipantsResponse(memberList, userList);
 
         Mockito.when(eventService.getParticipants(anyString()))
                 .thenReturn(response);
@@ -199,10 +211,14 @@ public class EventControllerTest extends ControllerTestConfig {
                 .andExpect(jsonPath("$.is_success").value(true))
                 .andExpect(jsonPath("$.code").value("200"))
                 .andExpect(jsonPath("$.message").value("참여자 조회에 성공했습니다."))
-                .andExpect(jsonPath("$.payload.names[0]").value("Member1"))
-                .andExpect(jsonPath("$.payload.names[1]").value("User1"))
-                .andExpect(jsonPath("$.payload.names[2]").value("Member2"))
-                .andExpect(jsonPath("$.payload.names[3]").value("User2"))
+                .andExpect(jsonPath("$.payload.members[0].id").value(1))
+                .andExpect(jsonPath("$.payload.members[0].name").value("Member1"))
+                .andExpect(jsonPath("$.payload.members[1].id").value(2))
+                .andExpect(jsonPath("$.payload.members[1].name").value("Member2"))
+                .andExpect(jsonPath("$.payload.users[0].id").value(101))
+                .andExpect(jsonPath("$.payload.users[0].name").value("User1"))
+                .andExpect(jsonPath("$.payload.users[1].id").value(102))
+                .andExpect(jsonPath("$.payload.users[1].name").value("User2"))
 
                 // docs
                 .andDo(MockMvcRestDocumentationWrapper.document("event/get-participants",
@@ -220,7 +236,12 @@ public class EventControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
                                                 fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
                                                 fieldWithPath("payload").type(JsonFieldType.OBJECT).description("응답 데이터"),
-                                                fieldWithPath("payload.names").type(JsonFieldType.ARRAY).description("참여자 이름 목록")
+                                                fieldWithPath("payload.members").type(JsonFieldType.ARRAY).description("멤버 목록"),
+                                                fieldWithPath("payload.members[].id").type(JsonFieldType.NUMBER).description("멤버 ID"),
+                                                fieldWithPath("payload.members[].name").type(JsonFieldType.STRING).description("멤버 이름"),
+                                                fieldWithPath("payload.users").type(JsonFieldType.ARRAY).description("유저 목록"),
+                                                fieldWithPath("payload.users[].id").type(JsonFieldType.NUMBER).description("유저 ID"),
+                                                fieldWithPath("payload.users[].name").type(JsonFieldType.STRING).description("유저 이름")
                                         )
                                         .responseSchema(Schema.schema("GetParticipantsResponseSchema"))
                                         .build()
@@ -282,6 +303,80 @@ public class EventControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("payload[].impossible_names").type(JsonFieldType.ARRAY).description("참여 불가능한 이름 목록")
                                         )
                                         .responseSchema(Schema.schema("GetMostPossibleTimeResponseSchema"))
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("필터링한 사용자의 가능한 시간을 조회한다.")
+    public void getFilteredPossibleTimes() throws Exception {
+        // given
+        String eventId = UUID.randomUUID().toString();
+
+        GetFilteredSchedulesRequest request = new GetFilteredSchedulesRequest(
+                List.of(1L, 2L), // users
+                List.of(3L)  // members
+        );
+
+        List<GetMostPossibleTime> response = List.of(
+                new GetMostPossibleTime("2025.07.13", "10:00", "10:30", 3, List.of("User1", "User2", "Member3"), Collections.emptyList()),
+                new GetMostPossibleTime("2025.07.13", "11:00", "11:30", 3, List.of("User1", "User2", "Member3"), Collections.emptyList())
+        );
+
+        Mockito.when(eventService.getFilteredPossibleTimes(anyString(), any(GetFilteredSchedulesRequest.class))).thenReturn(response);
+
+        // when
+        String requestContent = new ObjectMapper().writeValueAsString(request);
+        ResultActions resultActions = mockMvc.perform(
+                RestDocumentationRequestBuilders.post("/api/v1/events/{event_id}/filtering", eventId)
+                        .content(requestContent)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+        );
+
+        // then
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.is_success").value(true))
+                .andExpect(jsonPath("$.code").value("200"))
+                .andExpect(jsonPath("$.message").value("필터링한 인원의 시간 조회에 성공했습니다."))
+                .andExpect(jsonPath("$.payload[0].time_point").value("2025.07.13"))
+                .andExpect(jsonPath("$.payload[0].start_time").value("10:00"))
+                .andExpect(jsonPath("$.payload[0].end_time").value("10:30"))
+                .andExpect(jsonPath("$.payload[0].possible_count").value(3))
+                .andExpect(jsonPath("$.payload[0].possible_names[0]").value("User1"))
+                .andExpect(jsonPath("$.payload[0].possible_names[1]").value("User2"))
+                .andExpect(jsonPath("$.payload[0].possible_names[2]").value("Member3"))
+
+                // docs
+                .andDo(MockMvcRestDocumentationWrapper.document("event/get-filtered-possible-times",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Event API")
+                                        .description("필터링한 사용자의 가능한 시간을 조회한다.")
+                                        .pathParameters(
+                                                parameterWithName("event_id").description("조회할 이벤트의 ID [예시 : dd099816-2b09-4625-bf95-319672c25659]")
+                                        )
+                                        .requestFields(
+                                                fieldWithPath("users[]").type(JsonFieldType.ARRAY).description("조회할 유저 ID 목록"),
+                                                fieldWithPath("members[]").type(JsonFieldType.ARRAY).description("조회할 멤버 ID 목록")
+                                        )
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.ARRAY).description("가장 많이 되는 시간 목록"),
+                                                fieldWithPath("payload[].time_point").type(JsonFieldType.STRING).description("날짜 또는 요일"),
+                                                fieldWithPath("payload[].start_time").type(JsonFieldType.STRING).description("시작 시간"),
+                                                fieldWithPath("payload[].end_time").type(JsonFieldType.STRING).description("종료 시간"),
+                                                fieldWithPath("payload[].possible_count").type(JsonFieldType.NUMBER).description("가능한 참여자 수"),
+                                                fieldWithPath("payload[].possible_names").type(JsonFieldType.ARRAY).description("가능한 참여자 이름 목록"),
+                                                fieldWithPath("payload[].impossible_names").type(JsonFieldType.ARRAY).description("참여 불가능한 이름 목록")
+                                        )
+                                        .responseSchema(Schema.schema("GetFilteredPossibleTimeResponseSchema"))
                                         .build()
                         )
                 ));

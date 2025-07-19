@@ -20,8 +20,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query("SELECT m FROM Member m " +
             "JOIN FETCH m.selections s " +
             "JOIN FETCH s.schedule sch " +
-            "WHERE m.event = :event AND m.name IN :names")
-    List<Member> findAllWithSelectionsAndSchedulesByEventAndNames(@Param("event") Event event, @Param("names") List<String> names);
+            "WHERE m.event = :event AND m.id IN :memberIds")
+    List<Member> findAllWithSelectionsAndSchedulesByEventAndMemberIds(@Param("event") Event event, @Param("memberIds") List<Long> memberIds);
 
     List<Member> findAllByEventIdIn(List<Long> eventIds);
 }

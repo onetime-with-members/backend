@@ -108,17 +108,18 @@ public class JwtFilter extends OncePerRequestFilter {
                 (isGet && path.matches("/api/v1/events/[^/]+$")) ||
                 (isGet && path.matches("/api/v1/events/[^/]+/participants")) ||
                 (isGet && path.matches("/api/v1/events/[^/]+/most")) ||
+                (isPost && path.matches("/api/v1/events/[^/]+/filtering")) ||
                 (isGet && path.matches("/api/v1/events/qr/[^/]+")) ||
                 // 요일 스케줄 등록/조회 (비로그인)
                 (isPost && path.equals("/api/v1/schedules/day")) ||
                 (isGet && path.matches("/api/v1/schedules/day/[^/]+$")) ||
                 (isGet && path.matches("/api/v1/schedules/day/[^/]+/[^/]+$") && !path.endsWith("/user")) ||
-                (isGet && path.equals("/api/v1/schedules/day/action-filtering")) ||
+                (isPost && path.matches("/api/v1/schedules/date/[^/]+/filtering")) ||
                 // 날짜 스케줄 등록/조회 (비로그인)
                 (isPost && path.equals("/api/v1/schedules/date")) ||
                 (isGet && path.matches("/api/v1/schedules/date/[^/]+$")) ||
                 (isGet && path.matches("/api/v1/schedules/date/[^/]+/[^/]+$") && !path.endsWith("/user")) ||
-                (isGet && path.equals("/api/v1/schedules/date/action-filtering"));
+                (isPost && path.matches("/api/v1/schedules/day/[^/]+/filtering"));
     }
 
     /**

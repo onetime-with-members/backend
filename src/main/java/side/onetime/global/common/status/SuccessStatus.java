@@ -17,6 +17,7 @@ public enum SuccessStatus implements BaseCode {
     _GET_EVENT(HttpStatus.OK, "200", "이벤트 조회에 성공했습니다."),
     _GET_PARTICIPANTS(HttpStatus.OK, "200", "참여자 조회에 성공했습니다."),
     _GET_MOST_POSSIBLE_TIME(HttpStatus.OK, "200", "가장 많이 되는 시간 조회에 성공했습니다."),
+    _GET_FILTERED_POSSIBLE_TIME(HttpStatus.OK, "200", "필터링한 인원의 시간 조회에 성공했습니다."),
     _GET_USER_PARTICIPATED_EVENTS(HttpStatus.OK, "200", "유저 참여 이벤트 목록 조회에 성공했습니다."),
     _REMOVE_USER_CREATED_EVENT(HttpStatus.OK, "200", "유저가 생성한 이벤트 삭제에 성공했습니다."),
     _MODIFY_USER_CREATED_EVENT(HttpStatus.OK, "200", "유저가 생성한 이벤트 수정에 성공했습니다."),
@@ -34,8 +35,8 @@ public enum SuccessStatus implements BaseCode {
     _GET_ALL_DATE_SCHEDULES(HttpStatus.OK, "200", "전체 날짜 스케줄 조회에 성공했습니다."),
     _GET_MEMBER_DATE_SCHEDULES(HttpStatus.OK, "200", "개인(비로그인) 날짜 스케줄 조회에 성공했습니다."),
     _GET_USER_DATE_SCHEDULES(HttpStatus.OK, "200", "개인(로그인) 날짜 스케줄 조회에 성공했습니다."),
-    _GET_FILTERED_DAY_SCHEDULES(HttpStatus.OK, "200", "멤버 필터링 요일 스케줄 조회에 성공했습니다."),
-    _GET_FILTERED_DATE_SCHEDULES(HttpStatus.OK, "200", "멤버 필터링 날짜 스케줄 조회에 성공했습니다."),
+    _GET_FILTERED_DAY_SCHEDULES(HttpStatus.OK, "200", "개인 필터링 요일 스케줄 조회에 성공했습니다."),
+    _GET_FILTERED_DATE_SCHEDULES(HttpStatus.OK, "200", "개인 필터링 날짜 스케줄 조회에 성공했습니다."),
     // URL
     _CONVERT_TO_SHORTEN_URL(HttpStatus.CREATED, "201", "단축 URL 변환에 성공했습니다."),
     _CONVERT_TO_ORIGINAL_URL(HttpStatus.CREATED, "201", "원본 URL 변환에 성공했습니다."),

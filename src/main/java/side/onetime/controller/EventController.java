@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import side.onetime.dto.event.request.CreateEventRequest;
 import side.onetime.dto.event.request.ModifyUserCreatedEventRequest;
 import side.onetime.dto.event.response.*;
+import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.EventService;
@@ -71,7 +72,7 @@ public class EventController {
      * 이 API는 특정 이벤트에 참여한 모든 참여자의 이름 목록을 조회합니다.
      *
      * @param eventId 참여자 목록을 조회할 이벤트의 ID
-     * @return 해당 이벤트에 참여한 참여자의 이름 목록
+     * @return 해당 이벤트에 참여한 멤버, 유저의 이름 및 ID 목록
      */
     @GetMapping("/{event_id}/participants")
     public ResponseEntity<ApiResponse<GetParticipantsResponse>> getParticipants(
@@ -95,6 +96,24 @@ public class EventController {
 
         List<GetMostPossibleTime> getMostPossibleTimes = eventService.getMostPossibleTime(eventId);
         return ApiResponse.onSuccess(SuccessStatus._GET_MOST_POSSIBLE_TIME, getMostPossibleTimes);
+    }
+
+    /**
+     * 필터링한 사용자의 가능한 시간 조회 API.
+     *
+     * 이 API는 특정 이벤트에서 필터링한 사용자의 시간대를 조회하여, 가능 인원과 해당 시간대 정보를 제공합니다.
+     *
+     * @param eventId 조회할 이벤트의 ID
+     * @param getFilteredSchedulesRequest 필터링할 스케줄 요청 객체 (유저 ID 목록, 멤버 ID 목록)
+     * @return 필터링한 사용자의 시간대와 관련 세부 정보
+     */
+    @PostMapping("/{event_id}/filtering")
+    public ResponseEntity<ApiResponse<List<GetMostPossibleTime>>> getFilteredPossibleTimes(
+            @PathVariable("event_id") String eventId,
+            @RequestBody GetFilteredSchedulesRequest getFilteredSchedulesRequest) {
+
+        List<GetMostPossibleTime> getFilteredPossibleTimes = eventService.getFilteredPossibleTimes(eventId, getFilteredSchedulesRequest);
+        return ApiResponse.onSuccess(SuccessStatus._GET_FILTERED_POSSIBLE_TIME, getFilteredPossibleTimes);
     }
 
     /**

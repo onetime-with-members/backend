@@ -16,6 +16,7 @@ import side.onetime.auth.service.CustomUserDetailsService;
 import side.onetime.configuration.ControllerTestConfig;
 import side.onetime.controller.ScheduleController;
 import side.onetime.domain.User;
+import side.onetime.dto.event.response.GetParticipantsResponse;
 import side.onetime.dto.schedule.request.CreateDateScheduleRequest;
 import side.onetime.dto.schedule.request.CreateDayScheduleRequest;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
@@ -300,21 +301,25 @@ public class ScheduleControllerTest extends ControllerTestConfig {
     }
 
     @Test
-    @DisplayName("멤버 필터링 요일 스케줄을 조회한다.")
+    @DisplayName("개인 필터링 요일 스케줄을 조회한다.")
     public void getFilteredDaySchedules() throws Exception {
         // given
         String eventId = UUID.randomUUID().toString();
-        List<String> names = List.of("Test Member");
-        GetFilteredSchedulesRequest request = new GetFilteredSchedulesRequest(eventId, names);
+
+        GetFilteredSchedulesRequest request = new GetFilteredSchedulesRequest(
+                List.of(1L, 2L), // users
+                List.of(3L)  // members
+        );
+
         List<DaySchedule> daySchedules = List.of(new DaySchedule("월", List.of("09:00", "10:00")));
         List<PerDaySchedulesResponse> responses = List.of(PerDaySchedulesResponse.of("Test Member", daySchedules));
 
-        Mockito.when(scheduleService.getFilteredDaySchedules(any(GetFilteredSchedulesRequest.class))).thenReturn(responses);
+        Mockito.when(scheduleService.getFilteredDaySchedules(anyString(), any(GetFilteredSchedulesRequest.class))).thenReturn(responses);
 
         // when
         String requestContent = new ObjectMapper().writeValueAsString(request);
         ResultActions resultActions = mockMvc.perform(
-                RestDocumentationRequestBuilders.get("/api/v1/schedules/day/action-filtering")
+                RestDocumentationRequestBuilders.post("/api/v1/schedules/day/{event_id}/filtering", eventId)
                         .content(requestContent)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
@@ -325,7 +330,7 @@ public class ScheduleControllerTest extends ControllerTestConfig {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.is_success").value(true))
                 .andExpect(jsonPath("$.code").value("200"))
-                .andExpect(jsonPath("$.message").value("멤버 필터링 요일 스케줄 조회에 성공했습니다."))
+                .andExpect(jsonPath("$.message").value("개인 필터링 요일 스케줄 조회에 성공했습니다."))
 
                 // docs
                 .andDo(MockMvcRestDocumentationWrapper.document("schedule/get-filtered-day-schedules",
@@ -334,16 +339,19 @@ public class ScheduleControllerTest extends ControllerTestConfig {
                         resource(
                                 ResourceSnippetParameters.builder()
                                         .tag("Schedule API")
-                                        .description("멤버 필터링 요일 스케줄을 조회한다.")
+                                        .description("개인 필터링 요일 스케줄을 조회한다.")
+                                        .pathParameters(
+                                                parameterWithName("event_id").description("이벤트 ID [예시 : dd099816-2b09-4625-bf95-319672c25659]")
+                                        )
                                         .requestFields(
-                                                fieldWithPath("event_id").type(JsonFieldType.STRING).description("이벤트 ID"),
-                                                fieldWithPath("names[]").type(JsonFieldType.ARRAY).description("조회할 멤버 이름 목록")
+                                                fieldWithPath("users[]").type(JsonFieldType.ARRAY).description("조회할 유저 ID 목록"),
+                                                fieldWithPath("members[]").type(JsonFieldType.ARRAY).description("조회할 멤버 ID 목록")
                                         )
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
                                                 fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
-                                                fieldWithPath("payload[].name").type(JsonFieldType.STRING).description("멤버 이름"),
+                                                fieldWithPath("payload[].name").type(JsonFieldType.STRING).description("사용자 이름"),
                                                 fieldWithPath("payload[].schedules[].time_point").type(JsonFieldType.STRING).description("요일"),
                                                 fieldWithPath("payload[].schedules[].times[]").type(JsonFieldType.ARRAY).description("스케줄 시간 목록")
                                         )
@@ -492,23 +500,27 @@ public class ScheduleControllerTest extends ControllerTestConfig {
     }
 
     @Test
-    @DisplayName("멤버 필터링 날짜 스케줄을 조회한다.")
+    @DisplayName("개인 필터링 날짜 스케줄을 조회한다.")
     public void getFilteredDateSchedules() throws Exception {
         // given
         String eventId = "123e4567-e89b-12d3-a456-426614174000";
-        List<String> names = List.of("memberName1", "memberName2");
-        GetFilteredSchedulesRequest request = new GetFilteredSchedulesRequest(eventId, names);
+
+        GetFilteredSchedulesRequest request = new GetFilteredSchedulesRequest(
+                List.of(1L, 2L), // users
+                List.of(3L)  // members
+        );
+
         List<PerDateSchedulesResponse> responseList = List.of(
                 PerDateSchedulesResponse.of("memberName1", List.of(new DateSchedule("2024.12.01", List.of("09:00", "10:00")))),
                 PerDateSchedulesResponse.of("memberName2", List.of(new DateSchedule("2024.12.02", List.of("11:00", "12:00"))))
         );
 
-        Mockito.when(scheduleService.getFilteredDateSchedules(any(GetFilteredSchedulesRequest.class))).thenReturn(responseList);
+        Mockito.when(scheduleService.getFilteredDateSchedules(anyString(), any(GetFilteredSchedulesRequest.class))).thenReturn(responseList);
         String requestContent = new ObjectMapper().writeValueAsString(request);
 
         // when
         ResultActions resultActions = mockMvc.perform(
-                RestDocumentationRequestBuilders.get("/api/v1/schedules/date/action-filtering")
+                RestDocumentationRequestBuilders.post("/api/v1/schedules/date/{event_id}/filtering", eventId)
                         .content(requestContent)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
@@ -519,23 +531,26 @@ public class ScheduleControllerTest extends ControllerTestConfig {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.is_success").value(true))
                 .andExpect(jsonPath("$.code").value("200"))
-                .andExpect(jsonPath("$.message").value("멤버 필터링 날짜 스케줄 조회에 성공했습니다."))
+                .andExpect(jsonPath("$.message").value("개인 필터링 날짜 스케줄 조회에 성공했습니다."))
                 .andDo(MockMvcRestDocumentationWrapper.document("schedule/get-filtered-date",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         resource(
                                 ResourceSnippetParameters.builder()
                                         .tag("Schedule API")
-                                        .description("멤버 필터링 날짜 스케줄을 조회한다.")
+                                        .description("개인 필터링 날짜 스케줄을 조회한다.")
+                                        .pathParameters(
+                                                parameterWithName("event_id").description("이벤트 ID [예시 : dd099816-2b09-4625-bf95-319672c25659]")
+                                        )
                                         .requestFields(
-                                                fieldWithPath("event_id").type(JsonFieldType.STRING).description("이벤트 ID"),
-                                                fieldWithPath("names[]").type(JsonFieldType.ARRAY).description("이름 목록")
+                                                fieldWithPath("users[]").type(JsonFieldType.ARRAY).description("조회할 유저 ID 목록"),
+                                                fieldWithPath("members[]").type(JsonFieldType.ARRAY).description("조회할 멤버 ID 목록")
                                         )
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
                                                 fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
-                                                fieldWithPath("payload[].name").type(JsonFieldType.STRING).description("멤버 이름"),
+                                                fieldWithPath("payload[].name").type(JsonFieldType.STRING).description("사용자 이름"),
                                                 fieldWithPath("payload[].schedules[].time_point").type(JsonFieldType.STRING).description("날짜"),
                                                 fieldWithPath("payload[].schedules[].times[]").type(JsonFieldType.ARRAY).description("스케줄 시간 목록")
                                         )

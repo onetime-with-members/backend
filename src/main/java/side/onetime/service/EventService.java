@@ -11,6 +11,7 @@ import side.onetime.domain.enums.EventStatus;
 import side.onetime.dto.event.request.CreateEventRequest;
 import side.onetime.dto.event.request.ModifyUserCreatedEventRequest;
 import side.onetime.dto.event.response.*;
+import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.EventErrorStatus;
 import side.onetime.exception.status.EventParticipationErrorStatus;
@@ -21,6 +22,7 @@ import side.onetime.util.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @Service
@@ -267,6 +269,62 @@ public class EventService {
     }
 
     /**
+     * 필터링한 사용자들의 가능한 시간대를 조회하는 메서드.
+     * 특정 이벤트에서 전달받은 멤버 및 유저 ID를 기준으로 선택 정보를 필터링하고, 가능한 시간대를 정리하여 반환합니다.
+     *
+     * @param eventId 조회할 이벤트의 ID
+     * @param getFilteredSchedulesRequest 필터링할 스케줄 요청 객체 (유저 ID 목록, 멤버 ID 목록)
+     * @return 필터링된 사용자들의 가능한 시간대 정보 리스트
+     * @throws CustomException 이벤트를 찾을 수 없는 경우
+     */
+    @Transactional(readOnly = true)
+    public List<GetMostPossibleTime> getFilteredPossibleTimes(String eventId, GetFilteredSchedulesRequest getFilteredSchedulesRequest) {
+        // 1. 이벤트 + 멤버 fetch join으로 조회
+        Event event = eventRepository.findByEventIdWithMembers(UUID.fromString(eventId))
+                .orElseThrow(() -> new CustomException(EventErrorStatus._NOT_FOUND_EVENT));
+
+        List<Long> memberIds = getFilteredSchedulesRequest.members();
+        List<Long> userIds = getFilteredSchedulesRequest.users();
+
+        // 요청 값이 없을 경우, 빈 리스트 반환
+        if (memberIds.isEmpty() && userIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 2. 멤버 이름 리스트 (요청된 멤버 ID에 해당하는 이름만 추출)
+        List<String> memberNames = event.getMembers().stream()
+                .filter(member -> memberIds.contains(member.getId()))
+                .map(Member::getName)
+                .toList();
+
+        // 3. 참여자(user) 조회 (CREATOR 제외, 요청된 유저 ID에 해당하는 이름만 추출)
+        List<String> userNicknames = eventParticipationRepository.findAllByEvent(event).stream()
+                .filter(ep -> userIds.contains(ep.getUser().getId()))
+                .filter(ep -> ep.getEventStatus() != EventStatus.CREATOR)
+                .map(ep -> ep.getUser().getNickname())
+                .toList();
+
+        // 4. 전체 참여자 이름 목록 생성 (멤버 + 유저)
+        List<String> allParticipants = Stream.concat(memberNames.stream(), userNicknames.stream())
+                .collect(Collectors.toList());
+
+        // 5. 선택 정보 조회 (멤버 ID 및 유저 ID 기준)
+        List<Selection> allSelections = selectionRepository.findAllByUserIdsOrMemberIdsWithScheduleAndEvent(event, userIds, memberIds);
+
+        // 6. 스케줄 기준으로 참여자 이름 매핑 생성
+        Map<Schedule, List<String>> scheduleToNamesMap = buildScheduleToNamesMap(allSelections, event.getCategory());
+
+        // 7. 전체 참여자가 모두 가능한 시간대만 필터링
+        Map<Schedule, List<String>> filteredScheduleToNamesMap = filterSchedulesWithAllParticipants(scheduleToNamesMap, allParticipants);
+
+        // 8. 필터링된 시간대로부터 최적 시간대 리스트 구성
+        List<GetMostPossibleTime> mostPossibleTimes = buildMostPossibleTimes(
+                filteredScheduleToNamesMap, allParticipants, event.getCategory());
+
+        return DateUtil.sortMostPossibleTimes(mostPossibleTimes, event.getCategory());
+    }
+
+    /**
      * 스케줄과 선택된 참여자 이름 매핑 메서드.
      * 이벤트 카테고리에 따라 요일 또는 날짜를 유지하며, 같은 날짜/요일 내에서는 time 기준으로 정렬합니다.
      *
@@ -404,6 +462,25 @@ public class EventService {
     }
 
     /**
+     * 전체 참여자가 모두 가능한 스케줄만 필터링하는 메서드.
+     * 입력으로 주어진 스케줄-참여자 매핑에서, 모든 참여자가 포함된 스케줄만 남겨 반환합니다.
+     *
+     * @param scheduleToNamesMap 스케줄과 참여자 이름 매핑 데이터
+     * @param allParticipants 전체 참여자 이름 목록
+     * @return 전체 참여자가 모두 가능한 스케줄과 참여자 이름 매핑 데이터
+     */
+    private Map<Schedule, List<String>> filterSchedulesWithAllParticipants(Map<Schedule, List<String>> scheduleToNamesMap, List<String> allParticipants) {
+        return scheduleToNamesMap.entrySet().stream()
+                .filter(entry -> new HashSet<>(entry.getValue()).containsAll(allParticipants))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (a, b) -> a,
+                        LinkedHashMap::new // buildScheduleToNamesMap()에서 정렬된 순서 유지
+                ));
+    }
+
+    /**
      * 날짜 포맷 여부 검증 메서드.
      * 주어진 문자열이 날짜 형식인지 확인합니다.
      *
@@ -446,7 +523,7 @@ public class EventService {
                     return GetUserParticipatedEventsResponse.of(
                             event,
                             ep,
-                            participants.names().size(),
+                            participants.users().size() + participants.members().size(),
                             mostPossibleTimes
                     );
                 })

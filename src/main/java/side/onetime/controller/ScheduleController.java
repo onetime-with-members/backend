@@ -119,18 +119,20 @@ public class ScheduleController {
     }
 
     /**
-     * 멤버 필터링 요일 스케줄 조회 API.
+     * 개인 필터링 요일 스케줄 조회 API.
      *
-     * 멤버 이름을 필터링하여 특정 이벤트의 요일 스케줄을 조회합니다.
+     * 사용자 ID로 필터링하여 특정 이벤트의 요일 스케줄을 조회합니다.
      *
-     * @param getFilteredSchedulesRequest 필터링할 스케줄 요청 객체 (이벤트 ID, 멤버 이름 목록)
+     * @param eventId 조회할 이벤트의 ID
+     * @param getFilteredSchedulesRequest 필터링할 스케줄 요청 객체 (유저 ID 목록, 멤버 ID 목록)
      * @return 필터링된 요일 스케줄 목록
      */
-    @GetMapping("/day/action-filtering")
+    @PostMapping("/day/{event_id}/filtering")
     public ResponseEntity<ApiResponse<List<PerDaySchedulesResponse>>> getFilteredDaySchedules(
-            @Valid @RequestBody GetFilteredSchedulesRequest getFilteredSchedulesRequest) {
+            @PathVariable("event_id") String eventId,
+            @RequestBody GetFilteredSchedulesRequest getFilteredSchedulesRequest) {
 
-        List<PerDaySchedulesResponse> perDaySchedulesResponses = scheduleService.getFilteredDaySchedules(getFilteredSchedulesRequest);
+        List<PerDaySchedulesResponse> perDaySchedulesResponses = scheduleService.getFilteredDaySchedules(eventId, getFilteredSchedulesRequest);
         return ApiResponse.onSuccess(SuccessStatus._GET_FILTERED_DAY_SCHEDULES, perDaySchedulesResponses);
     }
 
@@ -185,18 +187,20 @@ public class ScheduleController {
     }
 
     /**
-     * 멤버 필터링 날짜 스케줄 조회 API.
+     * 개인 필터링 날짜 스케줄 조회 API.
      *
-     * 멤버 이름을 필터링하여 특정 이벤트의 날짜 스케줄을 조회합니다.
+     * 사용자 ID로 필터링하여 특정 이벤트의 날짜 스케줄을 조회합니다.
      *
-     * @param getFilteredSchedulesRequest 필터링할 스케줄 요청 객체 (이벤트 ID, 멤버 이름 목록)
+     * @param eventId 조회할 이벤트의 ID
+     * @param getFilteredSchedulesRequest 필터링할 스케줄 요청 객체 (유저 ID 목록, 멤버 ID 목록)
      * @return 필터링된 날짜 스케줄 목록
      */
-    @GetMapping("/date/action-filtering")
+    @PostMapping("/date/{event_id}/filtering")
     public ResponseEntity<ApiResponse<List<PerDateSchedulesResponse>>> getFilteredDateSchedules(
-            @Valid @RequestBody GetFilteredSchedulesRequest getFilteredSchedulesRequest) {
+            @PathVariable("event_id") String eventId,
+            @RequestBody GetFilteredSchedulesRequest getFilteredSchedulesRequest) {
 
-        List<PerDateSchedulesResponse> perDateSchedulesResponses = scheduleService.getFilteredDateSchedules(getFilteredSchedulesRequest);
+        List<PerDateSchedulesResponse> perDateSchedulesResponses = scheduleService.getFilteredDateSchedules(eventId, getFilteredSchedulesRequest);
         return ApiResponse.onSuccess(SuccessStatus._GET_FILTERED_DATE_SCHEDULES, perDateSchedulesResponses);
     }
 }
