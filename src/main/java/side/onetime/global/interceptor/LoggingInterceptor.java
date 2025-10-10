@@ -2,6 +2,8 @@ package side.onetime.global.interceptor;
 
 import static net.logstash.logback.argument.StructuredArguments.*;
 
+import java.util.Optional;
+
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -12,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class LoggingInterceptor implements HandlerInterceptor {
+
+	private static final int HTTP_ERROR_THRESHOLD = 400;
 
     /**
      * 요청 전 처리 로직을 수행합니다.
@@ -27,13 +31,15 @@ public class LoggingInterceptor implements HandlerInterceptor {
      */
 	@Override
 	public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
-		Long start = (Long) request.getAttribute("startTime");
-		long duration = System.currentTimeMillis() - (start != null ? start : 0L);
+		Long start = Optional.ofNullable(request.getAttribute("startTime"))
+			.map(Long.class::cast)
+			.orElse(0L);
+		long duration = System.currentTimeMillis() - start;
 		int status = response.getStatus();
 		String method = request.getMethod();
 		String uri = request.getRequestURI();
 
-		if (status >= 400) {
+		if (status >= HTTP_ERROR_THRESHOLD) {
 			log.error("❌ Request failed",
 				kv("http_method", method),
 				kv("request_uri", uri),
