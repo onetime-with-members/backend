@@ -1,107 +1,15 @@
-server:
-  port: ${SERVER_PORT}
-  forward-headers-strategy: native
-
 spring:
-  datasource:
-    url: ${DATABASE_URL}
-    username: ${DATABASE_USERNAME}
-    password: ${DATABASE_PW}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
   jpa:
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
-        format_sql: false
-        use_sql_comments: false
     hibernate:
       ddl-auto: validate
-    defer-datasource-initialization: true
-    open-in-view: false
     generate-ddl: false
     show-sql: false
-
   sql:
     init:
       mode: never
-
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${OAUTH_GOOGLE_CLIENT_ID}
-            client-secret: ${OAUTH_GOOGLE_CLIENT_SECRET}
-            scope:
-              - email
-              - profile
-            redirect-uri: ${OAUTH_GOOGLE_REDIRECT_URI}
-
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-
-  cloud:
-    aws:
-      credentials:
-        access-key: ${S3_ACCESS_KEY}
-        secret-key: ${S3_SECRET_KEY}
-      region:
-        static: ap-northeast-2
-      s3:
-        bucket: ${S3_BUCKET_NAME}
-
-jwt:
-  secret: ${JWT_SECRET}
-  redirect:
-    access: ${ACCESS_TOKEN_REDIRECT_URI}
-    register: ${REGISTER_TOKEN_REDIRECT_URI}
-  access-token:
-    expiration-time: ${ACCESS_TOKEN_EXPIRATION_TIME}
-  admin-user-access-token:
-    expiration-time: ${ADMIN_USER_ACCESS_TOKEN_EXPIRATION_TIME}
-  refresh-token:
-    expiration-time: ${REFRESH_TOKEN_EXPIRATION_TIME}
-  register-token:
-    expiration-time: ${REGISTER_TOKEN_EXPIRATION_TIME}
-  browser-id-salt: ${BROWSER_ID_SALT}
-
-scheduling:
-  cron: ${CRON}
-
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-    tags-sorter: alpha
-    operations-sorter: alpha
-    persist-authorization: true
-  api-docs:
-    path: /v3/api-docs
-  show-actuator: false
-
-qr:
-  event-base-url: ${QR_EVENT_BASE_URL}
-
-management:
-  endpoint:
-    health:
-      show-details: never
-  endpoints:
-    web:
-      exposure:
-        include: health
-  metrics:
-    enable:
-      process.cpu: false
-      system.cpu: false
-
 logging:
   level:
     root: info
-    side.onetime.global.filter: debug
-    side.onetime.util: debug
-    side.onetime.exception: debug
-    org.hibernate.SQL: off
-    org.hibernate.type.descriptor.sql.BasicBinder: off
+    side.onetime: debug
+    org.springframework: info
+    org.hibernate: info
