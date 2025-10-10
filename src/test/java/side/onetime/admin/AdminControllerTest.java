@@ -588,7 +588,7 @@ public class AdminControllerTest extends ControllerTestConfig {
         String accessToken = "Bearer test.jwt.token";
         Long bannerId = 1L;
         GetBannerResponse response = new GetBannerResponse(
-                bannerId, "OneTime", "OneTime's Title", "OneTime's Sub Title", "OneTime's Button Text", "#FFFFFF", "https://www.image.com", true, "2025-08-26 12:00:00", "https://www.link.com"
+                bannerId, "OneTime", "OneTime's Title", "OneTime's Sub Title", "OneTime's Button Text", "#FFFFFF", "https://www.image.com", true, "2025-08-26 12:00:00", "https://www.link.com", 1L
         );
 
         // when
@@ -625,7 +625,8 @@ public class AdminControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("payload.image_url").type(JsonFieldType.STRING).description("배너 이미지 URL"),
                                                 fieldWithPath("payload.is_activated").type(JsonFieldType.BOOLEAN).description("활성화 여부"),
                                                 fieldWithPath("payload.created_date").type(JsonFieldType.STRING).description("생성일자"),
-                                                fieldWithPath("payload.link_url").type(JsonFieldType.STRING).description("링크 URL")
+                                                fieldWithPath("payload.link_url").type(JsonFieldType.STRING).description("링크 URL"),
+                                                fieldWithPath("payload.click_count").type(JsonFieldType.NUMBER).description("클릭 수")
                                         )
                                         .responseSchema(Schema.schema("GetBannerResponse"))
                                         .build()
@@ -692,8 +693,8 @@ public class AdminControllerTest extends ControllerTestConfig {
         int page = 1;
 
         List<GetBannerResponse> banners = List.of(
-                new GetBannerResponse(1L, "OneTime", "OneTime's Title", "OneTime's Sub Title", "OneTime's Button Text", "#FFFFFF", "https://www.image.com", true, "2025-08-26 12:00:00", "https://www.link.com"),
-                new GetBannerResponse(2L, "OneTime2", "OneTime's Title2", "OneTime's Sub Title2", "OneTime's Button Text2", "#000000", "https://www.image.com", true, "2025-08-27 12:00:00", "https://www.link.com")
+                new GetBannerResponse(1L, "OneTime", "OneTime's Title", "OneTime's Sub Title", "OneTime's Button Text", "#FFFFFF", "https://www.image.com", true, "2025-08-26 12:00:00", "https://www.link.com", 1L),
+                new GetBannerResponse(2L, "OneTime2", "OneTime's Title2", "OneTime's Sub Title2", "OneTime's Button Text2", "#000000", "https://www.image.com", true, "2025-08-27 12:00:00", "https://www.link.com", 1L)
         );
 
         PageInfo pageInfo = PageInfo.of(1, 20, 2, 1);
@@ -743,6 +744,7 @@ public class AdminControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("payload.banners[].is_activated").type(JsonFieldType.BOOLEAN).description("활성화 여부"),
                                                 fieldWithPath("payload.banners[].created_date").type(JsonFieldType.STRING).description("생성일자"),
                                                 fieldWithPath("payload.banners[].link_url").type(JsonFieldType.STRING).description("링크 URL"),
+                                                fieldWithPath("payload.banners[].click_count").type(JsonFieldType.NUMBER).description("클릭 수"),
                                                 fieldWithPath("payload.page_info.page").type(JsonFieldType.NUMBER).description("현재 페이지 번호"),
                                                 fieldWithPath("payload.page_info.size").type(JsonFieldType.NUMBER).description("페이지당 항목 수"),
                                                 fieldWithPath("payload.page_info.total_elements").type(JsonFieldType.NUMBER).description("전체 항목 수"),
@@ -827,8 +829,8 @@ public class AdminControllerTest extends ControllerTestConfig {
     public void getAllActivatedBanners() throws Exception {
         // given
         List<GetBannerResponse> banners = List.of(
-                new GetBannerResponse(1L, "OneTime", "OneTime's Title", "OneTime's Sub Title", "OneTime's Button Text", "#FFFFFF", "https://www.image.com", true, "2025-08-26 12:00:00", "https://www.link.com"),
-                new GetBannerResponse(2L, "OneTime2", "OneTime's Title2", "OneTime's Sub Title2", "OneTime's Button Text2", "#000000", "https://www.image.com", true, "2025-08-27 12:00:00", "https://www.link.com")
+                new GetBannerResponse(1L, "OneTime", "OneTime's Title", "OneTime's Sub Title", "OneTime's Button Text", "#FFFFFF", "https://www.image.com", true, "2025-08-26 12:00:00", "https://www.link.com", 1L),
+                new GetBannerResponse(2L, "OneTime2", "OneTime's Title2", "OneTime's Sub Title2", "OneTime's Button Text2", "#000000", "https://www.image.com", true, "2025-08-27 12:00:00", "https://www.link.com", 1L)
         );
         GetAllActivatedBannersResponse response = GetAllActivatedBannersResponse.from(banners);
 
@@ -863,7 +865,8 @@ public class AdminControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("payload.banners[].image_url").type(JsonFieldType.STRING).description("배너 이미지 URL"),
                                                 fieldWithPath("payload.banners[].is_activated").type(JsonFieldType.BOOLEAN).description("활성화 여부"),
                                                 fieldWithPath("payload.banners[].created_date").type(JsonFieldType.STRING).description("생성일자"),
-                                                fieldWithPath("payload.banners[].link_url").type(JsonFieldType.STRING).description("링크 URL")
+                                                fieldWithPath("payload.banners[].link_url").type(JsonFieldType.STRING).description("링크 URL"),
+                                                fieldWithPath("payload.banners[].click_count").type(JsonFieldType.NUMBER).description("클릭 수")
                                         )
                                         .responseSchema(Schema.schema("GetAllActivatedBannersResponse"))
                                         .build()

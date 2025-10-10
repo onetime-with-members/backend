@@ -44,6 +44,9 @@ public class Banner extends BaseEntity {
     @Column(name = "link_url", length = 200)
     private String linkUrl;
 
+    @Column(name = "click_count", nullable = false, columnDefinition = "INT UNSIGNED")
+    private Long clickCount;
+
     @Builder
     public Banner(String organization, String title, String subTitle, String buttonText, String colorCode, String imageUrl, String linkUrl) {
         this.organization = organization;
@@ -55,6 +58,7 @@ public class Banner extends BaseEntity {
         this.isActivated = false;
         this.isDeleted = false;
         this.linkUrl = linkUrl;
+        this.clickCount = 0L;
     }
 
     public void updateOrganization(String organization) {

@@ -17,7 +17,8 @@ public record GetBannerResponse(
         String imageUrl,
         Boolean isActivated,
         String createdDate,
-        String linkUrl
+        String linkUrl,
+        Long clickCount
 ) {
     public static GetBannerResponse from(Banner banner) {
         return new GetBannerResponse(
@@ -30,7 +31,8 @@ public record GetBannerResponse(
                 banner.getImageUrl(),
                 banner.getIsActivated(),
                 banner.getCreatedDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                banner.getLinkUrl()
+                banner.getLinkUrl(),
+                banner.getClickCount()
         );
     }
 }

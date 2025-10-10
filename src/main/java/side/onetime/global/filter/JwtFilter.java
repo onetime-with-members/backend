@@ -99,6 +99,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 path.startsWith("/api/v1/members") ||
                 path.startsWith("/api/v1/tokens") ||
                 path.startsWith("/api/v1/urls") ||
+                path.startsWith("/api/v1/banners") ||
                 // 유저 관련
                 (isPost && path.equals("/api/v1/users/onboarding")) ||
                 (isPost && path.equals("/api/v1/users/logout")) ||
