@@ -1,6 +1,7 @@
 package side.onetime.global.config;
 
-import lombok.RequiredArgsConstructor;
+import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -12,11 +13,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import lombok.RequiredArgsConstructor;
 import side.onetime.auth.handler.OAuthLoginFailureHandler;
 import side.onetime.auth.handler.OAuthLoginSuccessHandler;
 import side.onetime.global.filter.JwtFilter;
-
-import java.util.Arrays;
 
 @RequiredArgsConstructor
 @Configuration
@@ -51,16 +52,15 @@ public class SecurityConfig {
 	};
 
 	private static final String[] ALLOWED_ORIGINS = {
-			"http://localhost:5173",
-			"http://localhost:3000",
-			"https://onetime-test.vercel.app",
-			"https://www.onetime-test.vercel.app",
-			"https://onetime-with-members.com",
-			"https://www.onetime-with-members.com",
-			"https://1-ti.me",
-			"https://dev-api.onetime.run",
-			"https://onetime-admin.vercel.app",
-			"https://onetime-test-admin.vercel.app",
+		"http://localhost:5173",
+		"http://localhost:3000",
+		"https://onetime-test.vercel.app",
+		"https://www.onetime-test.vercel.app",
+		"https://onetime-with-members.com",
+		"https://www.onetime-with-members.com",
+		"https://1-ti.me",
+		"https://onetime-admin.vercel.app",
+		"https://onetime-test-admin.vercel.app",
 	};
 
 	/**
