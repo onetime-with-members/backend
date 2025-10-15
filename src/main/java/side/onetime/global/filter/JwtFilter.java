@@ -87,6 +87,7 @@ public class JwtFilter extends OncePerRequestFilter {
         // 공통 prefix
         boolean isGet = method.equals("GET");
         boolean isPost = method.equals("POST");
+        boolean isPatch = method.equals("PATCH");
 
         return path.equals("/actuator/health") ||
                 path.equals("/") ||
@@ -109,6 +110,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 (isGet && path.matches("/api/v1/events/[^/]+/participants")) ||
                 (isGet && path.matches("/api/v1/events/[^/]+/most")) ||
                 (isPost && path.matches("/api/v1/events/[^/]+/most/filtering")) ||
+                (isPatch && path.matches("/api/v1/events/[^/]+")) ||
                 (isGet && path.matches("/api/v1/events/qr/[^/]+")) ||
                 // 요일 스케줄 등록/조회 (비로그인)
                 (isPost && path.equals("/api/v1/schedules/day")) ||

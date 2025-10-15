@@ -9,7 +9,7 @@ import side.onetime.domain.*;
 import side.onetime.domain.enums.Category;
 import side.onetime.domain.enums.EventStatus;
 import side.onetime.dto.event.request.CreateEventRequest;
-import side.onetime.dto.event.request.ModifyUserCreatedEventRequest;
+import side.onetime.dto.event.request.ModifyEventRequest;
 import side.onetime.dto.event.response.*;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
 import side.onetime.exception.CustomException;
@@ -524,26 +524,24 @@ public class EventService {
     }
 
     /**
-     * 유저가 생성한 이벤트 수정 메서드.
-     * 인증된 유저가 생성한 특정 이벤트를 수정합니다.
+     * 이벤트 수정 메서드.
+     * 특정 이벤트를 수정합니다.
      *
      * @param eventId 수정할 이벤트의 ID
-     * @param modifyUserCreatedEventRequest 새로운 이벤트 데이터
+     * @param modifyEventRequest 새로운 이벤트 데이터
      */
     @Transactional
-    public void modifyUserCreatedEvent(String eventId, ModifyUserCreatedEventRequest modifyUserCreatedEventRequest) {
-        User user = userRepository.findById(UserAuthorizationUtil.getLoginUserId())
-                .orElseThrow(() -> new CustomException(UserErrorStatus._NOT_FOUND_USER));
-        EventParticipation eventParticipation = verifyUserHasEventAccess(user, eventId);
-        Event event = eventParticipation.getEvent();
+    public void modifyEvent(String eventId, ModifyEventRequest modifyEventRequest) {
+        Event event = eventRepository.findByEventId(UUID.fromString(eventId))
+                .orElseThrow(() -> new CustomException(EventErrorStatus._NOT_FOUND_EVENT));
 
-        event.updateTitle(modifyUserCreatedEventRequest.title());
-        updateEventRanges(event, event.getSchedules(), modifyUserCreatedEventRequest.ranges(), modifyUserCreatedEventRequest.startTime(), modifyUserCreatedEventRequest.endTime());
+        event.updateTitle(modifyEventRequest.title());
+        updateEventRanges(event, event.getSchedules(), modifyEventRequest.ranges(), modifyEventRequest.startTime(), modifyEventRequest.endTime());
 
         // 변경된 범위에 따른 새로운 스케줄 목록
         List<Schedule> newSchedules = scheduleRepository.findAllByEvent(event)
                 .orElseThrow(() -> new CustomException(ScheduleErrorStatus._NOT_FOUND_ALL_SCHEDULES));
-        updateEventTimes(event, newSchedules, modifyUserCreatedEventRequest.startTime(), modifyUserCreatedEventRequest.endTime());
+        updateEventTimes(event, newSchedules, modifyEventRequest.startTime(), modifyEventRequest.endTime());
     }
 
     /**
