@@ -69,19 +69,24 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
      * Selection → Schedule 순으로 진행됩니다.
      *
      * @param event 이벤트 객체
-     * @param range 삭제할 범위 (DATE 또는 DAY)
+     * @param ranges 삭제할 범위 리스트 (DATE 또는 DAY)
      */
     @Override
-    public void deleteSchedulesByRange(Event event, String range) {
+    public void deleteSchedulesByRanges(Event event, List<String> ranges) {
+        if (ranges.isEmpty()) {
+            return;
+        }
+
         queryFactory.delete(selection)
                 .where(selection.schedule.event.eq(event)
-                        .and(selection.schedule.date.eq(range)
-                                .or(selection.schedule.day.eq(range))))
+                        .and(selection.schedule.date.in(ranges)
+                                .or(selection.schedule.day.in(ranges))))
                 .execute();
 
         queryFactory.delete(schedule)
                 .where(schedule.event.eq(event)
-                        .and(schedule.date.eq(range).or(schedule.day.eq(range))))
+                        .and(schedule.date.in(ranges)
+                                .or(schedule.day.in(ranges))))
                 .execute();
     }
 
@@ -93,18 +98,22 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
      * Selection → Schedule 순으로 진행됩니다.
      *
      * @param event 이벤트 객체
-     * @param time 삭제할 시간 (HH:mm 형식)
+     * @param times 삭제할 시간 리스트 (HH:mm 형식)
      */
     @Override
-    public void deleteSchedulesByTime(Event event, String time) {
+    public void deleteSchedulesByTimes(Event event, List<String> times) {
+        if (times.isEmpty()) {
+            return;
+        }
+
         queryFactory.delete(selection)
                 .where(selection.schedule.event.eq(event)
-                        .and(selection.schedule.time.eq(time)))
+                        .and(selection.schedule.time.in(times)))
                 .execute();
 
         queryFactory.delete(schedule)
                 .where(schedule.event.eq(event)
-                        .and(schedule.time.eq(time)))
+                        .and(schedule.time.in(times)))
                 .execute();
     }
 

@@ -560,9 +560,10 @@ public class EventService {
                 : schedules.stream().map(Schedule::getDay).filter(Objects::nonNull).collect(Collectors.toSet());
 
         // 삭제 대상 처리
-        existRanges.stream()
+        List<String> rangesToDelete = existRanges.stream()
                 .filter(range -> !newRanges.contains(range))
-                .forEach(range -> eventRepository.deleteSchedulesByRange(event, range));
+                .toList();
+        eventRepository.deleteSchedulesByRanges(event, rangesToDelete);
 
         // 생성 대상 처리
         List<String> rangesToCreate = newRanges.stream()
@@ -598,9 +599,10 @@ public class EventService {
                     .collect(Collectors.toSet());
 
             // 삭제 대상 시간 처리
-            existTimes.stream()
+            List<String> timesToDelete = existTimes.stream()
                     .filter(time -> !newTimeSets.contains(time))
-                    .forEach(time -> eventRepository.deleteSchedulesByTime(event, time));
+                    .toList();
+            eventRepository.deleteSchedulesByTimes(event, timesToDelete);
 
             // 생성 대상 시간 처리
             List<String> timesToCreate = newTimeSets.stream()
