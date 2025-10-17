@@ -61,6 +61,8 @@ public class SecurityConfig {
 		"https://1-ti.me",
 		"https://onetime-admin.vercel.app",
 		"https://onetime-test-admin.vercel.app",
+		"https://onetime-test.mshong1007.workers.dev",
+		"https://dev-app.onetime.run",
 	};
 
 	/**
