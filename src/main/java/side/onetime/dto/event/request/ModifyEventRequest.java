@@ -10,7 +10,7 @@ import java.util.List;
 
 @JsonNaming(value = PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record ModifyUserCreatedEventRequest(
+public record ModifyEventRequest(
         @NotBlank(message = "제목은 필수 값입니다.") String title,
         @NotBlank(message = "시작 시간은 필수 값입니다.") String startTime,
         @NotBlank(message = "종료 시간은 필수 값입니다.") String endTime,

@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import side.onetime.dto.event.request.CreateEventRequest;
-import side.onetime.dto.event.request.ModifyUserCreatedEventRequest;
+import side.onetime.dto.event.request.ModifyEventRequest;
 import side.onetime.dto.event.response.*;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
 import side.onetime.global.common.ApiResponse;
@@ -147,9 +147,9 @@ public class EventController {
     }
 
     /**
-     * 유저가 생성한 이벤트 수정 API.
+     * 이벤트 수정 API.
      *
-     * 이 API는 인증된 유저가 생성한 특정 이벤트의 제목, 시간, 설문 범위를 수정합니다.
+     * 이 API는 특정 이벤트의 제목, 시간, 설문 범위를 수정합니다.
      * 수정 가능한 항목은 다음과 같습니다:
      * - 이벤트 제목
      * - 시작 시간 및 종료 시간
@@ -158,16 +158,16 @@ public class EventController {
      * 요청 데이터에 따라 변경 사항을 반영하며, 필요에 따라 기존 스케줄 데이터를 삭제하거나 새로운 스케줄을 생성합니다.
      *
      * @param eventId 수정할 이벤트의 ID
-     * @param modifyUserCreatedEventRequest 새로운 이벤트 정보가 담긴 요청 데이터 (제목, 시간, 범위 등)
+     * @param modifyEventRequest 새로운 이벤트 정보가 담긴 요청 데이터 (제목, 시간, 범위 등)
      * @return 수정 성공 여부
      */
     @PatchMapping("/{event_id}")
-    public ResponseEntity<ApiResponse<SuccessStatus>> modifyUserCreatedEvent(
+    public ResponseEntity<ApiResponse<SuccessStatus>> modifyEvent(
             @PathVariable("event_id") String eventId,
-            @Valid @RequestBody ModifyUserCreatedEventRequest modifyUserCreatedEventRequest) {
+            @Valid @RequestBody ModifyEventRequest modifyEventRequest) {
 
-        eventService.modifyUserCreatedEvent(eventId, modifyUserCreatedEventRequest);
-        return ApiResponse.onSuccess(SuccessStatus._MODIFY_USER_CREATED_EVENT);
+        eventService.modifyEvent(eventId, modifyEventRequest);
+        return ApiResponse.onSuccess(SuccessStatus._MODIFY_EVENT);
     }
 
     /**

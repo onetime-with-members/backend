@@ -20,7 +20,7 @@ import side.onetime.controller.EventController;
 import side.onetime.domain.enums.Category;
 import side.onetime.domain.enums.EventStatus;
 import side.onetime.dto.event.request.CreateEventRequest;
-import side.onetime.dto.event.request.ModifyUserCreatedEventRequest;
+import side.onetime.dto.event.request.ModifyEventRequest;
 import side.onetime.dto.event.response.*;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
 import side.onetime.service.EventService;
@@ -491,11 +491,11 @@ public class EventControllerTest extends ControllerTestConfig {
     }
 
     @Test
-    @DisplayName("유저가 생성한 이벤트를 수정한다.")
-    public void modifyUserCreatedEventTitle() throws Exception {
+    @DisplayName("이벤트를 수정한다.")
+    public void modifyEvent() throws Exception {
         // given
         String eventId = UUID.randomUUID().toString();
-        ModifyUserCreatedEventRequest request = new ModifyUserCreatedEventRequest(
+        ModifyEventRequest request = new ModifyEventRequest(
                 "수정된 이벤트 제목",
                 "09:00",
                 "18:00",
@@ -505,11 +505,10 @@ public class EventControllerTest extends ControllerTestConfig {
         String requestContent = new ObjectMapper().writeValueAsString(request);
 
         Mockito.doNothing().when(eventService)
-                .modifyUserCreatedEvent(anyString(), any(ModifyUserCreatedEventRequest.class));
+                .modifyEvent(anyString(), any(ModifyEventRequest.class));
 
         // when
         ResultActions resultActions = this.mockMvc.perform(RestDocumentationRequestBuilders.patch("/api/v1/events/{event_id}", eventId)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer sampleToken")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestContent)
                 .accept(MediaType.APPLICATION_JSON));
@@ -519,16 +518,16 @@ public class EventControllerTest extends ControllerTestConfig {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.is_success").value(true))
                 .andExpect(jsonPath("$.code").value("200"))
-                .andExpect(jsonPath("$.message").value("유저가 생성한 이벤트 수정에 성공했습니다."))
+                .andExpect(jsonPath("$.message").value("이벤트 수정에 성공했습니다."))
 
                 // docs
-                .andDo(MockMvcRestDocumentationWrapper.document("event/modify-user-created-event-title",
+                .andDo(MockMvcRestDocumentationWrapper.document("event/modify-event",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         resource(
                                 ResourceSnippetParameters.builder()
                                         .tag("Event API")
-                                        .description("유저가 생성한 이벤트를 수정한다.")
+                                        .description("이벤트를 수정한다.")
                                         .pathParameters(
                                                 parameterWithName("event_id").description("수정할 이벤트의 ID [예시 : dd099816-2b09-4625-bf95-319672c25659]")
                                         )
@@ -543,7 +542,7 @@ public class EventControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
                                                 fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
                                         )
-                                        .responseSchema(Schema.schema("ModifyUserCreatedEventTitleResponseSchema"))
+                                        .responseSchema(Schema.schema("ModifyEventResponseSchema"))
                                         .build()
                         )
                 ));
