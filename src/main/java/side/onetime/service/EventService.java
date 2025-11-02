@@ -20,6 +20,7 @@ import side.onetime.exception.status.UserErrorStatus;
 import side.onetime.repository.*;
 import side.onetime.util.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -227,6 +228,23 @@ public class EventService {
     }
 
     /**
+     * 이벤트 참여자 조회 메서드.
+     * 특정 이벤트에 참여한 모든 참여자의 이름 목록(멤버 및 유저)을 반환합니다.
+     *
+     * @param event 참여자를 조회할 이벤트
+     * @param eventParticipations 이벤트에 속한 참여자 목록
+     * @return 참여자의 이름 목록
+     */
+    private GetParticipantsResponse getParticipants(Event event, List<EventParticipation> eventParticipations) {
+        List<User> users = eventParticipations.stream()
+                .filter(eventParticipation -> eventParticipation.getEventStatus() != EventStatus.CREATOR)
+                .map(EventParticipation::getUser)
+                .toList();
+
+        return GetParticipantsResponse.of(event.getMembers(), users);
+    }
+
+    /**
      * 가장 많이 되는 시간 조회 메서드.
      * 특정 이벤트에서 참여자 수가 가장 많은 시간대를 계산하여 반환합니다.
      *
@@ -262,6 +280,37 @@ public class EventService {
         Map<Schedule, List<String>> scheduleToNamesMap = buildScheduleToNamesMap(selections, event.getCategory());
 
         // 7. 최적 시간대 리스트 생성
+        List<GetMostPossibleTime> mostPossibleTimes = buildMostPossibleTimes(
+                scheduleToNamesMap, allParticipants, event.getCategory());
+
+        return DateUtil.sortMostPossibleTimes(mostPossibleTimes, event.getCategory());
+    }
+
+    /**
+     * 가장 많이 되는 시간 조회 메서드.
+     * 특정 이벤트에서 참여자 수가 가장 많은 시간대를 계산하여 반환합니다.
+     *
+     * @param event 참여자를 조회할 이벤트
+     * @param eventParticipations 이벤트에 속한 참여자 목록
+     * @return 가능 인원이 많은 시간대 목록
+     */
+    private List<GetMostPossibleTime> getMostPossibleTimes(Event event, List<EventParticipation> eventParticipations) {
+        List<String> memberNames = event.getMembers().stream()
+                .map(Member::getName)
+                .toList();
+
+        List<String> userNicknames = eventParticipations.stream()
+                .filter(ep -> ep.getEventStatus() != EventStatus.CREATOR)
+                .map(ep -> ep.getUser().getNickname())
+                .toList();
+
+        List<String> allParticipants = new ArrayList<>(memberNames);
+        allParticipants.addAll(userNicknames);
+
+        List<Selection> selections = selectionRepository.findAllSelectionsByEvent(event);
+
+        Map<Schedule, List<String>> scheduleToNamesMap = buildScheduleToNamesMap(selections, event.getCategory());
+
         List<GetMostPossibleTime> mostPossibleTimes = buildMostPossibleTimes(
                 scheduleToNamesMap, allParticipants, event.getCategory());
 
@@ -507,6 +556,48 @@ public class EventService {
                 })
                 .collect(Collectors.toList());
     }
+
+    /**
+     * 유저 참여 이벤트 목록 조회 메서드.
+     *
+     * 인증된 유저가 참여한 이벤트 목록을 페이지 단위로 조회하며, 각 이벤트에 대한 세부 정보를 반환합니다.
+     * 각 이벤트에 대해 참여자 및 가장 많이 되는 시간을 조회한 뒤 페이지(커서) 정보를 감싸 반환합니다.
+     * 이벤트는 항상 최신 순으로 정렬됩니다.
+     *
+     * @param size 한 번에 가져올 이벤트 개수
+     * @param createdDate 마지막으로 조회한 이벤트 생성일
+     * @return 유저가 참여한 이벤트 목록
+     */
+    @Transactional(readOnly = true)
+    public GetAllUserParticipatedEventsResponse getAllUserParticipatedEvents(int size, LocalDateTime createdDate) {
+        User user = userRepository.findById(UserAuthorizationUtil.getLoginUserId())
+                .orElseThrow(() -> new CustomException(UserErrorStatus._NOT_FOUND_USER));
+
+        List<EventParticipation> participations = eventParticipationRepository.pageAllByUserWithCursor(user, createdDate, size);
+        List<GetUserParticipatedEventResponse> userParticipatedEvents = participations.stream()
+                .map(ep -> {
+                    Event event = ep.getEvent();
+                    List<EventParticipation> eventParticipations = eventParticipationRepository.findAllByEventWithEventAndMemberAndUser(event);
+
+                    GetParticipantsResponse participants = this.getParticipants(event, eventParticipations);
+                    List<GetMostPossibleTime> mostPossibleTimes = this.getMostPossibleTimes(event, eventParticipations);
+
+                    return GetUserParticipatedEventResponse.of(
+                            event,
+                            ep,
+                            participants.users().size() + participants.members().size(),
+                            mostPossibleTimes
+                    );
+                })
+                .toList();
+
+        String nextCursor = participations.isEmpty() ? null : participations.get(participations.size() - 1).getEvent().getCreatedDate().toString();
+        boolean hasNext = participations.size() == size;
+        PageCursorInfo<String> pageCursorInfo = PageCursorInfo.of(nextCursor, hasNext);
+
+        return GetAllUserParticipatedEventsResponse.of(userParticipatedEvents, pageCursorInfo);
+    }
+
 
     /**
      * 유저가 생성한 이벤트 삭제 메서드.
