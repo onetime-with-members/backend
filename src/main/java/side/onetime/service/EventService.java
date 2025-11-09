@@ -569,12 +569,12 @@ public class EventService {
      * @return 유저가 참여한 이벤트 목록
      */
     @Transactional(readOnly = true)
-    public GetAllUserParticipatedEventsResponse getAllUserParticipatedEvents(int size, LocalDateTime createdDate) {
+    public GetParticipatedEventsResponse getParticipatedEventsByCursor(int size, LocalDateTime createdDate) {
         User user = userRepository.findById(UserAuthorizationUtil.getLoginUserId())
                 .orElseThrow(() -> new CustomException(UserErrorStatus._NOT_FOUND_USER));
 
-        List<EventParticipation> participations = eventParticipationRepository.pageAllByUserWithCursor(user, createdDate, size);
-        List<GetUserParticipatedEventResponse> userParticipatedEvents = participations.stream()
+        List<EventParticipation> participations = eventParticipationRepository.findParticipationsByUserWithCursor(user, createdDate, size);
+        List<GetParticipatedEventResponse> userParticipatedEvents = participations.stream()
                 .map(ep -> {
                     Event event = ep.getEvent();
                     List<EventParticipation> eventParticipations = eventParticipationRepository.findAllByEventWithEventAndMemberAndUser(event);
@@ -582,7 +582,7 @@ public class EventService {
                     GetParticipantsResponse participants = this.getParticipants(event, eventParticipations);
                     List<GetMostPossibleTime> mostPossibleTimes = this.getMostPossibleTimes(event, eventParticipations);
 
-                    return GetUserParticipatedEventResponse.of(
+                    return GetParticipatedEventResponse.of(
                             event,
                             ep,
                             participants.users().size() + participants.members().size(),
@@ -595,7 +595,7 @@ public class EventService {
         boolean hasNext = participations.size() == size;
         PageCursorInfo<String> pageCursorInfo = PageCursorInfo.of(nextCursor, hasNext);
 
-        return GetAllUserParticipatedEventsResponse.of(userParticipatedEvents, pageCursorInfo);
+        return GetParticipatedEventsResponse.of(userParticipatedEvents, pageCursorInfo);
     }
 
 

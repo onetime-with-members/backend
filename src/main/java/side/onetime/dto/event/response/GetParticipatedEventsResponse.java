@@ -8,11 +8,11 @@ import java.util.List;
 
 @JsonNaming(value = PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record GetAllUserParticipatedEventsResponse(
-        List<GetUserParticipatedEventResponse> events,
+public record GetParticipatedEventsResponse(
+        List<GetParticipatedEventResponse> events,
         PageCursorInfo<String> pageCursorInfo
 ) {
-    public static GetAllUserParticipatedEventsResponse of(List<GetUserParticipatedEventResponse> events, PageCursorInfo<String> pageCursorInfo) {
-        return new GetAllUserParticipatedEventsResponse(events, pageCursorInfo);
+    public static GetParticipatedEventsResponse of(List<GetParticipatedEventResponse> events, PageCursorInfo<String> pageCursorInfo) {
+        return new GetParticipatedEventsResponse(events, pageCursorInfo);
     }
 }

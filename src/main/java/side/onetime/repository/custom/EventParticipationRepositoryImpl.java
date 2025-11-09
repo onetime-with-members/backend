@@ -52,7 +52,7 @@ public class EventParticipationRepositoryImpl implements EventParticipationRepos
      * @return 이벤트 참여 목록
      */
     @Override
-    public List<EventParticipation> pageAllByUserWithCursor(User user, LocalDateTime createdDate, int pageSize) {
+    public List<EventParticipation> findParticipationsByUserWithCursor(User user, LocalDateTime createdDate, int pageSize) {
         QEventParticipation ep = QEventParticipation.eventParticipation;
         QEvent e = QEvent.event;
 

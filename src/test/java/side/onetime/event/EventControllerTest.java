@@ -451,12 +451,12 @@ public class EventControllerTest extends ControllerTestConfig {
 
     @Test
     @DisplayName("유저 참여 이벤트 목록을 조회한다.")
-    public void getAllUserParticipatedEvents() throws Exception {
+    public void getParticipatedEventsByCursor() throws Exception {
         // given
         int size = 2;
         String createdDate = "2025-01-01T12:00:00.000";
-        List<GetUserParticipatedEventResponse> userParticipatedEvents = List.of(
-                new GetUserParticipatedEventResponse(
+        List<GetParticipatedEventResponse> userParticipatedEvents = List.of(
+                new GetParticipatedEventResponse(
                         UUID.randomUUID(),
                         Category.DATE,
                         "Sample Event",
@@ -469,9 +469,9 @@ public class EventControllerTest extends ControllerTestConfig {
                 )
         );
         PageCursorInfo<String> pageCursorInfo = PageCursorInfo.of(createdDate, true);
-        GetAllUserParticipatedEventsResponse response = GetAllUserParticipatedEventsResponse.of(userParticipatedEvents, pageCursorInfo);
+        GetParticipatedEventsResponse response = GetParticipatedEventsResponse.of(userParticipatedEvents, pageCursorInfo);
 
-        Mockito.when(eventService.getAllUserParticipatedEvents(anyInt(), any(LocalDateTime.class))).thenReturn(response);
+        Mockito.when(eventService.getParticipatedEventsByCursor(anyInt(), any(LocalDateTime.class))).thenReturn(response);
 
         // when
         ResultActions resultActions = this.mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/events/user/all/v2")
@@ -492,7 +492,7 @@ public class EventControllerTest extends ControllerTestConfig {
                 .andExpect(jsonPath("$.payload.page_cursor_info.has_next").value(true))
 
                 // docs
-                .andDo(MockMvcRestDocumentationWrapper.document("event/get-all-user-participated-events",
+                .andDo(MockMvcRestDocumentationWrapper.document("event/get-participated-events",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         resource(
@@ -525,7 +525,7 @@ public class EventControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("payload.page_cursor_info.next_cursor").type(JsonFieldType.STRING).description("다음 페이지 조회용 커서"),
                                                 fieldWithPath("payload.page_cursor_info.has_next").type(JsonFieldType.BOOLEAN).description("다음 페이지 존재 여부")
                                         )
-                                        .responseSchema(Schema.schema("GetAllUserParticipatedEventsResponseSchema"))
+                                        .responseSchema(Schema.schema("GetParticipatedEventsResponseSchema"))
                                         .build()
                         )
                 ));

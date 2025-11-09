@@ -145,12 +145,12 @@ public class EventController {
      * @return 유저가 참여한 이벤트 목록 및 페이지(커서) 정보가 포함된 응답 DTO
      */
     @GetMapping("/user/all/v2")
-    public ResponseEntity<ApiResponse<GetAllUserParticipatedEventsResponse>> getAllUserParticipatedEvents(
+    public ResponseEntity<ApiResponse<GetParticipatedEventsResponse>> getParticipatedEventsByCursor(
             @RequestParam(value = "size", defaultValue = "2") @Min(1) int size,
             @RequestParam(value = "cursor", required = false) LocalDateTime createdDate
     ) {
-        GetAllUserParticipatedEventsResponse response = eventService.getAllUserParticipatedEvents(size, createdDate);
-        return ApiResponse.onSuccess(SuccessStatus._GET_ALL_USER_PARTICIPATED_EVENTS, response);
+        GetParticipatedEventsResponse response = eventService.getParticipatedEventsByCursor(size, createdDate);
+        return ApiResponse.onSuccess(SuccessStatus._GET_PARTICIPATED_EVENTS, response);
     }
 
     /**

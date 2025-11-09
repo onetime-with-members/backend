@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @JsonNaming(value = PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record GetUserParticipatedEventResponse(
+public record GetParticipatedEventResponse(
         UUID eventId,
         Category category,
         String title,
@@ -22,8 +22,8 @@ public record GetUserParticipatedEventResponse(
         EventStatus eventStatus,
         List<GetMostPossibleTime> mostPossibleTimes
 ) {
-    public static GetUserParticipatedEventResponse of(Event event, EventParticipation eventParticipation, int participantCount, List<GetMostPossibleTime> mostPossibleTimes) {
-        return new GetUserParticipatedEventResponse(
+    public static GetParticipatedEventResponse of(Event event, EventParticipation eventParticipation, int participantCount, List<GetMostPossibleTime> mostPossibleTimes) {
+        return new GetParticipatedEventResponse(
                 event.getEventId(),
                 event.getCategory(),
                 event.getTitle(),

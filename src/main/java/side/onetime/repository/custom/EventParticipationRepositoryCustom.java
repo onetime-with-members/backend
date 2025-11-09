@@ -10,5 +10,5 @@ import java.util.Map;
 public interface EventParticipationRepositoryCustom {
     Map<Long, Integer> countParticipantsByEventIds(List<Long> eventIds);
 
-    List<EventParticipation> pageAllByUserWithCursor(User user, LocalDateTime createdDate, int pageSize);
+    List<EventParticipation> findParticipationsByUserWithCursor(User user, LocalDateTime createdDate, int pageSize);
 }
