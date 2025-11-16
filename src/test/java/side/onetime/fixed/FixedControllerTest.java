@@ -22,6 +22,8 @@ import side.onetime.domain.User;
 import side.onetime.dto.fixed.request.UpdateFixedScheduleRequest;
 import side.onetime.dto.fixed.response.FixedScheduleResponse;
 import side.onetime.dto.fixed.response.GetFixedScheduleResponse;
+import side.onetime.exception.CustomException;
+import side.onetime.exception.status.FixedErrorStatus;
 import side.onetime.service.FixedScheduleService;
 import side.onetime.util.JwtUtil;
 
@@ -30,6 +32,7 @@ import java.util.List;
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -153,4 +156,84 @@ public class FixedControllerTest extends ControllerTestConfig {
                         )
                 ));
     }
+
+	@Test
+	@DisplayName("[SUCCESS] 에브리타임 시간표를 조회한다.")
+	public void getEverytimeTimetable() throws Exception {
+		// given
+		String identifier = "test-identifier-12345";
+		List<FixedScheduleResponse> schedules = List.of(
+			new FixedScheduleResponse("월", List.of("09:00", "09:30", "10:00", "10:30")),
+			new FixedScheduleResponse("수", List.of("13:00", "13:30", "14:00", "14:30")),
+			new FixedScheduleResponse("금", List.of("10:00", "10:30"))
+		);
+		GetFixedScheduleResponse response = new GetFixedScheduleResponse(schedules);
+
+		// Service Mocking
+		Mockito.when(fixedScheduleService.getUserEverytimeTimetable(identifier)).thenReturn(response);
+
+		// when
+		ResultActions result = mockMvc.perform(
+			RestDocumentationRequestBuilders.get("/api/v1/fixed-schedules/everytime/{identifier}", identifier)
+				.accept(MediaType.APPLICATION_JSON)
+		);
+
+		// then
+		result.andExpect(status().isOk())
+			.andExpect(jsonPath("$.is_success").value(true))
+			.andExpect(jsonPath("$.code").value("200"))
+			.andExpect(jsonPath("$.message").value("유저 에브리타임 시간표 조회에 성공했습니다."))
+			.andExpect(jsonPath("$.payload.schedules").isArray())
+			.andExpect(jsonPath("$.payload.schedules[0].time_point").value("월"))
+			.andExpect(jsonPath("$.payload.schedules[0].times[1]").value("09:30"))
+			.andExpect(jsonPath("$.payload.schedules[2].time_point").value("금"))
+			.andExpect(jsonPath("$.payload.schedules[2].times[0]").value("10:00"))
+			.andDo(MockMvcRestDocumentationWrapper.document("fixed/getEverytime",
+				preprocessRequest(prettyPrint()),
+				preprocessResponse(prettyPrint()),
+				resource(
+					ResourceSnippetParameters.builder()
+						.tag("Fixed API")
+						.description("에브리타임 시간표를 조회한다.")
+						.pathParameters(
+							parameterWithName("identifier").description("에브리타임 시간표 URL 식별자")
+						)
+						.responseFields(
+							fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+							fieldWithPath("code").type(JsonFieldType.STRING).description("HTTP 상태 코드"),
+							fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+							fieldWithPath("payload.schedules").type(JsonFieldType.ARRAY).description("파싱된 스케줄 목록"),
+							fieldWithPath("payload.schedules[].time_point").type(JsonFieldType.STRING).description("요일"),
+							fieldWithPath("payload.schedules[].times[]").type(JsonFieldType.ARRAY).description("시간 목록")
+						)
+						.build()
+				)
+			));
+	}
+
+	@Test
+	@DisplayName("[FAILED] 에브리타임 시간표 조회에 실패한다 (공개 범위 설정 오류 등)")
+	public void getEverytimeTimetable_Fail_NotFound() throws Exception {
+		// given
+		String identifier = "invalid-or-private-identifier";
+
+		Mockito.when(fixedScheduleService.getUserEverytimeTimetable(identifier))
+			.thenThrow(new CustomException(FixedErrorStatus._NOT_FOUND_EVERYTIME_TIMETABLE));
+
+		// when
+		ResultActions result = mockMvc.perform(
+			RestDocumentationRequestBuilders.get("/api/v1/fixed-schedules/everytime/{identifier}", identifier)
+				.accept(MediaType.APPLICATION_JSON)
+		);
+
+		// then
+		result.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.is_success").value(false))
+			.andExpect(jsonPath("$.code").value("FIXED-002"))
+			.andExpect(jsonPath("$.message").value("에브리타임 시간표를 가져오는 데 실패했습니다. 공개 범위를 확인해주세요."))
+			.andDo(MockMvcRestDocumentationWrapper.document("fixed/getEverytime-fail-not-found",
+				preprocessRequest(prettyPrint()),
+				preprocessResponse(prettyPrint())
+			));
+	}
 }
