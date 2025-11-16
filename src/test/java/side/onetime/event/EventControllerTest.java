@@ -26,13 +26,13 @@ import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
 import side.onetime.service.EventService;
 import side.onetime.util.JwtUtil;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
@@ -444,6 +444,88 @@ public class EventControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("payload[].most_possible_times[].impossible_names").type(JsonFieldType.ARRAY).description("참여 불가능한 유저 이름 목록")
                                         )
                                         .responseSchema(Schema.schema("GetUserParticipatedEventsResponseSchema"))
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("유저 참여 이벤트 목록을 조회한다.")
+    public void getParticipatedEventsByCursor() throws Exception {
+        // given
+        int size = 2;
+        String createdDate = "2025-01-01T12:00:00.000";
+        List<GetParticipatedEventResponse> userParticipatedEvents = List.of(
+                new GetParticipatedEventResponse(
+                        UUID.randomUUID(),
+                        Category.DATE,
+                        "Sample Event",
+                        createdDate,
+                        10,
+                        EventStatus.CREATOR,
+                        List.of(
+                                new GetMostPossibleTime("2024.11.13", "10:00", "10:30", 5, List.of("User1", "User2"), List.of("User3"))
+                        )
+                )
+        );
+        PageCursorInfo<String> pageCursorInfo = PageCursorInfo.of(createdDate, true);
+        GetParticipatedEventsResponse response = GetParticipatedEventsResponse.of(userParticipatedEvents, pageCursorInfo);
+
+        Mockito.when(eventService.getParticipatedEventsByCursor(anyInt(), any(LocalDateTime.class))).thenReturn(response);
+
+        // when
+        ResultActions resultActions = this.mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/events/user/all/v2")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer sampleToken")
+                .param("size", String.valueOf(size))
+                .param("cursor", createdDate)
+                .accept(MediaType.APPLICATION_JSON));
+
+        // then
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.is_success").value(true))
+                .andExpect(jsonPath("$.code").value("200"))
+                .andExpect(jsonPath("$.message").value("유저 참여 이벤트 목록 조회에 성공했습니다."))
+                .andExpect(jsonPath("$.payload.events[0].event_id").exists())
+                .andExpect(jsonPath("$.payload.events[0].title").value("Sample Event"))
+                .andExpect(jsonPath("$.payload.page_cursor_info.next_cursor").value(createdDate))
+                .andExpect(jsonPath("$.payload.page_cursor_info.has_next").value(true))
+
+                // docs
+                .andDo(MockMvcRestDocumentationWrapper.document("event/get-participated-events",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Event API")
+                                        .description("유저가 참여한 이벤트 목록을 조회한다.")
+                                        .queryParameters(
+                                                parameterWithName("size").description("한 번에 가져올 이벤트 개수 (기본값: 2)").optional(),
+                                                parameterWithName("cursor").description("마지막으로 조회한 이벤트 생성일").optional()
+                                        )
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload.events[]").type(JsonFieldType.ARRAY).description("참여 이벤트 목록"),
+                                                fieldWithPath("payload.events[].event_id").type(JsonFieldType.STRING).description("이벤트 ID"),
+                                                fieldWithPath("payload.events[].category").type(JsonFieldType.STRING).description("이벤트 카테고리"),
+                                                fieldWithPath("payload.events[].title").type(JsonFieldType.STRING).description("이벤트 제목"),
+                                                fieldWithPath("payload.events[].created_date").type(JsonFieldType.STRING).description("이벤트 생성일"),
+                                                fieldWithPath("payload.events[].participant_count").type(JsonFieldType.NUMBER).description("참여자 수"),
+                                                fieldWithPath("payload.events[].event_status").type(JsonFieldType.STRING).description("이벤트 참여 상태"),
+                                                fieldWithPath("payload.events[].most_possible_times").type(JsonFieldType.ARRAY).description("가장 많이 가능한 시간대"),
+                                                fieldWithPath("payload.events[].most_possible_times[].time_point").type(JsonFieldType.STRING).description("날짜 또는 요일"),
+                                                fieldWithPath("payload.events[].most_possible_times[].start_time").type(JsonFieldType.STRING).description("시작 시간"),
+                                                fieldWithPath("payload.events[].most_possible_times[].end_time").type(JsonFieldType.STRING).description("종료 시간"),
+                                                fieldWithPath("payload.events[].most_possible_times[].possible_count").type(JsonFieldType.NUMBER).description("가능한 참여자 수"),
+                                                fieldWithPath("payload.events[].most_possible_times[].possible_names").type(JsonFieldType.ARRAY).description("참여 가능한 유저 이름 목록"),
+                                                fieldWithPath("payload.events[].most_possible_times[].impossible_names").type(JsonFieldType.ARRAY).description("참여 불가능한 유저 이름 목록"),
+                                                fieldWithPath("payload.page_cursor_info").type(JsonFieldType.OBJECT).description("페이지 커서 정보"),
+                                                fieldWithPath("payload.page_cursor_info.next_cursor").type(JsonFieldType.STRING).description("다음 페이지 조회용 커서"),
+                                                fieldWithPath("payload.page_cursor_info.has_next").type(JsonFieldType.BOOLEAN).description("다음 페이지 존재 여부")
+                                        )
+                                        .responseSchema(Schema.schema("GetParticipatedEventsResponseSchema"))
                                         .build()
                         )
                 ));
