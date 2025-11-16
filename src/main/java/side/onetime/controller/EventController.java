@@ -1,6 +1,7 @@
 package side.onetime.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +13,7 @@ import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.EventService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -128,6 +130,27 @@ public class EventController {
 
         List<GetUserParticipatedEventsResponse> getUserParticipatedEventsResponses = eventService.getUserParticipatedEvents();
         return ApiResponse.onSuccess(SuccessStatus._GET_USER_PARTICIPATED_EVENTS, getUserParticipatedEventsResponses);
+    }
+
+    /**
+     * 유저 참여 이벤트 목록 조회 API.
+     *
+     * 이 API는 인증된 유저가 참여한 이벤트 목록을 페이지 단위로 조회합니다. 유저의 참여 상태, 이벤트 정보 등이 포함됩니다.
+     *
+     * 커서 기반의 페이징을 지원하며, createdDate 커서를 기준으로 이전에 생성된 이벤트를 조회합니다.
+     * createdDate를 전달하지 않으면 가장 최신 이벤트부터 조회합니다.
+     *
+     * @param size 한 번에 가져올 이벤트 개수
+     * @param createdDate 마지막으로 조회한 이벤트 생성일
+     * @return 유저가 참여한 이벤트 목록 및 페이지(커서) 정보가 포함된 응답 DTO
+     */
+    @GetMapping("/user/all/v2")
+    public ResponseEntity<ApiResponse<GetParticipatedEventsResponse>> getParticipatedEventsByCursor(
+            @RequestParam(value = "size", defaultValue = "2") @Min(1) int size,
+            @RequestParam(value = "cursor", required = false) LocalDateTime createdDate
+    ) {
+        GetParticipatedEventsResponse response = eventService.getParticipatedEventsByCursor(size, createdDate);
+        return ApiResponse.onSuccess(SuccessStatus._GET_PARTICIPATED_EVENTS, response);
     }
 
     /**
