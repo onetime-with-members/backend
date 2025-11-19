@@ -122,11 +122,20 @@ public class FixedScheduleService {
 	 * Feign Client를 통해 에브리타임 XML을 요청합니다.
 	 */
 	private String fetchTimetableXml(String identifier) {
-		String xmlResponse = everytimeApiClient.getUserTimetable(identifier);
+		String xmlResponse;
+
+		try {
+			// Feign Client 호출
+			xmlResponse = everytimeApiClient.getUserTimetable(identifier);
+		} catch (Exception e) {
+			throw new CustomException(FixedErrorStatus._EVERYTIME_API_FAILED);
+		}
+
 		if (!xmlResponse.contains("subject")) {
-			// 200 OK 응답이 왔지만, 테이블이 비어있는 경우 -> 공개 범위 확인 유도
+			// 200 OK 응답이 왔지만, 테이블이 비어있는 경우 (공개 범위 설정 오류 등)
 			throw new CustomException(FixedErrorStatus._NOT_FOUND_EVERYTIME_TIMETABLE);
 		}
+
 		return xmlResponse;
 	}
 
