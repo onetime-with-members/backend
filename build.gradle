@@ -90,7 +90,7 @@ dependencies {
     implementation 'net.logstash.logback:logstash-logback-encoder:8.1'
 
     // Feign
-    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:4.1.3'
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:4.1.4'
 
     // Jsoup
     implementation 'org.jsoup:jsoup:1.21.2'
