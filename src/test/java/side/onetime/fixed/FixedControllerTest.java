@@ -1,7 +1,13 @@
 package side.onetime.fixed;
 
-import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
-import com.epages.restdocs.apispec.ResourceSnippetParameters;
+import static com.epages.restdocs.apispec.ResourceDocumentation.*;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,6 +20,10 @@ import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.ResultActions;
+
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
+import com.epages.restdocs.apispec.ResourceSnippetParameters;
+
 import side.onetime.auth.dto.CustomUserDetails;
 import side.onetime.auth.service.CustomUserDetailsService;
 import side.onetime.configuration.ControllerTestConfig;
@@ -26,15 +36,6 @@ import side.onetime.exception.CustomException;
 import side.onetime.exception.status.FixedErrorStatus;
 import side.onetime.service.FixedScheduleService;
 import side.onetime.util.JwtUtil;
-
-import java.util.List;
-
-import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
-import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.restdocs.request.RequestDocumentation.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(FixedController.class)
 public class FixedControllerTest extends ControllerTestConfig {
@@ -161,7 +162,7 @@ public class FixedControllerTest extends ControllerTestConfig {
 	@DisplayName("[SUCCESS] 에브리타임 시간표를 조회한다.")
 	public void getEverytimeTimetable() throws Exception {
 		// given
-		String identifier = "test-identifier-12345";
+		String identifier = "de9YHaTAnl47JtxH0muz";
 		List<FixedScheduleResponse> schedules = List.of(
 			new FixedScheduleResponse("월", List.of("09:00", "09:30", "10:00", "10:30")),
 			new FixedScheduleResponse("수", List.of("13:00", "13:30", "14:00", "14:30")),
@@ -215,7 +216,7 @@ public class FixedControllerTest extends ControllerTestConfig {
 	@DisplayName("[FAILED] 에브리타임 시간표 조회에 실패한다 (공개 범위 설정 오류 등)")
 	public void getEverytimeTimetable_Fail_NotFound() throws Exception {
 		// given
-		String identifier = "invalid-or-private-identifier";
+		String identifier = "de9YHaTAnl47JtxH0muz";
 
 		Mockito.when(fixedScheduleService.getUserEverytimeTimetable(identifier))
 			.thenThrow(new CustomException(FixedErrorStatus._NOT_FOUND_EVERYTIME_TIMETABLE));
@@ -237,7 +238,35 @@ public class FixedControllerTest extends ControllerTestConfig {
 				resource(
 					ResourceSnippetParameters.builder()
 						.tag("Fixed API")
-						.description("에브리타임 시간표를 조회한다.")
+						.build()
+				)
+			));
+	}
+
+	@Test
+	@DisplayName("[FAILED] 에브리타임 시간표 조회에 실패한다 (식별자 유효성 검증 실패)")
+	public void getEverytimeTimetable_Fail_Validation() throws Exception {
+		// given
+		// 19자: 길이가 20이 아니므로 @Pattern 실패
+		String invalidIdentifier = "short-identifier-1234";
+
+		// when
+		ResultActions result = mockMvc.perform(
+			RestDocumentationRequestBuilders.get("/api/v1/fixed-schedules/everytime/{identifier}", invalidIdentifier)
+				.accept(MediaType.APPLICATION_JSON)
+		);
+
+		// then
+		result.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.is_success").value(false))
+			.andExpect(jsonPath("$.code").value("E_BAD_REQUEST"))
+			.andExpect(jsonPath("$.message").value("getUserEverytimeTimetable.identifier: 식별자는 20자리의 영문 대소문자 및 숫자로만 구성되어야 합니다."))
+			.andDo(MockMvcRestDocumentationWrapper.document("fixed/getEverytime-fail-validation",
+				preprocessRequest(prettyPrint()),
+				preprocessResponse(prettyPrint()),
+				resource(
+					ResourceSnippetParameters.builder()
+						.tag("Fixed API")
 						.build()
 				)
 			));

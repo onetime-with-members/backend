@@ -1,6 +1,7 @@
 package side.onetime.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import side.onetime.dto.fixed.request.UpdateFixedScheduleRequest;
 import side.onetime.dto.fixed.response.GetFixedScheduleResponse;
@@ -16,6 +18,7 @@ import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.FixedScheduleService;
 
+@Validated
 @RestController
 @RequestMapping("/api/v1/fixed-schedules")
 @RequiredArgsConstructor
@@ -63,7 +66,9 @@ public class FixedController {
 	 */
 	@GetMapping("/everytime/{identifier}")
 	public ResponseEntity<ApiResponse<GetFixedScheduleResponse>> getUserEverytimeTimetable(
-		@PathVariable String identifier) {
+		@PathVariable
+		@Pattern(regexp = "^[a-zA-Z0-9]{20}$", message = "식별자는 20자리의 영문 대소문자 및 숫자로만 구성되어야 합니다.")
+		String identifier) {
 
 		GetFixedScheduleResponse response = fixedScheduleService.getUserEverytimeTimetable(identifier);
 		return ApiResponse.onSuccess(SuccessStatus._GET_USER_EVERYTIME_TIMETABLE, response);
