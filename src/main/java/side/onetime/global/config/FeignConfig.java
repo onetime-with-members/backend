@@ -18,7 +18,7 @@ public class FeignConfig {
 		return requestTemplate -> {
 			// "everytime"으로 시작하는 Feign Client에만 헤더 적용
 			if (requestTemplate.feignTarget().name().startsWith("everytime")) {
-				requestTemplate.header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/5.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+				requestTemplate.header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
 				requestTemplate.header("Referer", "https://everytime.kr/");
 			}
 		};
