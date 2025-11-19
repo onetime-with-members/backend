@@ -151,13 +151,36 @@ public class FixedScheduleService {
 
 			for (Element subject : subjects) {
 				for (Element data : subject.select("time > data")) {
-					String dayName = convertDayCodeToName(data.attr("day")); // "0" -> "월"
+					String dayName = convertDayCodeToName(data.attr("day"));
 					if (dayName.equals("알 수 없음")) {
 						continue;
 					}
 
-					int startMinutes = Integer.parseInt(data.attr("starttime")) * 5; // (분 / 5) -> 분
-					int endMinutes = Integer.parseInt(data.attr("endtime")) * 5;   // (분 / 5) -> 분
+					// 속성 검증 및 파싱 안정성 확보
+					String startTimeStr = data.attr("starttime");
+					String endTimeStr = data.attr("endtime");
+
+					// 1. 속성 누락/빈 값 검증
+					if (startTimeStr.isEmpty() || endTimeStr.isEmpty()) {
+						continue;
+					}
+
+					int startMinutes;
+					int endMinutes;
+
+					try {
+						startMinutes = Integer.parseInt(startTimeStr) * 5; // (분 / 5) -> 분
+						endMinutes = Integer.parseInt(endTimeStr) * 5;   // (분 / 5) -> 분
+					} catch (NumberFormatException e) {
+						// 2. 숫자가 아닌 값이 들어왔을 경우 스킵
+						continue;
+					}
+
+					// 3. 시간 범위 및 논리적 오류 검증 (0분 미만, 24시간 초과, 시작 >= 종료)
+					final int MINUTES_IN_DAY = 1440; // 24 * 60
+					if (startMinutes >= endMinutes || startMinutes < 0 || endMinutes > MINUTES_IN_DAY) {
+						continue;
+					}
 
 					// 해당 요일의 Set을 가져오거나 새로 생성 (시간 정렬)
 					Set<String> timeSlots = schedulesByDay.computeIfAbsent(dayName, k -> new TreeSet<>());
@@ -170,7 +193,6 @@ public class FixedScheduleService {
 			throw new CustomException(FixedErrorStatus._EVERYTIME_TIMETABLE_PARSE_ERROR);
 		}
 
-		// Map<String, Set<String>> -> List<FixedScheduleResponse> 변환
 		return schedulesByDay.entrySet().stream()
 			.map(entry -> FixedScheduleResponse.of(entry.getKey(), new ArrayList<>(entry.getValue())))
 			.collect(Collectors.toList());
