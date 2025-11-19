@@ -233,7 +233,13 @@ public class FixedControllerTest extends ControllerTestConfig {
 			.andExpect(jsonPath("$.message").value("에브리타임 시간표를 가져오는 데 실패했습니다. 공개 범위를 확인해주세요."))
 			.andDo(MockMvcRestDocumentationWrapper.document("fixed/getEverytime-fail-not-found",
 				preprocessRequest(prettyPrint()),
-				preprocessResponse(prettyPrint())
+				preprocessResponse(prettyPrint()),
+				resource(
+					ResourceSnippetParameters.builder()
+						.tag("Fixed API")
+						.description("에브리타임 시간표를 조회한다.")
+						.build()
+				)
 			));
 	}
 }
