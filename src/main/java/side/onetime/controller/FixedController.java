@@ -1,6 +1,7 @@
 package side.onetime.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -20,6 +21,7 @@ import side.onetime.service.FixedScheduleService;
 @RestController
 @RequestMapping("/api/v1/fixed-schedules")
 @RequiredArgsConstructor
+@Validated
 public class FixedController {
 
     private final FixedScheduleService fixedScheduleService;
