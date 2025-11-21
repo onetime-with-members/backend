@@ -11,6 +11,7 @@ import side.onetime.domain.Event;
 import side.onetime.domain.QEvent;
 import side.onetime.domain.QEventParticipation;
 import side.onetime.domain.enums.Category;
+import side.onetime.domain.enums.Status;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.AdminErrorStatus;
 import side.onetime.util.NamingUtil;
@@ -56,7 +57,9 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
                 .where(member.event.eq(e))
                 .execute();
 
-        queryFactory.delete(event)
+        queryFactory.update(event)
+                .set(event.status, Status.DELETED)
+                .set(event.deletedAt, LocalDateTime.now())
                 .where(event.eq(e))
                 .execute();
     }
