@@ -42,7 +42,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
      * 2. 유저가 직접 소유한 Selection → FixedSelection
      * 3. 최종적으로 User
      *
-     * @param user 탈퇴할 유저
+     * @param activeUser 탈퇴할 유저
      */
     @Override
     public void withdraw(User activeUser) {
