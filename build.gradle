@@ -33,47 +33,67 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-test'
+
     // DB
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'com.mysql:mysql-connector-j'
+
     // Query DSL
     implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
     annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
     annotationProcessor "jakarta.annotation:jakarta.annotation-api"
     annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
     // Redisson
     implementation 'org.redisson:redisson-spring-boot-starter:3.46.0'
+
     // Security
     implementation 'org.springframework.boot:spring-boot-starter-security'
     testImplementation 'org.springframework.security:spring-security-test'
+
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
     // OAuth 2.0
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.12.2'
     implementation 'io.jsonwebtoken:jjwt-impl:0.12.2'
     implementation 'io.jsonwebtoken:jjwt-jackson:0.12.2'
+
     // REST Docs & Swagger
     testImplementation 'com.epages:restdocs-api-spec-mockmvc:0.19.2'
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc:3.0.0'
     testImplementation 'com.squareup.okhttp3:mockwebserver'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
+
     // AWS S3
     implementation 'io.awspring.cloud:spring-cloud-aws-starter:3.1.1'
     implementation 'software.amazon.awssdk:s3:2.25.30'
+
     // org.json
     implementation 'org.json:json:20231013'
+
     // Zxing
     implementation 'com.google.zxing:core:3.5.1'
     implementation 'com.google.zxing:javase:3.5.1'
+
     // Health-Check
     //implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
     // Logback
     implementation 'net.logstash.logback:logstash-logback-encoder:8.1'
+
+    // Feign
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:4.1.4'
+
+    // Jsoup
+    implementation 'org.jsoup:jsoup:1.21.2'
 }
 
 // QueryDSL 디렉토리
