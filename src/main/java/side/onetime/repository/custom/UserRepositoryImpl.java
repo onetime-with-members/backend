@@ -56,6 +56,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
                                 .and(eventParticipation.eventStatus.ne(EventStatus.PARTICIPANT))
                 )
                 .fetch();
+        LocalDateTime deletedTime = LocalDateTime.now();
 
         if (!eventIds.isEmpty()) {
             queryFactory.delete(selection)
@@ -76,7 +77,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 
             queryFactory.update(event)
                     .set(event.status, Status.DELETED)
-                    .set(event.deletedAt, LocalDateTime.now())
+                    .set(event.deletedAt, deletedTime)
                     .where(event.id.in(eventIds))
                     .execute();
         }
@@ -96,7 +97,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 
         queryFactory.update(user)
                 .set(user.status, Status.DELETED)
-                .set(user.deletedAt, LocalDateTime.now())
+                .set(user.deletedAt, deletedTime)
                 .where(user.eq(activeUser))
                 .execute();
     }
