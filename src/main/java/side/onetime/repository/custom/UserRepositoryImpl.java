@@ -2,20 +2,30 @@ package side.onetime.repository.custom;
 
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import side.onetime.domain.*;
+import side.onetime.domain.User;
 import side.onetime.domain.enums.EventStatus;
 import side.onetime.domain.enums.Language;
+import side.onetime.domain.enums.Status;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.AdminErrorStatus;
 import side.onetime.util.NamingUtil;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
+import static side.onetime.domain.QEvent.event;
+import static side.onetime.domain.QEventParticipation.eventParticipation;
+import static side.onetime.domain.QFixedSelection.fixedSelection;
+import static side.onetime.domain.QMember.member;
+import static side.onetime.domain.QSchedule.schedule;
+import static side.onetime.domain.QSelection.selection;
+import static side.onetime.domain.QUser.user;
 
 @RequiredArgsConstructor
 public class UserRepositoryImpl implements UserRepositoryCustom {
@@ -31,61 +41,66 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
      * 삭제 순서:
      * 1. 유저가 생성한 이벤트의 Selection → EventParticipation → Schedule → Member → Event
      * 2. 유저가 직접 소유한 Selection → FixedSelection
-     * 3. 최종적으로 User
+     * 3. 최종적으로 User: status를 DELETED로, providerId를 null로 업데이트
      *
-     * @param user 탈퇴할 유저
+     * @param activeUser 탈퇴할 유저
      */
     @Override
-    public void withdraw(User user) {
+    public void withdraw(User activeUser) {
         // 유저가 생성한 이벤트 ID 리스트 조회
         List<Long> eventIds = queryFactory
-                .select(QEventParticipation.eventParticipation.event.id)
+                .select(eventParticipation.event.id)
                 .distinct()
-                .from(QEventParticipation.eventParticipation)
+                .from(eventParticipation)
                 .where(
-                        QEventParticipation.eventParticipation.user.eq(user)
-                                .and(QEventParticipation.eventParticipation.eventStatus.ne(EventStatus.PARTICIPANT))
+                        eventParticipation.user.eq(activeUser)
+                                .and(eventParticipation.eventStatus.ne(EventStatus.PARTICIPANT))
                 )
                 .fetch();
+        LocalDateTime deletedTime = LocalDateTime.now();
 
         if (!eventIds.isEmpty()) {
-            queryFactory.delete(QSelection.selection)
-                    .where(QSelection.selection.schedule.event.id.in(eventIds))
+            queryFactory.delete(selection)
+                    .where(selection.schedule.event.id.in(eventIds))
                     .execute();
 
-            queryFactory.delete(QEventParticipation.eventParticipation)
-                    .where(QEventParticipation.eventParticipation.event.id.in(eventIds))
+            queryFactory.delete(eventParticipation)
+                    .where(eventParticipation.event.id.in(eventIds))
                     .execute();
 
-            queryFactory.delete(QSchedule.schedule)
-                    .where(QSchedule.schedule.event.id.in(eventIds))
+            queryFactory.delete(schedule)
+                    .where(schedule.event.id.in(eventIds))
                     .execute();
 
-            queryFactory.delete(QMember.member)
-                    .where(QMember.member.event.id.in(eventIds))
+            queryFactory.delete(member)
+                    .where(member.event.id.in(eventIds))
                     .execute();
 
-            queryFactory.delete(QEvent.event)
-                    .where(QEvent.event.id.in(eventIds))
+            queryFactory.update(event)
+                    .set(event.status, Status.DELETED)
+                    .set(event.deletedAt, deletedTime)
+                    .where(event.id.in(eventIds))
                     .execute();
         }
 
         // 유저 소유 Selection, FixedSelection, eventParticipation 삭제
-        queryFactory.delete(QSelection.selection)
-                .where(QSelection.selection.user.eq(user))
+        queryFactory.delete(selection)
+                .where(selection.user.eq(activeUser))
                 .execute();
 
-        queryFactory.delete(QFixedSelection.fixedSelection)
-                .where(QFixedSelection.fixedSelection.user.eq(user))
+        queryFactory.delete(fixedSelection)
+                .where(fixedSelection.user.eq(activeUser))
                 .execute();
 
-        queryFactory.delete(QEventParticipation.eventParticipation)
-                .where(QEventParticipation.eventParticipation.user.eq(user))
+        queryFactory.delete(eventParticipation)
+                .where(eventParticipation.user.eq(activeUser))
                 .execute();
 
-        // 최종적으로 유저 삭제
-        queryFactory.delete(QUser.user)
-                .where(QUser.user.eq(user))
+        queryFactory.update(user)
+                .set(user.providerId, Expressions.nullExpression())
+                .set(user.status, Status.DELETED)
+                .set(user.deletedAt, deletedTime)
+                .where(user.eq(activeUser))
                 .execute();
     }
 
@@ -102,20 +117,17 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
         Order order = sorting.equalsIgnoreCase("asc") ? Order.ASC : Order.DESC;
         String field = NamingUtil.toCamelCase(keyword);
 
-        QUser user = QUser.user;
-        QEventParticipation ep = QEventParticipation.eventParticipation;
-
         JPAQuery<User> query = queryFactory.selectFrom(user);
 
         if ("participationCount".equals(field)) {
             query
-                    .leftJoin(ep).on(ep.user.eq(user))
+                    .leftJoin(eventParticipation).on(eventParticipation.user.eq(user))
                     .groupBy(user);
 
             if (order == Order.ASC) {
-                query.orderBy(ep.count().asc());
+                query.orderBy(eventParticipation.count().asc());
             } else {
-                query.orderBy(ep.count().desc());
+                query.orderBy(eventParticipation.count().desc());
             }
 
         } else {

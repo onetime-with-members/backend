@@ -5,9 +5,13 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import side.onetime.domain.enums.Category;
+import side.onetime.domain.enums.Status;
 import side.onetime.global.common.dao.BaseEntity;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,6 +19,8 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Table(name = "events")
+@SQLDelete(sql = "UPDATE events SET status = 'DELETED', deleted_at = CURRENT_TIMESTAMP WHERE events_id = ?")
+@SQLRestriction("status = 'ACTIVE'")
 public class Event extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,6 +55,13 @@ public class Event extends BaseEntity {
     @OneToMany(mappedBy = "event",cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<EventParticipation> eventParticipations;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private Status status;
+
+    @Column(name = "deleted_at", nullable = true)
+    private LocalDateTime deletedAt;
+
     @Builder
     public Event(UUID eventId, String title, String startTime, String endTime, Category category) {
         this.eventId = eventId;
@@ -56,6 +69,7 @@ public class Event extends BaseEntity {
         this.startTime = startTime;
         this.endTime = endTime;
         this.category = category;
+        this.status = Status.ACTIVE;
     }
 
     public void updateTitle(String title) {
