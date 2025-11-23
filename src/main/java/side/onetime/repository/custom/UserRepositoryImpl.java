@@ -2,6 +2,7 @@ package side.onetime.repository.custom;
 
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -40,7 +41,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
      * 삭제 순서:
      * 1. 유저가 생성한 이벤트의 Selection → EventParticipation → Schedule → Member → Event
      * 2. 유저가 직접 소유한 Selection → FixedSelection
-     * 3. 최종적으로 User
+     * 3. 최종적으로 User: status를 DELETED로, providerId를 null로 업데이트
      *
      * @param activeUser 탈퇴할 유저
      */
@@ -96,6 +97,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
                 .execute();
 
         queryFactory.update(user)
+                .set(user.providerId, Expressions.nullExpression())
                 .set(user.status, Status.DELETED)
                 .set(user.deletedAt, deletedTime)
                 .where(user.eq(activeUser))
