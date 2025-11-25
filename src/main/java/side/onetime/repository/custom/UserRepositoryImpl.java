@@ -98,7 +98,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
                 .execute();
 
         queryFactory.delete(guideViewStatus)
-                .where(user.eq(activeUser))
+                .where(guideViewStatus.user.eq(activeUser))
                 .execute();
 
         queryFactory.update(user)
