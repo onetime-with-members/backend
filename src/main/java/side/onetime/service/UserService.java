@@ -3,8 +3,10 @@ package side.onetime.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import side.onetime.domain.GuideViewStatus;
 import side.onetime.domain.RefreshToken;
 import side.onetime.domain.User;
+import side.onetime.domain.enums.GuideType;
 import side.onetime.dto.user.request.*;
 import side.onetime.dto.user.response.GetUserPolicyAgreementResponse;
 import side.onetime.dto.user.response.GetUserProfileResponse;
@@ -12,6 +14,7 @@ import side.onetime.dto.user.response.GetUserSleepTimeResponse;
 import side.onetime.dto.user.response.OnboardUserResponse;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.UserErrorStatus;
+import side.onetime.repository.GuideViewStatusRepository;
 import side.onetime.repository.RefreshTokenRepository;
 import side.onetime.repository.UserRepository;
 import side.onetime.util.JwtUtil;
@@ -26,6 +29,7 @@ public class UserService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
+    private final GuideViewStatusRepository guideViewStatusRepository;
 
     /**
      * 유저 온보딩 처리 메서드.
@@ -200,5 +204,32 @@ public class UserService {
         Long userId = jwtUtil.getClaimFromToken(refreshToken, "userId", Long.class);
         String browserId = jwtUtil.getClaimFromToken(refreshToken, "browserId", String.class);
         refreshTokenRepository.deleteRefreshToken(userId, browserId);
+    }
+
+    /**
+     * 가이드 확인 여부 저장 메서드.
+     *
+     * GuideType에 정의된 가이드에 대해 사용자의 확인 여부를 저장합니다.
+     * 이미 확인한 상태일 경우, Conflict 에러를 반환합니다.
+     *
+     * @param request 확인 여부를 저장할 가이드 타입 객체
+     */
+    @Transactional
+    public void createGuideViewStatus(CreateGuideViewStatusRequest request) {
+        User user = userRepository.findById(UserAuthorizationUtil.getLoginUserId())
+                .orElseThrow(() -> new CustomException(UserErrorStatus._NOT_FOUND_USER));
+        GuideType guideType = request.guideType();
+
+        boolean isViewed = guideViewStatusRepository.existsByUserAndGuideType(user, guideType);
+        if (isViewed) {
+            throw new CustomException(UserErrorStatus._IS_ALREADY_VIEWED_GUIDE);
+        }
+
+        GuideViewStatus guideViewStatus = GuideViewStatus.builder()
+                .user(user)
+                .guideType(guideType)
+                .build();
+
+        guideViewStatusRepository.save(guideViewStatus);
     }
 }

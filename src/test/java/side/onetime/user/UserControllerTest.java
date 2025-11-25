@@ -15,11 +15,9 @@ import org.springframework.test.web.servlet.ResultActions;
 import side.onetime.auth.service.CustomUserDetailsService;
 import side.onetime.configuration.ControllerTestConfig;
 import side.onetime.controller.UserController;
+import side.onetime.domain.enums.GuideType;
 import side.onetime.domain.enums.Language;
-import side.onetime.dto.user.request.OnboardUserRequest;
-import side.onetime.dto.user.request.UpdateUserPolicyAgreementRequest;
-import side.onetime.dto.user.request.UpdateUserProfileRequest;
-import side.onetime.dto.user.request.UpdateUserSleepTimeRequest;
+import side.onetime.dto.user.request.*;
 import side.onetime.dto.user.response.GetUserPolicyAgreementResponse;
 import side.onetime.dto.user.response.GetUserProfileResponse;
 import side.onetime.dto.user.response.GetUserSleepTimeResponse;
@@ -456,6 +454,46 @@ public class UserControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
                                         )
                                         .requestSchema(Schema.schema("LogoutUserRequestSchema"))
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("가이드 확인 여부를 저장한다.")
+    public void createGuideViewStatus() throws Exception {
+        // given
+        CreateGuideViewStatusRequest request = new CreateGuideViewStatusRequest(GuideType.SCHEDULE_GUIDE_MODAL_001);
+        String requestContent = objectMapper.writeValueAsString(request);
+
+        // when
+        Mockito.doNothing().when(userService).createGuideViewStatus(any(CreateGuideViewStatusRequest.class));
+
+        // then
+        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/users/guides/view-status")
+                        .content(requestContent)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.is_success").value(true))
+                .andExpect(jsonPath("$.code").value("201"))
+                .andExpect(jsonPath("$.message").value("유저 가이드 확인 여부 저장에 성공했습니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("user/create-guide-view-status",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("User API")
+                                        .description("가이드 확인 여부를 저장한다.")
+                                        .requestFields(
+                                                fieldWithPath("guide_type").type(JsonFieldType.STRING).description("가이드 타입")
+                                        )
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                        )
+                                        .requestSchema(Schema.schema("CreateGuideViewStatusRequestSchema"))
                                         .build()
                         )
                 ));

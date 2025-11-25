@@ -156,4 +156,22 @@ public class UserController {
         userService.logoutUser(logoutUserRequest);
         return ApiResponse.onSuccess(SuccessStatus._LOGOUT_USER);
     }
+
+    /**
+     * 가이드 확인 여부 저장 API.
+     *
+     * GuideType에 정의된 가이드에 대해 사용자의 확인 여부를 저장합니다.
+     * 이미 확인한 상태일 경우, Conflict 에러를 반환합니다.
+     *
+     * @param request 확인 여부를 저장할 가이드 타입 객체
+     * @return 성공 상태 응답 객체
+     */
+    @PostMapping("/guides/view-status")
+    public ResponseEntity<ApiResponse<SuccessStatus>> createGuideViewStatus(
+            @RequestBody CreateGuideViewStatusRequest request
+    ) {
+
+        userService.createGuideViewStatus(request);
+        return ApiResponse.onSuccess(SuccessStatus._CREATE_GUIDE_VIEW_STATUS);
+    }
 }

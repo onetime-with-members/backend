@@ -13,6 +13,7 @@ public enum UserErrorStatus implements BaseErrorCode {
     _NOT_FOUND_USER_BY_USERNAME(HttpStatus.UNAUTHORIZED, "USER-002", "username으로 user를 찾을 수 없습니다."),
     _NOT_FOUND_USER_BY_USERID(HttpStatus.UNAUTHORIZED, "USER-003", "userId로 user를 찾을 수 없습니다."),
     _UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "USER-004", "인증된 사용자가 아닙니다."),
+    _IS_ALREADY_VIEWED_GUIDE(HttpStatus.CONFLICT, "USER-005", "이미 조회한 가이드입니다."),
     ;
 
     private final HttpStatus httpStatus;
