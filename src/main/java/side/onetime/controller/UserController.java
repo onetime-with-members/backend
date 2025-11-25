@@ -166,7 +166,7 @@ public class UserController {
      */
     @PostMapping("/guides/view-status")
     public ResponseEntity<ApiResponse<SuccessStatus>> createGuideViewStatus(
-            @RequestBody CreateGuideViewStatusRequest request
+            @Valid @RequestBody CreateGuideViewStatusRequest request
     ) {
 
         userService.createGuideViewStatus(request);
