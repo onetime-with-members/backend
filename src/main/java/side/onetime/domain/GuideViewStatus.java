@@ -26,7 +26,7 @@ public class GuideViewStatus {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "users_id", foreignKey = @ForeignKey(name = "guide_view_status_fk_users_id"))
+    @JoinColumn(name = "users_id", foreignKey = @ForeignKey(name = "guide_view_status_fk_users_id"), nullable = false)
     private User user;
 
     @Enumerated(EnumType.STRING)
