@@ -8,10 +8,7 @@ import side.onetime.domain.RefreshToken;
 import side.onetime.domain.User;
 import side.onetime.domain.enums.GuideType;
 import side.onetime.dto.user.request.*;
-import side.onetime.dto.user.response.GetUserPolicyAgreementResponse;
-import side.onetime.dto.user.response.GetUserProfileResponse;
-import side.onetime.dto.user.response.GetUserSleepTimeResponse;
-import side.onetime.dto.user.response.OnboardUserResponse;
+import side.onetime.dto.user.response.*;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.UserErrorStatus;
 import side.onetime.repository.GuideViewStatusRepository;
@@ -231,5 +228,22 @@ public class UserService {
                 .build();
 
         guideViewStatusRepository.save(guideViewStatus);
+    }
+
+    /**
+     * 가이드 확인 여부 조회 메서드.
+     *
+     * GuideType에 정의된 가이드에 대해 사용자의 확인 여부를 조회합니다.
+     *
+     * @param guideType 조회할 가이드 타입
+     * @return 가이드 확인 여부 응답 데이터
+     */
+    @Transactional(readOnly = true)
+    public GetGuideViewStatusResponse getGuideViewStatus(GuideType guideType) {
+        User user = userRepository.findById(UserAuthorizationUtil.getLoginUserId())
+                .orElseThrow(() -> new CustomException(UserErrorStatus._NOT_FOUND_USER));
+
+        boolean isViewed = guideViewStatusRepository.existsByUserAndGuideType(user, guideType);
+        return GetGuideViewStatusResponse.from(isViewed);
     }
 }

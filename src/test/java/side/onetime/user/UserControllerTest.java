@@ -18,13 +18,11 @@ import side.onetime.controller.UserController;
 import side.onetime.domain.enums.GuideType;
 import side.onetime.domain.enums.Language;
 import side.onetime.dto.user.request.*;
-import side.onetime.dto.user.response.GetUserPolicyAgreementResponse;
-import side.onetime.dto.user.response.GetUserProfileResponse;
-import side.onetime.dto.user.response.GetUserSleepTimeResponse;
-import side.onetime.dto.user.response.OnboardUserResponse;
+import side.onetime.dto.user.response.*;
 import side.onetime.service.UserService;
 import side.onetime.util.JwtUtil;
 
+import static com.epages.restdocs.apispec.ResourceDocumentation.parameterWithName;
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
@@ -494,6 +492,47 @@ public class UserControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
                                         )
                                         .requestSchema(Schema.schema("CreateGuideViewStatusRequestSchema"))
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("가이드 확인 여부를 조회한다.")
+    public void getGuideViewStatus() throws Exception {
+        // given
+        GuideType guideType = GuideType.SCHEDULE_GUIDE_MODAL_001;
+        GetGuideViewStatusResponse response = GetGuideViewStatusResponse.from(true);
+
+        // when
+        Mockito.when(userService.getGuideViewStatus(any(GuideType.class))).thenReturn(response);
+
+        // then
+        mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/users/guides/view-status")
+                        .queryParam("guide_type", guideType.name())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.is_success").value(true))
+                .andExpect(jsonPath("$.code").value("200"))
+                .andExpect(jsonPath("$.message").value("유저 가이드 확인 여부 조회에 성공했습니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("user/get-guide-view-status",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("User API")
+                                        .description("가이드 확인 여부를 조회한다.")
+                                        .queryParameters(
+                                                parameterWithName("guide_type").description("가이드 타입")
+                                        )
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload.is_viewed").type(JsonFieldType.BOOLEAN).description("가이드 확인 여부")
+                                        )
+                                        .responseSchema(Schema.schema("GetGuideViewStatusResponseSchema"))
                                         .build()
                         )
                 ));

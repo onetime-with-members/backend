@@ -4,11 +4,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import side.onetime.domain.enums.GuideType;
 import side.onetime.dto.user.request.*;
-import side.onetime.dto.user.response.GetUserPolicyAgreementResponse;
-import side.onetime.dto.user.response.GetUserProfileResponse;
-import side.onetime.dto.user.response.GetUserSleepTimeResponse;
-import side.onetime.dto.user.response.OnboardUserResponse;
+import side.onetime.dto.user.response.*;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.UserService;
@@ -173,5 +171,22 @@ public class UserController {
 
         userService.createGuideViewStatus(request);
         return ApiResponse.onSuccess(SuccessStatus._CREATE_GUIDE_VIEW_STATUS);
+    }
+
+    /**
+     * 가이드 확인 여부 조회 API.
+     *
+     * GuideType에 정의된 가이드에 대해 사용자의 확인 여부를 조회합니다.
+     *
+     * @param guideType 조회할 가이드 타입
+     * @return 가이드 확인 여부 응답 객체
+     */
+    @GetMapping("/guides/view-status")
+    public ResponseEntity<ApiResponse<GetGuideViewStatusResponse>> getGuideViewStatus(
+            @RequestParam("guide_type") GuideType guideType
+    ){
+
+        GetGuideViewStatusResponse response = userService.getGuideViewStatus(guideType);
+        return ApiResponse.onSuccess(SuccessStatus._GET_GUIDE_VIEW_STATUS, response);
     }
 }
