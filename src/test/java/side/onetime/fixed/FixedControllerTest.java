@@ -213,8 +213,39 @@ public class FixedControllerTest extends ControllerTestConfig {
 	}
 
 	@Test
-	@DisplayName("[FAILED] 에브리타임 시간표 조회에 실패한다 (공개 범위 설정 오류 등)")
+	@DisplayName("[FAILED] 에브리타임 시간표 조회에 실패한다 (공개 범위가 '전체 공개'가 아님)")
 	public void getEverytimeTimetable_Fail_NotFound() throws Exception {
+		// given
+		String identifier = "de9YHaTAnl47JtxH0muz";
+
+		Mockito.when(fixedScheduleService.getUserEverytimeTimetable(identifier))
+			.thenThrow(new CustomException(FixedErrorStatus._EVERYTIME_TIMETABLE_NOT_PUBLIC));
+
+		// when
+		ResultActions result = mockMvc.perform(
+			RestDocumentationRequestBuilders.get("/api/v1/fixed-schedules/everytime/{identifier}", identifier)
+				.accept(MediaType.APPLICATION_JSON)
+		);
+
+		// then
+		result.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.is_success").value(false))
+			.andExpect(jsonPath("$.code").value("FIXED-002"))
+			.andExpect(jsonPath("$.message").value("에브리타임 시간표를 가져오는 데 실패했습니다. 공개 범위를 확인해주세요."))
+			.andDo(MockMvcRestDocumentationWrapper.document("fixed/getEverytime-fail-not-found",
+				preprocessRequest(prettyPrint()),
+				preprocessResponse(prettyPrint()),
+				resource(
+					ResourceSnippetParameters.builder()
+						.tag("Fixed API")
+						.build()
+				)
+			));
+	}
+
+	@Test
+	@DisplayName("[FAILED] 에브리타임 시간표 조회에 실패한다 (등록된 수업 없음)")
+	public void getEverytimeTimetable_Fail_Empty() throws Exception {
 		// given
 		String identifier = "de9YHaTAnl47JtxH0muz";
 
@@ -230,9 +261,9 @@ public class FixedControllerTest extends ControllerTestConfig {
 		// then
 		result.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.is_success").value(false))
-			.andExpect(jsonPath("$.code").value("FIXED-002"))
-			.andExpect(jsonPath("$.message").value("에브리타임 시간표를 가져오는 데 실패했습니다. 공개 범위를 확인해주세요."))
-			.andDo(MockMvcRestDocumentationWrapper.document("fixed/getEverytime-fail-not-found",
+			.andExpect(jsonPath("$.code").value("FIXED-005"))
+			.andExpect(jsonPath("$.message").value("에브리타임 시간표에 등록된 수업이 없습니다."))
+			.andDo(MockMvcRestDocumentationWrapper.document("fixed/getEverytime-fail-empty",
 				preprocessRequest(prettyPrint()),
 				preprocessResponse(prettyPrint()),
 				resource(
