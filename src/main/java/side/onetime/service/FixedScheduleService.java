@@ -146,6 +146,9 @@ public class FixedScheduleService {
 			} else if (EVERYTIME_PUBLIC_STATUS == status) {
 				// 2. '전체 공개'이지만, 등록된 수업이 없는 경우
 				throw new CustomException(FixedErrorStatus._NOT_FOUND_EVERYTIME_TIMETABLE);
+			} else {
+				// 3. 예상치 못한 status 값
+				throw new CustomException(FixedErrorStatus._EVERYTIME_TIMETABLE_PARSE_ERROR);
 			}
 		}
 
