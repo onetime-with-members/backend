@@ -40,6 +40,7 @@ public class FixedScheduleService {
 
 	private static final int EVERYTIME_PRIVATE_STATUS = -2;
 	private static final int EVERYTIME_PUBLIC_STATUS = 1;
+	private static final Pattern STATUS_PATTERN = Pattern.compile("status=\"(-?\\d+)\"");
 
     private final UserRepository userRepository;
     private final FixedScheduleRepository fixedScheduleRepository;
@@ -161,8 +162,7 @@ public class FixedScheduleService {
 	 */
 	private int extractStatusFromXml(String xml) {
 		// status="숫자" 패턴을 찾음
-		Pattern pattern = Pattern.compile("status=\"(-?\\d+)\"");
-		Matcher matcher = pattern.matcher(xml);
+		Matcher matcher = STATUS_PATTERN.matcher(xml);
 
 		if (matcher.find()) {
 			try {
