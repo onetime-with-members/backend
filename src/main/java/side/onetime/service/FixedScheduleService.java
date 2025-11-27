@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
@@ -35,6 +37,11 @@ import side.onetime.util.UserAuthorizationUtil;
 @Service
 @RequiredArgsConstructor
 public class FixedScheduleService {
+
+	private static final int EVERYTIME_PRIVATE_STATUS = -2;
+	private static final int EVERYTIME_PUBLIC_STATUS = 1;
+	private static final Pattern STATUS_PATTERN = Pattern.compile("status=\"(-?\\d+)\"");
+
     private final UserRepository userRepository;
     private final FixedScheduleRepository fixedScheduleRepository;
     private final FixedSelectionRepository fixedSelectionRepository;
@@ -132,11 +139,42 @@ public class FixedScheduleService {
 		}
 
 		if (!xmlResponse.contains("subject")) {
-			// 200 OK 응답이 왔지만, 테이블이 비어있는 경우 (공개 범위 설정 오류 등)
-			throw new CustomException(FixedErrorStatus._NOT_FOUND_EVERYTIME_TIMETABLE);
+			// 200 OK 응답이 왔지만, 테이블이 비어있는 경우
+			int status = extractStatusFromXml(xmlResponse);
+			if (EVERYTIME_PRIVATE_STATUS == status) {
+				// 1. 공개 범위가 '전체 공개'가 아닌 경우
+				throw new CustomException(FixedErrorStatus._EVERYTIME_TIMETABLE_NOT_PUBLIC);
+			} else if (EVERYTIME_PUBLIC_STATUS == status) {
+				// 2. '전체 공개'이지만, 등록된 수업이 없는 경우
+				throw new CustomException(FixedErrorStatus._NOT_FOUND_EVERYTIME_TIMETABLE);
+			} else {
+				// 3. 예상치 못한 status 값
+				throw new CustomException(FixedErrorStatus._EVERYTIME_TIMETABLE_PARSE_ERROR);
+			}
 		}
 
 		return xmlResponse;
+	}
+
+	/**
+	 * XML 문자열에서 status 속성값을 추출합니다.
+	 * 예: <table ... status="1" ... /> -> 1 반환
+	 */
+	private int extractStatusFromXml(String xml) {
+		// status="숫자" 패턴을 찾음
+		Matcher matcher = STATUS_PATTERN.matcher(xml);
+
+		if (matcher.find()) {
+			try {
+				return Integer.parseInt(matcher.group(1));
+			} catch (NumberFormatException e) {
+				// 숫자가 아닌 경우 파싱 에러 처리
+				throw new CustomException(FixedErrorStatus._EVERYTIME_TIMETABLE_PARSE_ERROR);
+			}
+		}
+
+		// status 속성을 찾지 못한 경우 파싱 에러 처리
+		throw new CustomException(FixedErrorStatus._EVERYTIME_TIMETABLE_PARSE_ERROR);
 	}
 
 	/**
