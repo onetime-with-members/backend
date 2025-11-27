@@ -5,15 +5,21 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import side.onetime.domain.enums.Language;
+import side.onetime.domain.enums.Status;
 import side.onetime.global.common.dao.BaseEntity;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Table(name = "users")
+@SQLDelete(sql = "UPDATE users SET status = 'DELETED', deleted_at = CURRENT_TIMESTAMP WHERE users_id = ?")
+@SQLRestriction("status = 'ACTIVE'")
 public class User extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,7 +38,7 @@ public class User extends BaseEntity {
     @Column(name = "provider", nullable = false, length = 50)
     private String provider;
 
-    @Column(name = "provider_id", nullable = false, length = 50, unique = true)
+    @Column(name = "provider_id", length = 50, unique = true)
     private String providerId;
 
     @Column(name = "service_policy_agreement")
@@ -63,6 +69,13 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<FixedSelection> fixedSelections;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private Status status;
+
+    @Column(name = "deleted_at", nullable = true)
+    private LocalDateTime deletedAt;
+
     @Builder
     public User(String name, String email, String nickname, String provider, String providerId, Boolean servicePolicyAgreement, Boolean privacyPolicyAgreement, Boolean marketingPolicyAgreement, String sleepStartTime, String sleepEndTime, Language language) {
         this.name = name;
@@ -76,6 +89,7 @@ public class User extends BaseEntity {
         this.sleepStartTime = sleepStartTime;
         this.sleepEndTime = sleepEndTime;
         this.language = language;
+        this.status = Status.ACTIVE;
     }
 
     public void updateNickName(String nickname) {

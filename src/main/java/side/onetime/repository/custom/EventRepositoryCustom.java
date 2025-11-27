@@ -9,9 +9,9 @@ public interface EventRepositoryCustom {
 
     void deleteEvent(Event event);
 
-    void deleteSchedulesByRange(Event event, String range);
+    void deleteSchedulesByRanges(Event event, List<String> ranges);
 
-    void deleteSchedulesByTime(Event event, String time);
+    void deleteSchedulesByTimes(Event event, List<String> times);
 
     List<Event> findAllWithSort(Pageable pageable, String keyword, String sorting);
 }

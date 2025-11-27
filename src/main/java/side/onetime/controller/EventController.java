@@ -1,17 +1,19 @@
 package side.onetime.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import side.onetime.dto.event.request.CreateEventRequest;
-import side.onetime.dto.event.request.ModifyUserCreatedEventRequest;
+import side.onetime.dto.event.request.ModifyEventRequest;
 import side.onetime.dto.event.response.*;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.EventService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -131,6 +133,27 @@ public class EventController {
     }
 
     /**
+     * 유저 참여 이벤트 목록 조회 API.
+     *
+     * 이 API는 인증된 유저가 참여한 이벤트 목록을 페이지 단위로 조회합니다. 유저의 참여 상태, 이벤트 정보 등이 포함됩니다.
+     *
+     * 커서 기반의 페이징을 지원하며, createdDate 커서를 기준으로 이전에 생성된 이벤트를 조회합니다.
+     * createdDate를 전달하지 않으면 가장 최신 이벤트부터 조회합니다.
+     *
+     * @param size 한 번에 가져올 이벤트 개수
+     * @param createdDate 마지막으로 조회한 이벤트 생성일
+     * @return 유저가 참여한 이벤트 목록 및 페이지(커서) 정보가 포함된 응답 DTO
+     */
+    @GetMapping("/user/all/v2")
+    public ResponseEntity<ApiResponse<GetParticipatedEventsResponse>> getParticipatedEventsByCursor(
+            @RequestParam(value = "size", defaultValue = "2") @Min(1) int size,
+            @RequestParam(value = "cursor", required = false) LocalDateTime createdDate
+    ) {
+        GetParticipatedEventsResponse response = eventService.getParticipatedEventsByCursor(size, createdDate);
+        return ApiResponse.onSuccess(SuccessStatus._GET_PARTICIPATED_EVENTS, response);
+    }
+
+    /**
      * 유저가 생성한 이벤트 삭제 API.
      *
      * 이 API는 인증된 유저가 생성한 특정 이벤트를 삭제합니다.
@@ -147,9 +170,9 @@ public class EventController {
     }
 
     /**
-     * 유저가 생성한 이벤트 수정 API.
+     * 이벤트 수정 API.
      *
-     * 이 API는 인증된 유저가 생성한 특정 이벤트의 제목, 시간, 설문 범위를 수정합니다.
+     * 이 API는 특정 이벤트의 제목, 시간, 설문 범위를 수정합니다.
      * 수정 가능한 항목은 다음과 같습니다:
      * - 이벤트 제목
      * - 시작 시간 및 종료 시간
@@ -158,16 +181,16 @@ public class EventController {
      * 요청 데이터에 따라 변경 사항을 반영하며, 필요에 따라 기존 스케줄 데이터를 삭제하거나 새로운 스케줄을 생성합니다.
      *
      * @param eventId 수정할 이벤트의 ID
-     * @param modifyUserCreatedEventRequest 새로운 이벤트 정보가 담긴 요청 데이터 (제목, 시간, 범위 등)
+     * @param modifyEventRequest 새로운 이벤트 정보가 담긴 요청 데이터 (제목, 시간, 범위 등)
      * @return 수정 성공 여부
      */
     @PatchMapping("/{event_id}")
-    public ResponseEntity<ApiResponse<SuccessStatus>> modifyUserCreatedEvent(
+    public ResponseEntity<ApiResponse<SuccessStatus>> modifyEvent(
             @PathVariable("event_id") String eventId,
-            @Valid @RequestBody ModifyUserCreatedEventRequest modifyUserCreatedEventRequest) {
+            @Valid @RequestBody ModifyEventRequest modifyEventRequest) {
 
-        eventService.modifyUserCreatedEvent(eventId, modifyUserCreatedEventRequest);
-        return ApiResponse.onSuccess(SuccessStatus._MODIFY_USER_CREATED_EVENT);
+        eventService.modifyEvent(eventId, modifyEventRequest);
+        return ApiResponse.onSuccess(SuccessStatus._MODIFY_EVENT);
     }
 
     /**

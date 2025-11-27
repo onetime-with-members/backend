@@ -15,11 +15,20 @@ public interface EventParticipationRepository extends JpaRepository<EventPartici
     List<EventParticipation> findAllByEvent(Event event);
 
     @Query("""
-    SELECT ep FROM EventParticipation ep
-    JOIN FETCH ep.event
-    WHERE ep.user = :user
+        SELECT ep FROM EventParticipation ep
+        JOIN FETCH ep.event
+        WHERE ep.user = :user
     """)
     List<EventParticipation> findAllByUserWithEvent(@Param("user") User user);
+
+    @Query("""
+        SELECT ep FROM EventParticipation ep
+        JOIN FETCH ep.event e
+        LEFT JOIN FETCH e.members
+        LEFT JOIN FETCH ep.user
+        WHERE ep.event = :event
+    """)
+    List<EventParticipation> findAllByEventWithEventAndMemberAndUser(@Param("event") Event event);
 
     EventParticipation findByUserAndEvent(User user, Event event);
 

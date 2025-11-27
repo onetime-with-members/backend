@@ -54,13 +54,12 @@ public class SecurityConfig {
 	private static final String[] ALLOWED_ORIGINS = {
 		"http://localhost:5173",
 		"http://localhost:3000",
-		"https://onetime-test.vercel.app",
-		"https://www.onetime-test.vercel.app",
 		"https://onetime-with-members.com",
 		"https://www.onetime-with-members.com",
 		"https://1-ti.me",
-		"https://onetime-admin.vercel.app",
-		"https://onetime-test-admin.vercel.app",
+		"https://dev-app.onetime-with-members.workers.dev",
+		"https://admin.onetime-with-members.workers.dev",
+		"https://dev-admin.onetime-with-members.workers.dev",
 	};
 
 	/**

@@ -1,7 +1,13 @@
 package side.onetime.fixed;
 
-import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
-import com.epages.restdocs.apispec.ResourceSnippetParameters;
+import static com.epages.restdocs.apispec.ResourceDocumentation.*;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,6 +20,10 @@ import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.ResultActions;
+
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
+import com.epages.restdocs.apispec.ResourceSnippetParameters;
+
 import side.onetime.auth.dto.CustomUserDetails;
 import side.onetime.auth.service.CustomUserDetailsService;
 import side.onetime.configuration.ControllerTestConfig;
@@ -22,16 +32,10 @@ import side.onetime.domain.User;
 import side.onetime.dto.fixed.request.UpdateFixedScheduleRequest;
 import side.onetime.dto.fixed.response.FixedScheduleResponse;
 import side.onetime.dto.fixed.response.GetFixedScheduleResponse;
+import side.onetime.exception.CustomException;
+import side.onetime.exception.status.FixedErrorStatus;
 import side.onetime.service.FixedScheduleService;
 import side.onetime.util.JwtUtil;
-
-import java.util.List;
-
-import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
-import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(FixedController.class)
 public class FixedControllerTest extends ControllerTestConfig {
@@ -153,4 +157,149 @@ public class FixedControllerTest extends ControllerTestConfig {
                         )
                 ));
     }
+
+	@Test
+	@DisplayName("[SUCCESS] 에브리타임 시간표를 조회한다.")
+	public void getEverytimeTimetable() throws Exception {
+		// given
+		String identifier = "de9YHaTAnl47JtxH0muz";
+		List<FixedScheduleResponse> schedules = List.of(
+			new FixedScheduleResponse("월", List.of("09:00", "09:30", "10:00", "10:30")),
+			new FixedScheduleResponse("수", List.of("13:00", "13:30", "14:00", "14:30")),
+			new FixedScheduleResponse("금", List.of("10:00", "10:30"))
+		);
+		GetFixedScheduleResponse response = new GetFixedScheduleResponse(schedules);
+
+		// Service Mocking
+		Mockito.when(fixedScheduleService.getUserEverytimeTimetable(identifier)).thenReturn(response);
+
+		// when
+		ResultActions result = mockMvc.perform(
+			RestDocumentationRequestBuilders.get("/api/v1/fixed-schedules/everytime/{identifier}", identifier)
+				.accept(MediaType.APPLICATION_JSON)
+		);
+
+		// then
+		result.andExpect(status().isOk())
+			.andExpect(jsonPath("$.is_success").value(true))
+			.andExpect(jsonPath("$.code").value("200"))
+			.andExpect(jsonPath("$.message").value("유저 에브리타임 시간표 조회에 성공했습니다."))
+			.andExpect(jsonPath("$.payload.schedules").isArray())
+			.andExpect(jsonPath("$.payload.schedules[0].time_point").value("월"))
+			.andExpect(jsonPath("$.payload.schedules[0].times[1]").value("09:30"))
+			.andExpect(jsonPath("$.payload.schedules[2].time_point").value("금"))
+			.andExpect(jsonPath("$.payload.schedules[2].times[0]").value("10:00"))
+			.andDo(MockMvcRestDocumentationWrapper.document("fixed/getEverytime",
+				preprocessRequest(prettyPrint()),
+				preprocessResponse(prettyPrint()),
+				resource(
+					ResourceSnippetParameters.builder()
+						.tag("Fixed API")
+						.description("에브리타임 시간표를 조회한다.")
+						.pathParameters(
+							parameterWithName("identifier").description("에브리타임 시간표 URL 식별자")
+						)
+						.responseFields(
+							fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+							fieldWithPath("code").type(JsonFieldType.STRING).description("HTTP 상태 코드"),
+							fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+							fieldWithPath("payload.schedules").type(JsonFieldType.ARRAY).description("파싱된 스케줄 목록"),
+							fieldWithPath("payload.schedules[].time_point").type(JsonFieldType.STRING).description("요일"),
+							fieldWithPath("payload.schedules[].times[]").type(JsonFieldType.ARRAY).description("시간 목록")
+						)
+						.build()
+				)
+			));
+	}
+
+	@Test
+	@DisplayName("[FAILED] 에브리타임 시간표 조회에 실패한다 (공개 범위가 '전체 공개'가 아님)")
+	public void getEverytimeTimetable_Fail_NotFound() throws Exception {
+		// given
+		String identifier = "de9YHaTAnl47JtxH0muz";
+
+		Mockito.when(fixedScheduleService.getUserEverytimeTimetable(identifier))
+			.thenThrow(new CustomException(FixedErrorStatus._EVERYTIME_TIMETABLE_NOT_PUBLIC));
+
+		// when
+		ResultActions result = mockMvc.perform(
+			RestDocumentationRequestBuilders.get("/api/v1/fixed-schedules/everytime/{identifier}", identifier)
+				.accept(MediaType.APPLICATION_JSON)
+		);
+
+		// then
+		result.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.is_success").value(false))
+			.andExpect(jsonPath("$.code").value("FIXED-002"))
+			.andExpect(jsonPath("$.message").value("에브리타임 시간표를 가져오는 데 실패했습니다. 공개 범위를 확인해주세요."))
+			.andDo(MockMvcRestDocumentationWrapper.document("fixed/getEverytime-fail-not-found",
+				preprocessRequest(prettyPrint()),
+				preprocessResponse(prettyPrint()),
+				resource(
+					ResourceSnippetParameters.builder()
+						.tag("Fixed API")
+						.build()
+				)
+			));
+	}
+
+	@Test
+	@DisplayName("[FAILED] 에브리타임 시간표 조회에 실패한다 (등록된 수업 없음)")
+	public void getEverytimeTimetable_Fail_Empty() throws Exception {
+		// given
+		String identifier = "de9YHaTAnl47JtxH0muz";
+
+		Mockito.when(fixedScheduleService.getUserEverytimeTimetable(identifier))
+			.thenThrow(new CustomException(FixedErrorStatus._NOT_FOUND_EVERYTIME_TIMETABLE));
+
+		// when
+		ResultActions result = mockMvc.perform(
+			RestDocumentationRequestBuilders.get("/api/v1/fixed-schedules/everytime/{identifier}", identifier)
+				.accept(MediaType.APPLICATION_JSON)
+		);
+
+		// then
+		result.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.is_success").value(false))
+			.andExpect(jsonPath("$.code").value("FIXED-005"))
+			.andExpect(jsonPath("$.message").value("에브리타임 시간표에 등록된 수업이 없습니다."))
+			.andDo(MockMvcRestDocumentationWrapper.document("fixed/getEverytime-fail-empty",
+				preprocessRequest(prettyPrint()),
+				preprocessResponse(prettyPrint()),
+				resource(
+					ResourceSnippetParameters.builder()
+						.tag("Fixed API")
+						.build()
+				)
+			));
+	}
+
+	@Test
+	@DisplayName("[FAILED] 에브리타임 시간표 조회에 실패한다 (식별자 유효성 검증 실패)")
+	public void getEverytimeTimetable_Fail_Validation() throws Exception {
+		// given
+		// 19자: 길이가 20이 아니므로 @Pattern 실패
+		String invalidIdentifier = "short-identifier-1234";
+
+		// when
+		ResultActions result = mockMvc.perform(
+			RestDocumentationRequestBuilders.get("/api/v1/fixed-schedules/everytime/{identifier}", invalidIdentifier)
+				.accept(MediaType.APPLICATION_JSON)
+		);
+
+		// then
+		result.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.is_success").value(false))
+			.andExpect(jsonPath("$.code").value("E_BAD_REQUEST"))
+			.andExpect(jsonPath("$.message").value("getUserEverytimeTimetable.identifier: 식별자는 20자리의 영문 대소문자 및 숫자로만 구성되어야 합니다."))
+			.andDo(MockMvcRestDocumentationWrapper.document("fixed/getEverytime-fail-validation",
+				preprocessRequest(prettyPrint()),
+				preprocessResponse(prettyPrint()),
+				resource(
+					ResourceSnippetParameters.builder()
+						.tag("Fixed API")
+						.build()
+				)
+			));
+	}
 }

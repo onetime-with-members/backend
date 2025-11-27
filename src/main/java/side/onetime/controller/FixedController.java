@@ -1,9 +1,17 @@
 package side.onetime.controller;
 
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
+import lombok.RequiredArgsConstructor;
 import side.onetime.dto.fixed.request.UpdateFixedScheduleRequest;
 import side.onetime.dto.fixed.response.GetFixedScheduleResponse;
 import side.onetime.global.common.ApiResponse;
@@ -13,6 +21,7 @@ import side.onetime.service.FixedScheduleService;
 @RestController
 @RequestMapping("/api/v1/fixed-schedules")
 @RequiredArgsConstructor
+@Validated
 public class FixedController {
 
     private final FixedScheduleService fixedScheduleService;
@@ -46,4 +55,22 @@ public class FixedController {
         fixedScheduleService.updateUserFixedSchedules(request);
         return ApiResponse.onSuccess(SuccessStatus._UPDATE_USER_FIXED_SCHEDULE);
     }
+
+	/**
+	 * 에브리타임 시간표 조회 API.
+	 *
+	 * 유저의 에브리타임 시간표를 조회한 후 파싱하여, 고정 스케줄 형태로 반환합니다.
+	 *
+	 * @param identifier 파싱할 에브리타임 시간표 URL 식별자
+	 * @return 성공 상태 응답 객체
+	 */
+	@GetMapping("/everytime/{identifier}")
+	public ResponseEntity<ApiResponse<GetFixedScheduleResponse>> getUserEverytimeTimetable(
+		@PathVariable
+		@Pattern(regexp = "^[a-zA-Z0-9]{20}$", message = "식별자는 20자리의 영문 대소문자 및 숫자로만 구성되어야 합니다.")
+		String identifier
+	) {
+		GetFixedScheduleResponse response = fixedScheduleService.getUserEverytimeTimetable(identifier);
+		return ApiResponse.onSuccess(SuccessStatus._GET_USER_EVERYTIME_TIMETABLE, response);
+	}
 }

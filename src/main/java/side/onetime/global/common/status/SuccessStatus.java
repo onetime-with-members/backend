@@ -19,8 +19,9 @@ public enum SuccessStatus implements BaseCode {
     _GET_MOST_POSSIBLE_TIME(HttpStatus.OK, "200", "가장 많이 되는 시간 조회에 성공했습니다."),
     _GET_FILTERED_MOST_POSSIBLE_TIME(HttpStatus.OK, "200", "필터링한 참여자의 시간 조회에 성공했습니다."),
     _GET_USER_PARTICIPATED_EVENTS(HttpStatus.OK, "200", "유저 참여 이벤트 목록 조회에 성공했습니다."),
+    _GET_PARTICIPATED_EVENTS(HttpStatus.OK, "200", "유저 참여 이벤트 목록 조회에 성공했습니다."),
     _REMOVE_USER_CREATED_EVENT(HttpStatus.OK, "200", "유저가 생성한 이벤트 삭제에 성공했습니다."),
-    _MODIFY_USER_CREATED_EVENT(HttpStatus.OK, "200", "유저가 생성한 이벤트 수정에 성공했습니다."),
+    _MODIFY_EVENT(HttpStatus.OK, "200", "이벤트 수정에 성공했습니다."),
     _GET_EVENT_QR_CODE(HttpStatus.OK, "200", "이벤트 QR 코드 조회에 성공했습니다."),
     // Member
     _REGISTER_MEMBER(HttpStatus.CREATED, "201", "멤버 등록에 성공했습니다."),
@@ -55,6 +56,7 @@ public enum SuccessStatus implements BaseCode {
     // Fixed
     _GET_USER_FIXED_SCHEDULE(HttpStatus.OK, "200", "유저 고정 스케줄 조회에 성공했습니다."),
     _UPDATE_USER_FIXED_SCHEDULE(HttpStatus.OK, "200", "유저 고정 스케줄 수정에 성공했습니다."),
+	_GET_USER_EVERYTIME_TIMETABLE(HttpStatus.OK, "200", "유저 에브리타임 시간표 조회에 성공했습니다."),
     // Admin User
     _REGISTER_ADMIN_USER(HttpStatus.CREATED, "201", "관리자 계정 등록에 성공했습니다."),
     _LOGIN_ADMIN_USER(HttpStatus.OK, "200", "관리자 계정 로그인에 성공했습니다."),

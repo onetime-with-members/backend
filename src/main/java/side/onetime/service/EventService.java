@@ -9,7 +9,7 @@ import side.onetime.domain.*;
 import side.onetime.domain.enums.Category;
 import side.onetime.domain.enums.EventStatus;
 import side.onetime.dto.event.request.CreateEventRequest;
-import side.onetime.dto.event.request.ModifyUserCreatedEventRequest;
+import side.onetime.dto.event.request.ModifyEventRequest;
 import side.onetime.dto.event.response.*;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
 import side.onetime.exception.CustomException;
@@ -20,6 +20,7 @@ import side.onetime.exception.status.UserErrorStatus;
 import side.onetime.repository.*;
 import side.onetime.util.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -227,6 +228,23 @@ public class EventService {
     }
 
     /**
+     * 이벤트 참여자 조회 메서드.
+     * 특정 이벤트에 참여한 모든 참여자의 이름 목록(멤버 및 유저)을 반환합니다.
+     *
+     * @param event 참여자를 조회할 이벤트
+     * @param eventParticipations 이벤트에 속한 참여자 목록
+     * @return 참여자의 이름 목록
+     */
+    private GetParticipantsResponse getParticipants(Event event, List<EventParticipation> eventParticipations) {
+        List<User> users = eventParticipations.stream()
+                .filter(eventParticipation -> eventParticipation.getEventStatus() != EventStatus.CREATOR)
+                .map(EventParticipation::getUser)
+                .toList();
+
+        return GetParticipantsResponse.of(event.getMembers(), users);
+    }
+
+    /**
      * 가장 많이 되는 시간 조회 메서드.
      * 특정 이벤트에서 참여자 수가 가장 많은 시간대를 계산하여 반환합니다.
      *
@@ -262,6 +280,37 @@ public class EventService {
         Map<Schedule, List<String>> scheduleToNamesMap = buildScheduleToNamesMap(selections, event.getCategory());
 
         // 7. 최적 시간대 리스트 생성
+        List<GetMostPossibleTime> mostPossibleTimes = buildMostPossibleTimes(
+                scheduleToNamesMap, allParticipants, event.getCategory());
+
+        return DateUtil.sortMostPossibleTimes(mostPossibleTimes, event.getCategory());
+    }
+
+    /**
+     * 가장 많이 되는 시간 조회 메서드.
+     * 특정 이벤트에서 참여자 수가 가장 많은 시간대를 계산하여 반환합니다.
+     *
+     * @param event 참여자를 조회할 이벤트
+     * @param eventParticipations 이벤트에 속한 참여자 목록
+     * @return 가능 인원이 많은 시간대 목록
+     */
+    private List<GetMostPossibleTime> getMostPossibleTimes(Event event, List<EventParticipation> eventParticipations) {
+        List<String> memberNames = event.getMembers().stream()
+                .map(Member::getName)
+                .toList();
+
+        List<String> userNicknames = eventParticipations.stream()
+                .filter(ep -> ep.getEventStatus() != EventStatus.CREATOR)
+                .map(ep -> ep.getUser().getNickname())
+                .toList();
+
+        List<String> allParticipants = new ArrayList<>(memberNames);
+        allParticipants.addAll(userNicknames);
+
+        List<Selection> selections = selectionRepository.findAllSelectionsByEvent(event);
+
+        Map<Schedule, List<String>> scheduleToNamesMap = buildScheduleToNamesMap(selections, event.getCategory());
+
         List<GetMostPossibleTime> mostPossibleTimes = buildMostPossibleTimes(
                 scheduleToNamesMap, allParticipants, event.getCategory());
 
@@ -509,6 +558,48 @@ public class EventService {
     }
 
     /**
+     * 유저 참여 이벤트 목록 조회 메서드.
+     *
+     * 인증된 유저가 참여한 이벤트 목록을 페이지 단위로 조회하며, 각 이벤트에 대한 세부 정보를 반환합니다.
+     * 각 이벤트에 대해 참여자 및 가장 많이 되는 시간을 조회한 뒤 페이지(커서) 정보를 감싸 반환합니다.
+     * 이벤트는 항상 최신 순으로 정렬됩니다.
+     *
+     * @param size 한 번에 가져올 이벤트 개수
+     * @param createdDate 마지막으로 조회한 이벤트 생성일
+     * @return 유저가 참여한 이벤트 목록
+     */
+    @Transactional(readOnly = true)
+    public GetParticipatedEventsResponse getParticipatedEventsByCursor(int size, LocalDateTime createdDate) {
+        User user = userRepository.findById(UserAuthorizationUtil.getLoginUserId())
+                .orElseThrow(() -> new CustomException(UserErrorStatus._NOT_FOUND_USER));
+
+        List<EventParticipation> participations = eventParticipationRepository.findParticipationsByUserWithCursor(user, createdDate, size);
+        List<GetParticipatedEventResponse> userParticipatedEvents = participations.stream()
+                .map(ep -> {
+                    Event event = ep.getEvent();
+                    List<EventParticipation> eventParticipations = eventParticipationRepository.findAllByEventWithEventAndMemberAndUser(event);
+
+                    GetParticipantsResponse participants = this.getParticipants(event, eventParticipations);
+                    List<GetMostPossibleTime> mostPossibleTimes = this.getMostPossibleTimes(event, eventParticipations);
+
+                    return GetParticipatedEventResponse.of(
+                            event,
+                            ep,
+                            participants.users().size() + participants.members().size(),
+                            mostPossibleTimes
+                    );
+                })
+                .toList();
+
+        String nextCursor = participations.isEmpty() ? null : participations.get(participations.size() - 1).getEvent().getCreatedDate().toString();
+        boolean hasNext = participations.size() == size;
+        PageCursorInfo<String> pageCursorInfo = PageCursorInfo.of(nextCursor, hasNext);
+
+        return GetParticipatedEventsResponse.of(userParticipatedEvents, pageCursorInfo);
+    }
+
+
+    /**
      * 유저가 생성한 이벤트 삭제 메서드.
      * 인증된 유저가 생성한 특정 이벤트를 삭제합니다.
      *
@@ -524,26 +615,24 @@ public class EventService {
     }
 
     /**
-     * 유저가 생성한 이벤트 수정 메서드.
-     * 인증된 유저가 생성한 특정 이벤트를 수정합니다.
+     * 이벤트 수정 메서드.
+     * 특정 이벤트를 수정합니다.
      *
      * @param eventId 수정할 이벤트의 ID
-     * @param modifyUserCreatedEventRequest 새로운 이벤트 데이터
+     * @param modifyEventRequest 새로운 이벤트 데이터
      */
     @Transactional
-    public void modifyUserCreatedEvent(String eventId, ModifyUserCreatedEventRequest modifyUserCreatedEventRequest) {
-        User user = userRepository.findById(UserAuthorizationUtil.getLoginUserId())
-                .orElseThrow(() -> new CustomException(UserErrorStatus._NOT_FOUND_USER));
-        EventParticipation eventParticipation = verifyUserHasEventAccess(user, eventId);
-        Event event = eventParticipation.getEvent();
+    public void modifyEvent(String eventId, ModifyEventRequest modifyEventRequest) {
+        Event event = eventRepository.findByEventId(UUID.fromString(eventId))
+                .orElseThrow(() -> new CustomException(EventErrorStatus._NOT_FOUND_EVENT));
 
-        event.updateTitle(modifyUserCreatedEventRequest.title());
-        updateEventRanges(event, event.getSchedules(), modifyUserCreatedEventRequest.ranges(), modifyUserCreatedEventRequest.startTime(), modifyUserCreatedEventRequest.endTime());
+        event.updateTitle(modifyEventRequest.title());
+        updateEventRanges(event, event.getSchedules(), modifyEventRequest.ranges(), modifyEventRequest.startTime(), modifyEventRequest.endTime());
 
         // 변경된 범위에 따른 새로운 스케줄 목록
         List<Schedule> newSchedules = scheduleRepository.findAllByEvent(event)
                 .orElseThrow(() -> new CustomException(ScheduleErrorStatus._NOT_FOUND_ALL_SCHEDULES));
-        updateEventTimes(event, newSchedules, modifyUserCreatedEventRequest.startTime(), modifyUserCreatedEventRequest.endTime());
+        updateEventTimes(event, newSchedules, modifyEventRequest.startTime(), modifyEventRequest.endTime());
     }
 
     /**
@@ -562,9 +651,10 @@ public class EventService {
                 : schedules.stream().map(Schedule::getDay).filter(Objects::nonNull).collect(Collectors.toSet());
 
         // 삭제 대상 처리
-        existRanges.stream()
+        List<String> rangesToDelete = existRanges.stream()
                 .filter(range -> !newRanges.contains(range))
-                .forEach(range -> eventRepository.deleteSchedulesByRange(event, range));
+                .toList();
+        eventRepository.deleteSchedulesByRanges(event, rangesToDelete);
 
         // 생성 대상 처리
         List<String> rangesToCreate = newRanges.stream()
@@ -600,9 +690,10 @@ public class EventService {
                     .collect(Collectors.toSet());
 
             // 삭제 대상 시간 처리
-            existTimes.stream()
+            List<String> timesToDelete = existTimes.stream()
                     .filter(time -> !newTimeSets.contains(time))
-                    .forEach(time -> eventRepository.deleteSchedulesByTime(event, time));
+                    .toList();
+            eventRepository.deleteSchedulesByTimes(event, timesToDelete);
 
             // 생성 대상 시간 처리
             List<String> timesToCreate = newTimeSets.stream()
