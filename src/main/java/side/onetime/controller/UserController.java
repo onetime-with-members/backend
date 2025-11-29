@@ -189,4 +189,18 @@ public class UserController {
         GetGuideViewStatusResponse response = userService.getGuideViewStatus(guideType);
         return ApiResponse.onSuccess(SuccessStatus._GET_GUIDE_VIEW_STATUS, response);
     }
+
+    /**
+     * 가이드 확인 여부 삭제 API.
+     *
+     * 사용자의 가이드 확인 여부를 삭제합니다.
+     *
+     * @return 성공 상태 응답 객체
+     */
+    @DeleteMapping("/guides/view-status")
+    public ResponseEntity<ApiResponse<GetGuideViewStatusResponse>> deleteGuideViewStatus(){
+
+        userService.deleteGuideViewStatus();
+        return ApiResponse.onSuccess(SuccessStatus._DELETE_GUIDE_VIEW_STATUS);
+    }
 }

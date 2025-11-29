@@ -598,4 +598,63 @@ public class UserControllerTest extends ControllerTestConfig {
                         )
                 ));
     }
+
+    @Test
+    @DisplayName("가이드 확인 여부를 삭제한다.")
+    public void deleteGuideViewStatus() throws Exception {
+        // when
+        Mockito.doNothing().when(userService).deleteGuideViewStatus();
+
+        // then
+        mockMvc.perform(RestDocumentationRequestBuilders.delete("/api/v1/users/guides/view-status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.is_success").value(true))
+                .andExpect(jsonPath("$.code").value("200"))
+                .andExpect(jsonPath("$.message").value("유저 가이드 확인 여부 삭제에 성공했습니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("user/delete-guide-view-status",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("User API")
+                                        .description("가이드 확인 여부를 삭제한다.")
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                        )
+                                        .responseSchema(Schema.schema("CommonSuccessResponse"))
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("[FAILED] 가이드 확인 여부 삭제에 실패한다. (가이드 확인 여부 없음)")
+    public void deleteGuideViewStatus_Fail_NotFound() throws Exception {
+        // when
+        Mockito.doThrow(new CustomException(UserErrorStatus._NOT_FOUND_GUIDE))
+                .when(userService)
+                .deleteGuideViewStatus();
+
+        // then
+        mockMvc.perform(RestDocumentationRequestBuilders.delete("/api/v1/users/guides/view-status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.is_success").value(false))
+                .andExpect(jsonPath("$.code").value("USER-006"))
+                .andExpect(jsonPath("$.message").value("가이드를 찾을 수 없습니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("user/delete-guide-view-status-fail-not-found",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("User API")
+                                        .build()
+                        )
+                ));
+    }
 }

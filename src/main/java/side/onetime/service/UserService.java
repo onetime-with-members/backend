@@ -246,4 +246,20 @@ public class UserService {
         boolean isViewed = guideViewStatusRepository.existsByUserAndGuideType(user, guideType);
         return GetGuideViewStatusResponse.from(isViewed);
     }
+
+    /**
+     * 가이드 확인 여부 삭제 메서드.
+     *
+     * 사용자의 가이드 확인 여부를 삭제합니다.
+     */
+    @Transactional
+    public void deleteGuideViewStatus() {
+        User user = userRepository.findById(UserAuthorizationUtil.getLoginUserId())
+                .orElseThrow(() -> new CustomException(UserErrorStatus._NOT_FOUND_USER));
+
+        GuideViewStatus guideViewStatus = guideViewStatusRepository.findByUserAndIsViewedTrue(user)
+                .orElseThrow(() -> new CustomException(UserErrorStatus._NOT_FOUND_GUIDE));
+
+        guideViewStatusRepository.delete(guideViewStatus);
+    }
 }

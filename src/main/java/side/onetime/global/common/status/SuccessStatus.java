@@ -55,6 +55,7 @@ public enum SuccessStatus implements BaseCode {
     _LOGOUT_USER(HttpStatus.OK, "200", "유저 로그아웃에 성공했습니다."),
     _CREATE_GUIDE_VIEW_STATUS(HttpStatus.CREATED, "201", "유저 가이드 확인 여부 저장에 성공했습니다."),
     _GET_GUIDE_VIEW_STATUS(HttpStatus.OK, "200", "유저 가이드 확인 여부 조회에 성공했습니다."),
+    _DELETE_GUIDE_VIEW_STATUS(HttpStatus.OK, "200", "유저 가이드 확인 여부 삭제에 성공했습니다."),
     // Fixed
     _GET_USER_FIXED_SCHEDULE(HttpStatus.OK, "200", "유저 고정 스케줄 조회에 성공했습니다."),
     _UPDATE_USER_FIXED_SCHEDULE(HttpStatus.OK, "200", "유저 고정 스케줄 수정에 성공했습니다."),
