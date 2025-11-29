@@ -19,6 +19,8 @@ import side.onetime.domain.enums.GuideType;
 import side.onetime.domain.enums.Language;
 import side.onetime.dto.user.request.*;
 import side.onetime.dto.user.response.*;
+import side.onetime.exception.CustomException;
+import side.onetime.exception.status.UserErrorStatus;
 import side.onetime.service.UserService;
 import side.onetime.util.JwtUtil;
 
@@ -492,6 +494,65 @@ public class UserControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
                                         )
                                         .requestSchema(Schema.schema("CreateGuideViewStatusRequestSchema"))
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("[FAILED] 가이드 확인 여부 저장에 실패한다. (잘못된 GuideType 값)")
+    public void createGuideViewStatus_Fail_Validation() throws Exception {
+        // given
+        String invalidGuideType = "wrong-guide-type";
+        String requestContent = String.format("{\"guide_type\": \"%s\"}", invalidGuideType);
+
+        // then
+        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/users/guides/view-status")
+                        .content(requestContent)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.is_success").value(false))
+                .andExpect(jsonPath("$.code").value("E_BAD_REQUEST"))
+                .andExpect(jsonPath("$.message").value("올바르지 않은 enum 값입니다. 허용되지 않은 값: " + invalidGuideType))
+                .andDo(MockMvcRestDocumentationWrapper.document("user/create-guide-view-status-fail-validation",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("User API")
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("[FAILED] 가이드 확인 여부 저장에 실패한다. (이미 조회한 가이드)")
+    public void createGuideViewStatus_Fail_Already_Viewed() throws Exception {
+        // given
+        CreateGuideViewStatusRequest request = new CreateGuideViewStatusRequest(GuideType.SCHEDULE_GUIDE_MODAL_001);
+        String requestContent = objectMapper.writeValueAsString(request);
+
+        // when
+        Mockito.doThrow(new CustomException(UserErrorStatus._IS_ALREADY_VIEWED_GUIDE))
+                .when(userService)
+                .createGuideViewStatus(any(CreateGuideViewStatusRequest.class));
+
+        // then
+        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/users/guides/view-status")
+                        .content(requestContent)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.is_success").value(false))
+                .andExpect(jsonPath("$.code").value("USER-005"))
+                .andExpect(jsonPath("$.message").value("이미 조회한 가이드입니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("user/create-guide-view-status-fail-already-viewed",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("User API")
                                         .build()
                         )
                 ));
