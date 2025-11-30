@@ -198,7 +198,7 @@ public class UserController {
      * @return 성공 상태 응답 객체
      */
     @DeleteMapping("/guides/view-log")
-    public ResponseEntity<ApiResponse<GetGuideViewLogResponse>> deleteGuideViewLog(){
+    public ResponseEntity<ApiResponse<SuccessStatus>> deleteGuideViewLog(){
 
         userService.deleteGuideViewLog();
         return ApiResponse.onSuccess(SuccessStatus._DELETE_GUIDE_VIEW_LOG);
