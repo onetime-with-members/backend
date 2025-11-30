@@ -4,11 +4,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import side.onetime.domain.enums.GuideType;
 import side.onetime.dto.user.request.*;
-import side.onetime.dto.user.response.GetUserPolicyAgreementResponse;
-import side.onetime.dto.user.response.GetUserProfileResponse;
-import side.onetime.dto.user.response.GetUserSleepTimeResponse;
-import side.onetime.dto.user.response.OnboardUserResponse;
+import side.onetime.dto.user.response.*;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.UserService;
@@ -155,5 +153,54 @@ public class UserController {
 
         userService.logoutUser(logoutUserRequest);
         return ApiResponse.onSuccess(SuccessStatus._LOGOUT_USER);
+    }
+
+    /**
+     * 유저 가이드 조회 로그 저장 API.
+     *
+     * GuideType에 정의된 가이드에 대해 사용자의 조회 로그를 저장합니다.
+     * 이미 조회한 경우, Conflict 에러를 반환합니다.
+     *
+     * @param request 확인 여부를 저장할 가이드 타입 객체
+     * @return 성공 상태 응답 객체
+     */
+    @PostMapping("/guides/view-log")
+    public ResponseEntity<ApiResponse<SuccessStatus>> createGuideViewLog(
+            @Valid @RequestBody CreateGuideViewLogRequest request
+    ) {
+
+        userService.createGuideViewLog(request);
+        return ApiResponse.onSuccess(SuccessStatus._CREATE_GUIDE_VIEW_LOG);
+    }
+
+    /**
+     * 유저 가이드 조회 로그 조회 API.
+     *
+     * GuideType에 정의된 가이드에 대해 사용자의 조회 로그를 조회합니다.
+     *
+     * @param guideType 조회할 가이드 타입
+     * @return 가이드 조회 로그 응답 객체
+     */
+    @GetMapping("/guides/view-log")
+    public ResponseEntity<ApiResponse<GetGuideViewLogResponse>> getGuideViewLog(
+            @RequestParam("guide_type") GuideType guideType
+    ){
+
+        GetGuideViewLogResponse response = userService.getGuideViewLog(guideType);
+        return ApiResponse.onSuccess(SuccessStatus._GET_GUIDE_VIEW_LOG, response);
+    }
+
+    /**
+     * 유저 가이드 조회 로그 삭제 API.
+     *
+     * 사용자의 가이드 조회 로그를 삭제합니다.
+     *
+     * @return 성공 상태 응답 객체
+     */
+    @DeleteMapping("/guides/view-log")
+    public ResponseEntity<ApiResponse<SuccessStatus>> deleteGuideViewLog(){
+
+        userService.deleteGuideViewLog();
+        return ApiResponse.onSuccess(SuccessStatus._DELETE_GUIDE_VIEW_LOG);
     }
 }
