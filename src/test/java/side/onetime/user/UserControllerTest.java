@@ -460,31 +460,31 @@ public class UserControllerTest extends ControllerTestConfig {
     }
 
     @Test
-    @DisplayName("가이드 확인 여부를 저장한다.")
-    public void createGuideViewStatus() throws Exception {
+    @DisplayName("유저 가이드 조회 로그를 저장한다.")
+    public void createGuideViewLog() throws Exception {
         // given
-        CreateGuideViewStatusRequest request = new CreateGuideViewStatusRequest(GuideType.SCHEDULE_GUIDE_MODAL_001);
+        CreateGuideViewLogRequest request = new CreateGuideViewLogRequest(GuideType.SCHEDULE_GUIDE_MODAL_001);
         String requestContent = objectMapper.writeValueAsString(request);
 
         // when
-        Mockito.doNothing().when(userService).createGuideViewStatus(any(CreateGuideViewStatusRequest.class));
+        Mockito.doNothing().when(userService).createGuideViewLog(any(CreateGuideViewLogRequest.class));
 
         // then
-        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/users/guides/view-status")
+        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/users/guides/view-log")
                         .content(requestContent)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.is_success").value(true))
                 .andExpect(jsonPath("$.code").value("201"))
-                .andExpect(jsonPath("$.message").value("유저 가이드 확인 여부 저장에 성공했습니다."))
-                .andDo(MockMvcRestDocumentationWrapper.document("user/create-guide-view-status",
+                .andExpect(jsonPath("$.message").value("유저 가이드 조회 로그 저장에 성공했습니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("user/create-guide-view-log",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         resource(
                                 ResourceSnippetParameters.builder()
                                         .tag("User API")
-                                        .description("가이드 확인 여부를 저장한다.")
+                                        .description("유저 가이드 조회 로그를 저장한다.")
                                         .requestFields(
                                                 fieldWithPath("guide_type").type(JsonFieldType.STRING).description("가이드 타입")
                                         )
@@ -493,21 +493,21 @@ public class UserControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
                                                 fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
                                         )
-                                        .requestSchema(Schema.schema("CreateGuideViewStatusRequestSchema"))
+                                        .requestSchema(Schema.schema("CreateGuideViewLogRequestSchema"))
                                         .build()
                         )
                 ));
     }
 
     @Test
-    @DisplayName("[FAILED] 가이드 확인 여부 저장에 실패한다. (잘못된 GuideType 값)")
-    public void createGuideViewStatus_Fail_Validation() throws Exception {
+    @DisplayName("[FAILED] 유저 가이드 조회 로그 저장에 실패한다. (잘못된 GuideType 값)")
+    public void createGuideViewLog_Fail_Validation() throws Exception {
         // given
         String invalidGuideType = "wrong-guide-type";
         String requestContent = String.format("{\"guide_type\": \"%s\"}", invalidGuideType);
 
         // then
-        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/users/guides/view-status")
+        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/users/guides/view-log")
                         .content(requestContent)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -515,7 +515,7 @@ public class UserControllerTest extends ControllerTestConfig {
                 .andExpect(jsonPath("$.is_success").value(false))
                 .andExpect(jsonPath("$.code").value("E_BAD_REQUEST"))
                 .andExpect(jsonPath("$.message").value("올바르지 않은 enum 값입니다. 허용되지 않은 값: " + invalidGuideType))
-                .andDo(MockMvcRestDocumentationWrapper.document("user/create-guide-view-status-fail-validation",
+                .andDo(MockMvcRestDocumentationWrapper.document("user/create-guide-view-log-fail-validation",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         resource(
@@ -527,19 +527,19 @@ public class UserControllerTest extends ControllerTestConfig {
     }
 
     @Test
-    @DisplayName("[FAILED] 가이드 확인 여부 저장에 실패한다. (이미 조회한 가이드)")
-    public void createGuideViewStatus_Fail_Already_Viewed() throws Exception {
+    @DisplayName("[FAILED] 유저 가이드 조회 로그 저장에 실패한다. (이미 조회한 가이드)")
+    public void createGuideViewLog_Fail_Already_Viewed() throws Exception {
         // given
-        CreateGuideViewStatusRequest request = new CreateGuideViewStatusRequest(GuideType.SCHEDULE_GUIDE_MODAL_001);
+        CreateGuideViewLogRequest request = new CreateGuideViewLogRequest(GuideType.SCHEDULE_GUIDE_MODAL_001);
         String requestContent = objectMapper.writeValueAsString(request);
 
         // when
         Mockito.doThrow(new CustomException(UserErrorStatus._IS_ALREADY_VIEWED_GUIDE))
                 .when(userService)
-                .createGuideViewStatus(any(CreateGuideViewStatusRequest.class));
+                .createGuideViewLog(any(CreateGuideViewLogRequest.class));
 
         // then
-        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/users/guides/view-status")
+        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/users/guides/view-log")
                         .content(requestContent)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -547,7 +547,7 @@ public class UserControllerTest extends ControllerTestConfig {
                 .andExpect(jsonPath("$.is_success").value(false))
                 .andExpect(jsonPath("$.code").value("USER-005"))
                 .andExpect(jsonPath("$.message").value("이미 조회한 가이드입니다."))
-                .andDo(MockMvcRestDocumentationWrapper.document("user/create-guide-view-status-fail-already-viewed",
+                .andDo(MockMvcRestDocumentationWrapper.document("user/create-guide-view-log-fail-already-viewed",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         resource(
@@ -559,31 +559,31 @@ public class UserControllerTest extends ControllerTestConfig {
     }
 
     @Test
-    @DisplayName("가이드 확인 여부를 조회한다.")
-    public void getGuideViewStatus() throws Exception {
+    @DisplayName("유저 가이드 조회 로그를 조회한다.")
+    public void getGuideViewLog() throws Exception {
         // given
         GuideType guideType = GuideType.SCHEDULE_GUIDE_MODAL_001;
-        GetGuideViewStatusResponse response = GetGuideViewStatusResponse.from(true);
+        GetGuideViewLogResponse response = GetGuideViewLogResponse.from(true);
 
         // when
-        Mockito.when(userService.getGuideViewStatus(any(GuideType.class))).thenReturn(response);
+        Mockito.when(userService.getGuideViewLog(any(GuideType.class))).thenReturn(response);
 
         // then
-        mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/users/guides/view-status")
+        mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/users/guides/view-log")
                         .queryParam("guide_type", guideType.name())
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.is_success").value(true))
                 .andExpect(jsonPath("$.code").value("200"))
-                .andExpect(jsonPath("$.message").value("유저 가이드 확인 여부 조회에 성공했습니다."))
-                .andDo(MockMvcRestDocumentationWrapper.document("user/get-guide-view-status",
+                .andExpect(jsonPath("$.message").value("유저 가이드 조회 로그 조회에 성공했습니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("user/get-guide-view-log",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         resource(
                                 ResourceSnippetParameters.builder()
                                         .tag("User API")
-                                        .description("가이드 확인 여부를 조회한다.")
+                                        .description("유저 가이드 조회 로그를 조회한다.")
                                         .queryParameters(
                                                 parameterWithName("guide_type").description("가이드 타입")
                                         )
@@ -591,35 +591,35 @@ public class UserControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
                                                 fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
-                                                fieldWithPath("payload.is_viewed").type(JsonFieldType.BOOLEAN).description("가이드 확인 여부")
+                                                fieldWithPath("payload.is_viewed").type(JsonFieldType.BOOLEAN).description("가이드 조회 여부")
                                         )
-                                        .responseSchema(Schema.schema("GetGuideViewStatusResponseSchema"))
+                                        .responseSchema(Schema.schema("GetGuideViewLogResponseSchema"))
                                         .build()
                         )
                 ));
     }
 
     @Test
-    @DisplayName("가이드 확인 여부를 삭제한다.")
-    public void deleteGuideViewStatus() throws Exception {
+    @DisplayName("유저 가이드 조회 로그를 삭제한다.")
+    public void deleteGuideViewLog() throws Exception {
         // when
-        Mockito.doNothing().when(userService).deleteGuideViewStatus();
+        Mockito.doNothing().when(userService).deleteGuideViewLog();
 
         // then
-        mockMvc.perform(RestDocumentationRequestBuilders.delete("/api/v1/users/guides/view-status")
+        mockMvc.perform(RestDocumentationRequestBuilders.delete("/api/v1/users/guides/view-log")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.is_success").value(true))
                 .andExpect(jsonPath("$.code").value("200"))
-                .andExpect(jsonPath("$.message").value("유저 가이드 확인 여부 삭제에 성공했습니다."))
-                .andDo(MockMvcRestDocumentationWrapper.document("user/delete-guide-view-status",
+                .andExpect(jsonPath("$.message").value("유저 가이드 조회 로그 삭제에 성공했습니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("user/delete-guide-view-log",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         resource(
                                 ResourceSnippetParameters.builder()
                                         .tag("User API")
-                                        .description("가이드 확인 여부를 삭제한다.")
+                                        .description("유저 가이드 조회 로그를 삭제한다.")
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
@@ -632,22 +632,22 @@ public class UserControllerTest extends ControllerTestConfig {
     }
 
     @Test
-    @DisplayName("[FAILED] 가이드 확인 여부 삭제에 실패한다. (가이드 확인 여부 없음)")
-    public void deleteGuideViewStatus_Fail_NotFound() throws Exception {
+    @DisplayName("[FAILED] 유저 가이드 조회 로그 삭제에 실패한다. (가이드 조회 로그 없음)")
+    public void deleteGuideViewLog_Fail_NotFound() throws Exception {
         // when
         Mockito.doThrow(new CustomException(UserErrorStatus._NOT_FOUND_GUIDE))
                 .when(userService)
-                .deleteGuideViewStatus();
+                .deleteGuideViewLog();
 
         // then
-        mockMvc.perform(RestDocumentationRequestBuilders.delete("/api/v1/users/guides/view-status")
+        mockMvc.perform(RestDocumentationRequestBuilders.delete("/api/v1/users/guides/view-log")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.is_success").value(false))
                 .andExpect(jsonPath("$.code").value("USER-006"))
                 .andExpect(jsonPath("$.message").value("가이드를 찾을 수 없습니다."))
-                .andDo(MockMvcRestDocumentationWrapper.document("user/delete-guide-view-status-fail-not-found",
+                .andDo(MockMvcRestDocumentationWrapper.document("user/delete-guide-view-log-fail-not-found",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         resource(

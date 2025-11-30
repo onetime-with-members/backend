@@ -8,7 +8,7 @@ import side.onetime.domain.enums.GuideType;
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record CreateGuideViewStatusRequest(
+public record CreateGuideViewLogRequest(
         @NotNull(message = "가이드 타입은 필수 값입니다.")
         GuideType guideType
 ) {

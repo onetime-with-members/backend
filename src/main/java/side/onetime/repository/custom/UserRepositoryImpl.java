@@ -22,7 +22,7 @@ import java.util.List;
 import static side.onetime.domain.QEvent.event;
 import static side.onetime.domain.QEventParticipation.eventParticipation;
 import static side.onetime.domain.QFixedSelection.fixedSelection;
-import static side.onetime.domain.QGuideViewStatus.guideViewStatus;
+import static side.onetime.domain.QGuideViewLog.guideViewLog;
 import static side.onetime.domain.QMember.member;
 import static side.onetime.domain.QSchedule.schedule;
 import static side.onetime.domain.QSelection.selection;
@@ -97,8 +97,8 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
                 .where(eventParticipation.user.eq(activeUser))
                 .execute();
 
-        queryFactory.delete(guideViewStatus)
-                .where(guideViewStatus.user.eq(activeUser))
+        queryFactory.delete(guideViewLog)
+                .where(guideViewLog.user.eq(activeUser))
                 .execute();
 
         queryFactory.update(user)

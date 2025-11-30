@@ -6,10 +6,10 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record GetGuideViewStatusResponse(
+public record GetGuideViewLogResponse(
         boolean isViewed
 ) {
-    public static GetGuideViewStatusResponse from(boolean isViewed) {
-        return new GetGuideViewStatusResponse(isViewed);
+    public static GetGuideViewLogResponse from(boolean isViewed) {
+        return new GetGuideViewLogResponse(isViewed);
     }
 }

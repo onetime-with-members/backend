@@ -156,51 +156,51 @@ public class UserController {
     }
 
     /**
-     * 가이드 확인 여부 저장 API.
+     * 유저 가이드 조회 로그 저장 API.
      *
-     * GuideType에 정의된 가이드에 대해 사용자의 확인 여부를 저장합니다.
-     * 이미 확인한 상태일 경우, Conflict 에러를 반환합니다.
+     * GuideType에 정의된 가이드에 대해 사용자의 조회 로그를 저장합니다.
+     * 이미 조회한 경우, Conflict 에러를 반환합니다.
      *
      * @param request 확인 여부를 저장할 가이드 타입 객체
      * @return 성공 상태 응답 객체
      */
-    @PostMapping("/guides/view-status")
-    public ResponseEntity<ApiResponse<SuccessStatus>> createGuideViewStatus(
-            @Valid @RequestBody CreateGuideViewStatusRequest request
+    @PostMapping("/guides/view-log")
+    public ResponseEntity<ApiResponse<SuccessStatus>> createGuideViewLog(
+            @Valid @RequestBody CreateGuideViewLogRequest request
     ) {
 
-        userService.createGuideViewStatus(request);
-        return ApiResponse.onSuccess(SuccessStatus._CREATE_GUIDE_VIEW_STATUS);
+        userService.createGuideViewLog(request);
+        return ApiResponse.onSuccess(SuccessStatus._CREATE_GUIDE_VIEW_LOG);
     }
 
     /**
-     * 가이드 확인 여부 조회 API.
+     * 유저 가이드 조회 로그 조회 API.
      *
-     * GuideType에 정의된 가이드에 대해 사용자의 확인 여부를 조회합니다.
+     * GuideType에 정의된 가이드에 대해 사용자의 조회 로그를 조회합니다.
      *
      * @param guideType 조회할 가이드 타입
-     * @return 가이드 확인 여부 응답 객체
+     * @return 가이드 조회 로그 응답 객체
      */
-    @GetMapping("/guides/view-status")
-    public ResponseEntity<ApiResponse<GetGuideViewStatusResponse>> getGuideViewStatus(
+    @GetMapping("/guides/view-log")
+    public ResponseEntity<ApiResponse<GetGuideViewLogResponse>> getGuideViewLog(
             @RequestParam("guide_type") GuideType guideType
     ){
 
-        GetGuideViewStatusResponse response = userService.getGuideViewStatus(guideType);
-        return ApiResponse.onSuccess(SuccessStatus._GET_GUIDE_VIEW_STATUS, response);
+        GetGuideViewLogResponse response = userService.getGuideViewLog(guideType);
+        return ApiResponse.onSuccess(SuccessStatus._GET_GUIDE_VIEW_LOG, response);
     }
 
     /**
-     * 가이드 확인 여부 삭제 API.
+     * 유저 가이드 조회 로그 삭제 API.
      *
-     * 사용자의 가이드 확인 여부를 삭제합니다.
+     * 사용자의 가이드 조회 로그를 삭제합니다.
      *
      * @return 성공 상태 응답 객체
      */
-    @DeleteMapping("/guides/view-status")
-    public ResponseEntity<ApiResponse<GetGuideViewStatusResponse>> deleteGuideViewStatus(){
+    @DeleteMapping("/guides/view-log")
+    public ResponseEntity<ApiResponse<GetGuideViewLogResponse>> deleteGuideViewLog(){
 
-        userService.deleteGuideViewStatus();
-        return ApiResponse.onSuccess(SuccessStatus._DELETE_GUIDE_VIEW_STATUS);
+        userService.deleteGuideViewLog();
+        return ApiResponse.onSuccess(SuccessStatus._DELETE_GUIDE_VIEW_LOG);
     }
 }
