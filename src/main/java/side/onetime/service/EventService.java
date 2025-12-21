@@ -519,45 +519,6 @@ public class EventService {
     }
 
     /**
-     * 유저 참여 이벤트 반환 메서드.
-     * 인증된 유저가 참여한 모든 이벤트 목록을 조회하며, 각 이벤트에 대한 세부 정보를 반환합니다.
-     *
-     * @return 유저가 참여한 이벤트 목록
-     */
-    @Transactional(readOnly = true)
-    public List<GetUserParticipatedEventsResponse> getUserParticipatedEvents() {
-        User user = userRepository.findById(UserAuthorizationUtil.getLoginUserId())
-                .orElseThrow(() -> new CustomException(UserErrorStatus._NOT_FOUND_USER));
-
-        List<EventParticipation> participations = eventParticipationRepository.findAllByUserWithEvent(user);
-
-        // 캐시 맵 선언
-        Map<String, GetParticipantsResponse> participantsCache = new HashMap<>();
-        Map<String, List<GetMostPossibleTime>> mostPossibleCache = new HashMap<>();
-
-        return participations.stream()
-                .sorted(Comparator.comparing((EventParticipation ep) -> ep.getEvent().getCreatedDate()).reversed())
-                .map(ep -> {
-                    Event event = ep.getEvent();
-                    String eventId = event.getEventId().toString();
-
-                    // 캐시 또는 메서드 실행
-                    GetParticipantsResponse participants = participantsCache.computeIfAbsent(
-                            eventId, this::getParticipants);
-                    List<GetMostPossibleTime> mostPossibleTimes = mostPossibleCache.computeIfAbsent(
-                            eventId, this::getMostPossibleTime);
-
-                    return GetUserParticipatedEventsResponse.of(
-                            event,
-                            ep,
-                            participants.users().size() + participants.members().size(),
-                            mostPossibleTimes
-                    );
-                })
-                .collect(Collectors.toList());
-    }
-
-    /**
      * 유저 참여 이벤트 목록 조회 메서드.
      *
      * 인증된 유저가 참여한 이벤트 목록을 페이지 단위로 조회하며, 각 이벤트에 대한 세부 정보를 반환합니다.
@@ -597,7 +558,6 @@ public class EventService {
 
         return GetParticipatedEventsResponse.of(userParticipatedEvents, pageCursorInfo);
     }
-
 
     /**
      * 유저가 생성한 이벤트 삭제 메서드.
