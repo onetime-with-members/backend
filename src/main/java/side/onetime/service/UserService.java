@@ -41,6 +41,12 @@ public class UserService {
     public OnboardUserResponse onboardUser(OnboardUserRequest request) {
         String registerToken = request.registerToken();
         jwtUtil.validateToken(registerToken);
+
+        String providerId = jwtUtil.getClaimFromToken(registerToken, "providerId", String.class);
+        if (userRepository.existsByProviderId(providerId)) {
+            throw new CustomException(UserErrorStatus._ALREADY_REGISTERED_USER);
+        }
+
         User newUser = createUserFromRegisterToken(request, registerToken);
         userRepository.save(newUser);
 
