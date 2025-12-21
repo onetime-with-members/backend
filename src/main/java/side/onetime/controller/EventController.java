@@ -121,20 +121,6 @@ public class EventController {
     /**
      * 유저 참여 이벤트 목록 조회 API.
      *
-     * 이 API는 인증된 유저가 참여한 모든 이벤트 목록을 조회합니다. 유저의 참여 상태, 이벤트 정보 등이 포함됩니다.
-     *
-     * @return 유저가 참여한 이벤트 목록
-     */
-    @GetMapping("/user/all")
-    public ResponseEntity<ApiResponse<List<GetUserParticipatedEventsResponse>>> getUserParticipatedEvents() {
-
-        List<GetUserParticipatedEventsResponse> getUserParticipatedEventsResponses = eventService.getUserParticipatedEvents();
-        return ApiResponse.onSuccess(SuccessStatus._GET_USER_PARTICIPATED_EVENTS, getUserParticipatedEventsResponses);
-    }
-
-    /**
-     * 유저 참여 이벤트 목록 조회 API.
-     *
      * 이 API는 인증된 유저가 참여한 이벤트 목록을 페이지 단위로 조회합니다. 유저의 참여 상태, 이벤트 정보 등이 포함됩니다.
      *
      * 커서 기반의 페이징을 지원하며, createdDate 커서를 기준으로 이전에 생성된 이벤트를 조회합니다.
@@ -144,7 +130,7 @@ public class EventController {
      * @param createdDate 마지막으로 조회한 이벤트 생성일
      * @return 유저가 참여한 이벤트 목록 및 페이지(커서) 정보가 포함된 응답 DTO
      */
-    @GetMapping("/user/all/v2")
+    @GetMapping("/user/all")
     public ResponseEntity<ApiResponse<GetParticipatedEventsResponse>> getParticipatedEventsByCursor(
             @RequestParam(value = "size", defaultValue = "2") @Min(1) int size,
             @RequestParam(value = "cursor", required = false) LocalDateTime createdDate
