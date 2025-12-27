@@ -12,7 +12,11 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long>, UserRepositoryCustom {
     Optional<User> findByName(String name);
+
     User findByProviderId(String providerId);
+
+    boolean existsByProviderId(String providerId);
+
     void withdraw(User user);
 
     @Query("""

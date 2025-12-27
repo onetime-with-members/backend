@@ -384,73 +384,6 @@ public class EventControllerTest extends ControllerTestConfig {
 
     @Test
     @DisplayName("유저 참여 이벤트 목록을 조회한다.")
-    public void getUserParticipatedEvents() throws Exception {
-        // given
-        List<GetUserParticipatedEventsResponse> response = List.of(
-                new GetUserParticipatedEventsResponse(
-                        UUID.randomUUID(),
-                        Category.DATE,
-                        "Sample Event",
-                        "2024.11.13",
-                        10,
-                        EventStatus.CREATOR,
-                        List.of(
-                                new GetMostPossibleTime("2024.11.13", "10:00", "10:30", 5, List.of("User1", "User2"), List.of("User3"))
-                        )
-                )
-        );
-
-        Mockito.when(eventService.getUserParticipatedEvents()).thenReturn(response);
-
-        // when
-        ResultActions resultActions = this.mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/events/user/all")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer sampleToken")
-                .accept(MediaType.APPLICATION_JSON));
-
-        // then
-        resultActions
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.is_success").value(true))
-                .andExpect(jsonPath("$.code").value("200"))
-                .andExpect(jsonPath("$.message").value("유저 참여 이벤트 목록 조회에 성공했습니다."))
-                .andExpect(jsonPath("$.payload[0].event_id").exists())
-                .andExpect(jsonPath("$.payload[0].title").value("Sample Event"))
-
-                // docs
-                .andDo(MockMvcRestDocumentationWrapper.document("event/get-user-participated-events",
-                        preprocessRequest(prettyPrint()),
-                        preprocessResponse(prettyPrint()),
-                        resource(
-                                ResourceSnippetParameters.builder()
-                                        .tag("Event API")
-                                        .description("유저가 참여한 이벤트 목록을 조회한다.")
-                                        .responseFields(
-                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
-                                                fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
-                                                fieldWithPath("payload").type(JsonFieldType.ARRAY).description("참여 이벤트 목록"),
-                                                fieldWithPath("payload[].event_id").type(JsonFieldType.STRING).description("이벤트 ID"),
-                                                fieldWithPath("payload[].category").type(JsonFieldType.STRING).description("이벤트 카테고리"),
-                                                fieldWithPath("payload[].title").type(JsonFieldType.STRING).description("이벤트 제목"),
-                                                fieldWithPath("payload[].created_date").type(JsonFieldType.STRING).description("이벤트 생성일"),
-                                                fieldWithPath("payload[].participant_count").type(JsonFieldType.NUMBER).description("참여자 수"),
-                                                fieldWithPath("payload[].event_status").type(JsonFieldType.STRING).description("이벤트 참여 상태"),
-                                                fieldWithPath("payload[].most_possible_times").type(JsonFieldType.ARRAY).description("가장 많이 가능한 시간대"),
-                                                fieldWithPath("payload[].most_possible_times[].time_point").type(JsonFieldType.STRING).description("날짜 또는 요일"),
-                                                fieldWithPath("payload[].most_possible_times[].start_time").type(JsonFieldType.STRING).description("시작 시간"),
-                                                fieldWithPath("payload[].most_possible_times[].end_time").type(JsonFieldType.STRING).description("종료 시간"),
-                                                fieldWithPath("payload[].most_possible_times[].possible_count").type(JsonFieldType.NUMBER).description("가능한 참여자 수"),
-                                                fieldWithPath("payload[].most_possible_times[].possible_names").type(JsonFieldType.ARRAY).description("참여 가능한 유저 이름 목록"),
-                                                fieldWithPath("payload[].most_possible_times[].impossible_names").type(JsonFieldType.ARRAY).description("참여 불가능한 유저 이름 목록")
-                                        )
-                                        .responseSchema(Schema.schema("GetUserParticipatedEventsResponseSchema"))
-                                        .build()
-                        )
-                ));
-    }
-
-    @Test
-    @DisplayName("유저 참여 이벤트 목록을 조회한다.")
     public void getParticipatedEventsByCursor() throws Exception {
         // given
         int size = 2;
@@ -474,7 +407,7 @@ public class EventControllerTest extends ControllerTestConfig {
         Mockito.when(eventService.getParticipatedEventsByCursor(anyInt(), any(LocalDateTime.class))).thenReturn(response);
 
         // when
-        ResultActions resultActions = this.mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/events/user/all/v2")
+        ResultActions resultActions = this.mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/events/user/all")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer sampleToken")
                 .param("size", String.valueOf(size))
                 .param("cursor", createdDate)
