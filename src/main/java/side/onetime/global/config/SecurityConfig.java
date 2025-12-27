@@ -41,6 +41,7 @@ public class SecurityConfig {
 		"/api/v1/tokens/**",
 		"/api/v1/admin/**",
 		"/api/v1/banners/**",
+		"/api/v1/bar-banners/**",
 		"/api/v1/users/onboarding",
 		"/api/v1/users/logout",
 		"/actuator/health"
