@@ -1,7 +1,8 @@
-package side.onetime.dto.admin.response;
+package side.onetime.dto.banner.response;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import side.onetime.dto.admin.response.PageInfo;
 
 import java.util.List;
 
