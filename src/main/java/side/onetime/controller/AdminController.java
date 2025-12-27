@@ -288,28 +288,6 @@ public class AdminController {
     }
 
     /**
-     * 현재 활성화된 배너 전체 조회 API.
-     *
-     * @return 활성화된 배너 응답 객체 리스트
-     */
-    @GetMapping("/banners/activated/all")
-    public ResponseEntity<ApiResponse<GetAllActivatedBannersResponse>> getAllActivatedBanners() {
-        GetAllActivatedBannersResponse response = adminService.getAllActivatedBanners();
-        return ApiResponse.onSuccess(SuccessStatus._GET_ALL_ACTIVATED_BANNERS, response);
-    }
-
-    /**
-     * 현재 활성화된 띠배너 전체 조회 API.
-     *
-     * @return 활성화된 띠배너 응답 객체 리스트
-     */
-    @GetMapping("/bar-banners/activated/all")
-    public ResponseEntity<ApiResponse<GetAllActivatedBarBannersResponse>> getAllActivatedBarBanners() {
-        GetAllActivatedBarBannersResponse response = adminService.getAllActivatedBarBanners();
-        return ApiResponse.onSuccess(SuccessStatus._GET_ALL_ACTIVATED_BAR_BANNERS, response);
-    }
-
-    /**
      * 배너 수정 API.
      *
      * 일부 필드만 수정이 가능한 PATCH 방식의 API입니다.
