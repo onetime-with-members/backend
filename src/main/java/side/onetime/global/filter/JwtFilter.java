@@ -6,11 +6,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import side.onetime.auth.service.CustomAdminDetailsService;
 import side.onetime.auth.service.CustomUserDetailsService;
 import side.onetime.exception.CustomException;
 import side.onetime.util.JwtUtil;
@@ -24,6 +26,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService customUserDetailsService;
+    private final CustomAdminDetailsService customAdminDetailsService;
 
     /**
      * 요청을 처리하며 JWT 검증 및 인증 설정을 수행합니다.
@@ -43,12 +46,23 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
+        String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
-            String authorizationHeader = request.getHeader("Authorization");
             String token = jwtUtil.getTokenFromHeader(authorizationHeader);
             jwtUtil.validateToken(token);
+
+            String userType = jwtUtil.getClaimFromToken(token, "userType", String.class);
             Long userId = jwtUtil.getClaimFromToken(token, "userId", Long.class);
-            setAuthentication(userId);
+
+            UserDetails userDetails = "ADMIN".equals(userType)
+                    ? customAdminDetailsService.loadAdminByAdminId(userId)
+                    : customUserDetailsService.loadUserByUserId(userId);
+            setAuthentication(userDetails);
 
             filterChain.doFilter(request, response);
 
@@ -61,10 +75,9 @@ public class JwtFilter extends OncePerRequestFilter {
     /**
      * 인증 정보를 SecurityContext에 설정합니다.
      *
-     * @param userId 인증된 사용자의 ID
+     * @param userDetails 인증된 사용자
      */
-    private void setAuthentication(Long userId) {
-        UserDetails userDetails = customUserDetailsService.loadUserByUserId(userId);
+    private void setAuthentication(UserDetails userDetails) {
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 userDetails,
                 null,
@@ -82,47 +95,12 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        String method = request.getMethod();
-
-        // 공통 prefix
-        boolean isGet = method.equals("GET");
-        boolean isPost = method.equals("POST");
-        boolean isPatch = method.equals("PATCH");
 
         return path.equals("/actuator/health") ||
                 path.equals("/") ||
-                path.equals("/login") ||
-                // 스웨거
                 path.startsWith("/swagger-ui") ||
                 path.startsWith("/v3/api-docs") ||
-                // 로그인 없이 접근 가능한 공통 API
-                path.startsWith("/api/v1/admin") ||
-                path.startsWith("/api/v1/members") ||
-                path.startsWith("/api/v1/tokens") ||
-                path.startsWith("/api/v1/urls") ||
-                path.startsWith("/api/v1/banners") ||
-                path.startsWith("/api/v1/bar-banners") ||
-                // 유저 관련
-                (isPost && path.equals("/api/v1/users/onboarding")) ||
-                (isPost && path.equals("/api/v1/users/logout")) ||
-                // 이벤트 관련
-                (isPost && path.equals("/api/v1/events")) ||
-                (isGet && path.matches("/api/v1/events/[^/]+$")) ||
-                (isGet && path.matches("/api/v1/events/[^/]+/participants")) ||
-                (isGet && path.matches("/api/v1/events/[^/]+/most")) ||
-                (isPost && path.matches("/api/v1/events/[^/]+/most/filtering")) ||
-                (isPatch && path.matches("/api/v1/events/[^/]+")) ||
-                (isGet && path.matches("/api/v1/events/qr/[^/]+")) ||
-                // 요일 스케줄 등록/조회 (비로그인)
-                (isPost && path.equals("/api/v1/schedules/day")) ||
-                (isGet && path.matches("/api/v1/schedules/day/[^/]+$")) ||
-                (isGet && path.matches("/api/v1/schedules/day/[^/]+/[^/]+$") && !path.endsWith("/user")) ||
-                (isPost && path.matches("/api/v1/schedules/day/[^/]+/filtering")) ||
-                // 날짜 스케줄 등록/조회 (비로그인)
-                (isPost && path.equals("/api/v1/schedules/date")) ||
-                (isGet && path.matches("/api/v1/schedules/date/[^/]+$")) ||
-                (isGet && path.matches("/api/v1/schedules/date/[^/]+/[^/]+$") && !path.endsWith("/user")) ||
-                (isPost && path.matches("/api/v1/schedules/date/[^/]+/filtering"));
+                path.startsWith("/favicon.ico");
     }
 
     /**
