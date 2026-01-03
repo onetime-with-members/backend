@@ -15,6 +15,7 @@ import side.onetime.dto.admin.response.*;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.AdminErrorStatus;
 import side.onetime.repository.*;
+import side.onetime.util.AdminAuthorizationUtil;
 import side.onetime.util.JwtUtil;
 
 import java.util.Comparator;
@@ -84,13 +85,13 @@ public class AdminService {
      * 관리자 정보를 조회합니다.
      * - 토큰이 유효하지 않거나 관리자 정보가 존재하지 않을 경우 예외가 발생합니다.
      *
-     * @param authorizationHeader Authorization 헤더에 포함된 액세스 토큰
      * @return 관리자 프로필 응답 객체
      */
     @Transactional(readOnly = true)
-    public GetAdminUserProfileResponse getAdminUserProfile(String authorizationHeader) {
+    public GetAdminUserProfileResponse getAdminUserProfile() {
 
-        AdminUser adminUser = jwtUtil.getAdminUserFromHeader(authorizationHeader);
+        AdminUser adminUser = adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
+                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
         return GetAdminUserProfileResponse.from(adminUser);
     }
 
@@ -103,13 +104,13 @@ public class AdminService {
      * - 마스터 관리자가 아닐 경우 예외가 발생합니다.
      * - 토큰이 유효하지 않거나 관리자 정보가 존재하지 않을 경우 예외가 발생합니다.
      *
-     * @param authorizationHeader Authorization 헤더에 포함된 액세스 토큰
      * @return 전체 관리자 정보 리스트
      */
     @Transactional(readOnly = true)
-    public List<AdminUserDetailResponse> getAllAdminUserDetail(String authorizationHeader) {
+    public List<AdminUserDetailResponse> getAllAdminUserDetail() {
 
-        AdminUser adminUser = jwtUtil.getAdminUserFromHeader(authorizationHeader);
+        AdminUser adminUser = adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
+                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
         if (!AdminStatus.MASTER.equals(adminUser.getAdminStatus())) {
             throw new CustomException(AdminErrorStatus._ONLY_CAN_MASTER_ADMIN_USER);
         }
@@ -128,13 +129,13 @@ public class AdminService {
      * - 마스터 관리자가 아닐 경우 예외가 발생합니다.
      * - 대상 관리자가 존재하지 않을 경우 예외가 발생합니다.
      *
-     * @param authorizationHeader 요청자의 액세스 토큰
      * @param request 수정할 관리자 ID와 변경할 권한 상태를 담은 요청 객체
      */
     @Transactional
-    public void updateAdminUserStatus(String authorizationHeader, UpdateAdminUserStatusRequest request) {
+    public void updateAdminUserStatus(UpdateAdminUserStatusRequest request) {
 
-        AdminUser adminUser = jwtUtil.getAdminUserFromHeader(authorizationHeader);
+        AdminUser adminUser = adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
+                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
         if (!AdminStatus.MASTER.equals(adminUser.getAdminStatus())) {
             throw new CustomException(AdminErrorStatus._ONLY_CAN_MASTER_ADMIN_USER);
         }
@@ -149,12 +150,12 @@ public class AdminService {
      *
      * 액세스 토큰을 기반으로 관리자 정보를 조회한 뒤 DB에서 삭제합니다.
      *
-     * @param authorizationHeader Authorization 헤더에 포함된 액세스 토큰
      */
     @Transactional
-    public void withdrawAdminUser(String authorizationHeader) {
+    public void withdrawAdminUser() {
 
-        AdminUser adminUser = jwtUtil.getAdminUserFromHeader(authorizationHeader);
+        AdminUser adminUser = adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
+                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
         adminRepository.delete(adminUser);
     }
 
@@ -167,15 +168,15 @@ public class AdminService {
      * 정렬 기준이 participant_count인 경우 메모리 내 정렬 후 페이징 처리됩니다.
      * 그 외 기준은 DB 정렬 및 페이징 후 결과가 반환됩니다.
      *
-     * @param authorizationHeader Authorization 헤더에서 추출한 토큰
      * @param pageable 페이지 정보 (페이지 번호, 크기 등 - 정렬은 직접 처리)
      * @param keyword 정렬 기준 필드명 (snake_case)
      * @param sorting 정렬 방향 ("asc", "desc")
      * @return DashboardEvent 리스트 및 페이지 정보 포함 응답 DTO
      */
     @Transactional(readOnly = true)
-    public GetAllDashboardEventsResponse getAllDashboardEvents(String authorizationHeader, Pageable pageable, String keyword, String sorting) {
-        jwtUtil.getAdminUserFromHeader(authorizationHeader);
+    public GetAllDashboardEventsResponse getAllDashboardEvents(Pageable pageable, String keyword, String sorting) {
+        adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
+                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
 
         boolean isSortByParticipant = keyword.equals("participant_count");
 
@@ -234,15 +235,15 @@ public class AdminService {
      *
      * 전체 유저 수를 기준으로 totalElements와 totalPages를 계산하여 PageInfo에 포함합니다.
      *
-     * @param authorizationHeader Authorization 헤더에서 추출한 토큰
      * @param pageable 페이지 정보 (페이지 번호, 크기 등)
      * @param keyword 정렬 기준 필드 (예: name, email, created_date 등)
      * @param sorting 정렬 방향 ("asc" 또는 "desc")
      * @return DashboardUser 리스트 및 페이지 정보 포함 응답 DTO
      */
     @Transactional(readOnly = true)
-    public GetAllDashboardUsersResponse getAllDashboardUsers(String authorizationHeader, Pageable pageable, String keyword, String sorting) {
-        jwtUtil.getAdminUserFromHeader(authorizationHeader);
+    public GetAllDashboardUsersResponse getAllDashboardUsers(Pageable pageable, String keyword, String sorting) {
+        adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
+                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
 
         List<User> users = userRepository.findAllWithSort(pageable, keyword, sorting);
 
