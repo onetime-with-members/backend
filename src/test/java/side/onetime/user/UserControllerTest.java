@@ -12,8 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.ResultActions;
-import side.onetime.auth.service.CustomUserDetailsService;
-import side.onetime.configuration.ControllerTestConfig;
+import side.onetime.configuration.UserControllerTestConfig;
 import side.onetime.controller.UserController;
 import side.onetime.domain.enums.GuideType;
 import side.onetime.domain.enums.Language;
@@ -22,7 +21,6 @@ import side.onetime.dto.user.response.*;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.UserErrorStatus;
 import side.onetime.service.UserService;
-import side.onetime.util.JwtUtil;
 
 import static com.epages.restdocs.apispec.ResourceDocumentation.parameterWithName;
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
@@ -33,16 +31,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserController.class)
-public class UserControllerTest extends ControllerTestConfig {
+public class UserControllerTest extends UserControllerTestConfig {
 
     @MockBean
     private UserService userService;
-
-    @MockBean
-    private JwtUtil jwtUtil;
-
-    @MockBean
-    private CustomUserDetailsService customUserDetailsService;
 
     @Test
     @DisplayName("유저 온보딩을 진행한다.")
