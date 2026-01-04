@@ -12,7 +12,6 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.ResultActions;
-import side.onetime.auth.service.CustomUserDetailsService;
 import side.onetime.configuration.ControllerTestConfig;
 import side.onetime.controller.UrlController;
 import side.onetime.dto.url.request.ConvertToOriginalUrlRequest;
@@ -21,7 +20,6 @@ import side.onetime.dto.url.response.ConvertToOriginalUrlResponse;
 import side.onetime.dto.url.response.ConvertToShortenUrlResponse;
 import side.onetime.repository.EventRepository;
 import side.onetime.service.UrlService;
-import side.onetime.util.JwtUtil;
 
 import java.util.UUID;
 
@@ -34,17 +32,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(UrlController.class)
 public class UrlControllerTest extends ControllerTestConfig {
+
     @MockBean
     private UrlService urlService;
 
     @MockBean
     private EventRepository eventRepository;
-
-    @MockBean
-    private JwtUtil jwtUtil;
-
-    @MockBean
-    private CustomUserDetailsService customUserDetailsService;
 
     @Test
     @DisplayName("원본 URL을 단축 URL로 변환한다.")

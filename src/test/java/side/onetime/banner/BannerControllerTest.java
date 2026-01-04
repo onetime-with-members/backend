@@ -14,8 +14,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.web.multipart.MultipartFile;
-import side.onetime.auth.service.CustomUserDetailsService;
-import side.onetime.configuration.ControllerTestConfig;
+import side.onetime.configuration.AdminControllerTestConfig;
 import side.onetime.controller.BannerController;
 import side.onetime.dto.admin.response.PageInfo;
 import side.onetime.dto.banner.request.RegisterBannerRequest;
@@ -24,7 +23,6 @@ import side.onetime.dto.banner.request.UpdateBannerRequest;
 import side.onetime.dto.banner.request.UpdateBarBannerRequest;
 import side.onetime.dto.banner.response.*;
 import side.onetime.service.BannerService;
-import side.onetime.util.JwtUtil;
 
 import java.util.List;
 
@@ -39,23 +37,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(BannerController.class)
-public class BannerControllerTest extends ControllerTestConfig {
+public class BannerControllerTest extends AdminControllerTestConfig {
 
     @MockBean
     private BannerService bannerService;
-
-    @MockBean
-    private JwtUtil jwtUtil;
-
-    @MockBean
-    private CustomUserDetailsService customUserDetailsService;
 
     @Test
     @DisplayName("배너를 등록한다.")
     public void registerBanner() throws Exception {
         // given
-        String accessToken = "Bearer test.jwt.token";
-
         RegisterBannerRequest request = new RegisterBannerRequest(
                 "OneTime",
                 "OneTime's Title",
@@ -67,13 +57,12 @@ public class BannerControllerTest extends ControllerTestConfig {
         String requestContent = objectMapper.writeValueAsString(request);
 
         // when
-        Mockito.doNothing().when(bannerService).registerBanner(any(String.class), any(RegisterBannerRequest.class), any(MultipartFile.class));
+        Mockito.doNothing().when(bannerService).registerBanner(any(RegisterBannerRequest.class), any(MultipartFile.class));
 
         // then
         mockMvc.perform(RestDocumentationRequestBuilders.multipart("/api/v1/banners/register")
                         .file(new MockMultipartFile("request", "", "application/json", requestContent.getBytes()))
-                        .file(new MockMultipartFile("image_file", "banner.png", "image/png", "banner-image-content".getBytes()))
-                        .header("Authorization", accessToken))
+                        .file(new MockMultipartFile("image_file", "banner.png", "image/png", "banner-image-content".getBytes())))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.is_success").value(true))
                 .andExpect(jsonPath("$.code").value("201"))
@@ -99,7 +88,6 @@ public class BannerControllerTest extends ControllerTestConfig {
     @DisplayName("띠배너를 등록한다.")
     public void registerBarBanner() throws Exception {
         // given
-        String accessToken = "Bearer test.jwt.token";
         RegisterBarBannerRequest request = new RegisterBarBannerRequest(
                 "최신 소식 안내",
                 "News",
@@ -110,12 +98,11 @@ public class BannerControllerTest extends ControllerTestConfig {
         String requestContent = objectMapper.writeValueAsString(request);
 
         // when
-        Mockito.doNothing().when(bannerService).registerBarBanner(any(String.class), any(RegisterBarBannerRequest.class));
+        Mockito.doNothing().when(bannerService).registerBarBanner(any(RegisterBarBannerRequest.class));
 
         // then
         mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/bar-banners/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("Authorization", accessToken)
                         .content(requestContent))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.is_success").value(true))
@@ -151,18 +138,16 @@ public class BannerControllerTest extends ControllerTestConfig {
     @DisplayName("배너를 단건 조회한다.")
     public void getBanner() throws Exception {
         // given
-        String accessToken = "Bearer test.jwt.token";
         Long bannerId = 1L;
         GetBannerResponse response = new GetBannerResponse(
                 bannerId, "OneTime", "OneTime's Title", "OneTime's Sub Title", "OneTime's Button Text", "#FFFFFF", "https://www.image.com", true, "2025-08-26 12:00:00", "https://www.link.com", 1L
         );
 
         // when
-        Mockito.when(bannerService.getBanner(any(String.class), any(Long.class))).thenReturn(response);
+        Mockito.when(bannerService.getBanner(any(Long.class))).thenReturn(response);
 
         // then
-        mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/banners/{id}", bannerId)
-                        .header("Authorization", accessToken))
+        mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/banners/{id}", bannerId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.is_success").value(true))
                 .andExpect(jsonPath("$.code").value("200"))
@@ -204,7 +189,6 @@ public class BannerControllerTest extends ControllerTestConfig {
     @DisplayName("띠배너를 단건 조회한다.")
     public void getBarBanner() throws Exception {
         // given
-        String accessToken = "Bearer test.jwt.token";
         Long barBannerId = 1L;
         GetBarBannerResponse response = new GetBarBannerResponse(
                 barBannerId,
@@ -212,11 +196,10 @@ public class BannerControllerTest extends ControllerTestConfig {
         );
 
         // when
-        Mockito.when(bannerService.getBarBanner(any(String.class), any(Long.class))).thenReturn(response);
+        Mockito.when(bannerService.getBarBanner(any(Long.class))).thenReturn(response);
 
         // then
-        mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/bar-banners/{id}", barBannerId)
-                        .header("Authorization", accessToken))
+        mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/bar-banners/{id}", barBannerId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.is_success").value(true))
                 .andExpect(jsonPath("$.code").value("200"))
@@ -255,7 +238,6 @@ public class BannerControllerTest extends ControllerTestConfig {
     @DisplayName("배너를 전체 조회한다.")
     public void getAllBanners() throws Exception {
         // given
-        String accessToken = "Bearer test.jwt.token";
         int page = 1;
 
         List<GetBannerResponse> banners = List.of(
@@ -267,12 +249,11 @@ public class BannerControllerTest extends ControllerTestConfig {
         GetAllBannersResponse response = GetAllBannersResponse.of(banners, pageInfo);
 
         // when
-        Mockito.when(bannerService.getAllBanners(any(String.class), any(Pageable.class)))
+        Mockito.when(bannerService.getAllBanners(any(Pageable.class)))
                 .thenReturn(response);
 
         // then
         mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/banners/all")
-                        .header("Authorization", accessToken)
                         .param("page", String.valueOf(page)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.is_success").value(true))
@@ -326,7 +307,6 @@ public class BannerControllerTest extends ControllerTestConfig {
     @DisplayName("띠배너를 전체 조회한다.")
     public void getAllBarBanners() throws Exception {
         // given
-        String accessToken = "Bearer test.jwt.token";
         int page = 1;
 
         List<GetBarBannerResponse> barBanners = List.of(
@@ -338,12 +318,11 @@ public class BannerControllerTest extends ControllerTestConfig {
         GetAllBarBannersResponse response = GetAllBarBannersResponse.of(barBanners, pageInfo);
 
         // when
-        Mockito.when(bannerService.getAllBarBanners(any(String.class), any(Pageable.class)))
+        Mockito.when(bannerService.getAllBarBanners(any(Pageable.class)))
                 .thenReturn(response);
 
         // then
         mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/bar-banners/all")
-                        .header("Authorization", accessToken)
                         .param("page", String.valueOf(page)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.is_success").value(true))
@@ -492,7 +471,6 @@ public class BannerControllerTest extends ControllerTestConfig {
     public void updateBanner() throws Exception {
         // given
         Long bannerId = 1L;
-        String accessToken = "Bearer temp.jwt.access.token";
 
         UpdateBannerRequest request = new UpdateBannerRequest(
                 "Modified OneTime",
@@ -506,13 +484,12 @@ public class BannerControllerTest extends ControllerTestConfig {
         String requestContent = objectMapper.writeValueAsString(request);
 
         // when
-        Mockito.doNothing().when(bannerService).updateBanner(any(String.class), any(Long.class), any(UpdateBannerRequest.class), any(MultipartFile.class));
+        Mockito.doNothing().when(bannerService).updateBanner(any(Long.class), any(UpdateBannerRequest.class), any(MultipartFile.class));
 
         // then
         mockMvc.perform(RestDocumentationRequestBuilders.multipart("/api/v1/banners/{id}", bannerId)
                         .file(new MockMultipartFile("request", "", "application/json", requestContent.getBytes()))
                         .file(new MockMultipartFile("image_file", "banner.png", "image/png", "banner-image-content".getBytes()))
-                        .header("Authorization", accessToken)
                         .with(r -> {
                             r.setMethod("PATCH");
                             return r;
@@ -543,7 +520,6 @@ public class BannerControllerTest extends ControllerTestConfig {
     public void updateBarBanner() throws Exception {
         // given
         Long barBannerId = 1L;
-        String accessToken = "Bearer temp.jwt.access.token";
         UpdateBarBannerRequest request = new UpdateBarBannerRequest(
                 "수정된 내용",
                 "modified content",
@@ -555,11 +531,10 @@ public class BannerControllerTest extends ControllerTestConfig {
         String requestContent = objectMapper.writeValueAsString(request);
 
         // when
-        Mockito.doNothing().when(bannerService).updateBarBanner(any(String.class), eq(barBannerId), any(UpdateBarBannerRequest.class));
+        Mockito.doNothing().when(bannerService).updateBarBanner(eq(barBannerId), any(UpdateBarBannerRequest.class));
 
         // then
         mockMvc.perform(RestDocumentationRequestBuilders.patch("/api/v1/bar-banners/{id}", barBannerId)
-                        .header("Authorization", accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestContent))
                 .andExpect(status().isOk())
@@ -597,15 +572,13 @@ public class BannerControllerTest extends ControllerTestConfig {
     @DisplayName("배너를 삭제한다.")
     public void deleteBanner() throws Exception {
         // given
-        String accessToken = "Bearer test.jwt.token";
         Long bannerId = 1L;
 
         // when
-        Mockito.doNothing().when(bannerService).deleteBanner(any(String.class), eq(bannerId));
+        Mockito.doNothing().when(bannerService).deleteBanner(eq(bannerId));
 
         // then
-        mockMvc.perform(RestDocumentationRequestBuilders.delete("/api/v1/banners/{id}", bannerId)
-                        .header("Authorization", accessToken))
+        mockMvc.perform(RestDocumentationRequestBuilders.delete("/api/v1/banners/{id}", bannerId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.is_success").value(true))
                 .andExpect(jsonPath("$.code").value("200"))
@@ -632,15 +605,13 @@ public class BannerControllerTest extends ControllerTestConfig {
     @DisplayName("띠배너를 삭제한다.")
     public void deleteBarBanner() throws Exception {
         // given
-        String accessToken = "Bearer test.jwt.token";
         Long barBannerId = 1L;
 
         // when
-        Mockito.doNothing().when(bannerService).deleteBarBanner(any(String.class), eq(barBannerId));
+        Mockito.doNothing().when(bannerService).deleteBarBanner(eq(barBannerId));
 
         // then
-        mockMvc.perform(RestDocumentationRequestBuilders.delete("/api/v1/bar-banners/{id}", barBannerId)
-                        .header("Authorization", accessToken))
+        mockMvc.perform(RestDocumentationRequestBuilders.delete("/api/v1/bar-banners/{id}", barBannerId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.is_success").value(true))
                 .andExpect(jsonPath("$.code").value("200"))

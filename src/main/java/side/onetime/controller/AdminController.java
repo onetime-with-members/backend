@@ -64,14 +64,12 @@ public class AdminController {
      * 요청 헤더에 포함된 액세스 토큰을 기반으로 로그인된 관리자 정보를 조회합니다.
      * 유효한 토큰이 아닐 경우 예외가 발생하며, 유효한 경우 이름, 이메일 정보를 반환합니다.
      *
-     * @param authorizationHeader Authorization 헤더에 포함된 액세스 토큰
      * @return 관리자 프로필 정보가 포함된 응답 객체
      */
     @GetMapping("/profile")
-    public ResponseEntity<ApiResponse<GetAdminUserProfileResponse>> getAdminUserProfile(
-            @RequestHeader("Authorization") String authorizationHeader) {
+    public ResponseEntity<ApiResponse<GetAdminUserProfileResponse>> getAdminUserProfile() {
 
-        GetAdminUserProfileResponse response = adminService.getAdminUserProfile(authorizationHeader);
+        GetAdminUserProfileResponse response = adminService.getAdminUserProfile();
         return ApiResponse.onSuccess(SuccessStatus._GET_ADMIN_USER_PROFILE, response);
     }
 
@@ -83,14 +81,12 @@ public class AdminController {
      *
      * 마스터 관리자가 아닐 경우 예외가 발생하며, 유효한 경우 모든 관리자 이름, 이메일, 상태 정보가 포함됩니다.
      *
-     * @param authorizationHeader Authorization 헤더에 포함된 액세스 토큰
      * @return 전체 관리자 프로필 목록이 포함된 응답 객체
      */
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<AdminUserDetailResponse>>> getAllAdminUserDetail(
-            @RequestHeader("Authorization") String authorizationHeader) {
+    public ResponseEntity<ApiResponse<List<AdminUserDetailResponse>>> getAllAdminUserDetail() {
 
-        List<AdminUserDetailResponse> response = adminService.getAllAdminUserDetail(authorizationHeader);
+        List<AdminUserDetailResponse> response = adminService.getAllAdminUserDetail();
         return ApiResponse.onSuccess(SuccessStatus._GET_ALL_ADMIN_USER_DETAIL, response);
     }
 
@@ -101,16 +97,14 @@ public class AdminController {
      * 요청된 관리자 ID와 수정할 권한 상태를 바탕으로 권한을 변경하며,
      * 요청한 사용자가 마스터 관리자가 아닐 경우 예외가 발생합니다.
      *
-     * @param authorizationHeader 요청자의 액세스 토큰
      * @param request 수정할 관리자 ID와 변경할 권한 상태를 담은 요청 객체
      * @return 성공 응답 메시지
      */
     @PatchMapping("/status")
     public ResponseEntity<ApiResponse<SuccessStatus>> updateAdminUserStatus(
-            @RequestHeader("Authorization") String authorizationHeader,
             @Valid @RequestBody UpdateAdminUserStatusRequest request) {
 
-        adminService.updateAdminUserStatus(authorizationHeader, request);
+        adminService.updateAdminUserStatus(request);
         return ApiResponse.onSuccess(SuccessStatus._UPDATE_ADMIN_USER_STATUS);
     }
 
@@ -120,14 +114,12 @@ public class AdminController {
      * Authorization 헤더에 포함된 액세스 토큰을 통해 인증된 관리자 계정을 삭제합니다.
      * - 토큰에 포함된 ID로 관리자 정보를 조회하여 삭제합니다.
      *
-     * @param authorizationHeader Authorization 헤더에 포함된 액세스 토큰
      * @return 성공 응답 메시지
      */
     @PostMapping("/withdraw")
-    public ResponseEntity<ApiResponse<SuccessStatus>> withdrawAdminUser(
-            @RequestHeader("Authorization") String authorizationHeader) {
+    public ResponseEntity<ApiResponse<SuccessStatus>> withdrawAdminUser() {
 
-        adminService.withdrawAdminUser(authorizationHeader);
+        adminService.withdrawAdminUser();
         return ApiResponse.onSuccess(SuccessStatus._WITHDRAW_ADMIN_USER);
     }
 
@@ -137,7 +129,6 @@ public class AdminController {
      * 정렬 기준으로는 created_date, end_time, participant_count 등이 가능하며,
      * 응답은 최대 20개씩 페이지 단위로 제공됩니다.
      *
-     * @param authorizationHeader Authorization 헤더 (Bearer 토큰)
      * @param page 조회할 페이지 번호 (1부터 시작)
      * @param keyword 정렬 기준 필드명 (예: "created_date", "end_time", "participant_count")
      * @param sorting 정렬 방향 ("asc" 또는 "desc")
@@ -145,13 +136,12 @@ public class AdminController {
      */
     @GetMapping("/dashboard/events")
     public ResponseEntity<ApiResponse<GetAllDashboardEventsResponse>> getAllDashboardEvents(
-            @RequestHeader("Authorization") String authorizationHeader,
             @RequestParam(value = "page", defaultValue = "1") @Min(1) int page,
             @RequestParam(value = "keyword", defaultValue = "created_date") String keyword,
             @RequestParam(value = "sorting", defaultValue = "desc") String sorting
     ) {
         Pageable pageable = PageRequest.of(page - 1, 20);
-        GetAllDashboardEventsResponse response = adminService.getAllDashboardEvents(authorizationHeader, pageable, keyword, sorting);
+        GetAllDashboardEventsResponse response = adminService.getAllDashboardEvents(pageable, keyword, sorting);
         return ApiResponse.onSuccess(SuccessStatus._GET_ALL_DASHBOARD_EVENTS, response);
     }
 
@@ -161,7 +151,6 @@ public class AdminController {
      * 정렬 기준으로는 name, email, created_date, participation_count 등이 가능하며,
      * 응답은 최대 20개씩 페이지 단위로 제공됩니다.
      *
-     * @param authorizationHeader Authorization 헤더 (Bearer 토큰)
      * @param page 조회할 페이지 번호 (1부터 시작)
      * @param keyword 정렬 기준 필드명 (예: "name", "email", "created_date", "participation_count")
      * @param sorting 정렬 방향 ("asc" 또는 "desc")
@@ -169,13 +158,12 @@ public class AdminController {
      */
     @GetMapping("/dashboard/users")
     public ResponseEntity<ApiResponse<GetAllDashboardUsersResponse>> getAllDashboardUsers(
-            @RequestHeader("Authorization") String authorizationHeader,
             @RequestParam(value = "page", defaultValue = "1") @Min(1) int page,
             @RequestParam(value = "keyword", defaultValue = "created_date") String keyword,
             @RequestParam(value = "sorting", defaultValue = "desc") String sorting
     ) {
         Pageable pageable = PageRequest.of(page - 1, 20);
-        GetAllDashboardUsersResponse response = adminService.getAllDashboardUsers(authorizationHeader, pageable, keyword, sorting);
+        GetAllDashboardUsersResponse response = adminService.getAllDashboardUsers(pageable, keyword, sorting);
         return ApiResponse.onSuccess(SuccessStatus._GET_ALL_DASHBOARD_USERS, response);
     }
 }

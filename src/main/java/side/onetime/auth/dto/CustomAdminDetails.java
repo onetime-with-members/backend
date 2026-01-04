@@ -3,26 +3,31 @@ package side.onetime.auth.dto;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import side.onetime.domain.User;
+import side.onetime.domain.AdminUser;
+import side.onetime.domain.enums.AdminStatus;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Collections;
 
-public record CustomUserDetails(User user) implements UserDetails {
+public record CustomAdminDetails(AdminUser admin) implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        if (admin.getAdminStatus() == AdminStatus.PENDING_APPROVAL) {
+            return Collections.singletonList(new SimpleGrantedAuthority("ROLE_PENDING_APPROVAL"));
+        }
+
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN"));
     }
 
     @Override
     public String getPassword() {
-        return null;
+        return admin.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return user.getName();
+        return admin.getName();
     }
 
     @Override
@@ -46,10 +51,6 @@ public record CustomUserDetails(User user) implements UserDetails {
     }
 
     public Long getId() {
-        return user.getId();
-    }
-
-    public String getEmail() {
-        return user.getEmail();
+        return admin.getId();
     }
 }

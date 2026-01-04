@@ -1,7 +1,6 @@
 package side.onetime.global.config;
 
-import java.util.Arrays;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,11 +12,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import lombok.RequiredArgsConstructor;
+import side.onetime.auth.exception.CustomAccessDeniedHandler;
+import side.onetime.auth.exception.CustomAuthenticationEntryPoint;
 import side.onetime.auth.handler.OAuthLoginFailureHandler;
 import side.onetime.auth.handler.OAuthLoginSuccessHandler;
 import side.onetime.global.filter.JwtFilter;
+
+import java.util.Arrays;
 
 @RequiredArgsConstructor
 @Configuration
@@ -27,29 +28,40 @@ public class SecurityConfig {
 	private final JwtFilter jwtFilter;
 	private final OAuthLoginSuccessHandler oAuthLoginSuccessHandler;
 	private final OAuthLoginFailureHandler oAuthLoginFailureHandler;
+	private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+	private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
 	private static final String[] SWAGGER_URLS = {
 		"/swagger-ui/**", "/v3/api-docs/**"
 	};
 
 	private static final String[] PUBLIC_URLS = {
+		"/",
 		"/login/**",
 		"/api/v1/events/**",
 		"/api/v1/schedules/**",
 		"/api/v1/members/**",
 		"/api/v1/urls/**",
 		"/api/v1/tokens/**",
-		"/api/v1/admin/**",
-		"/api/v1/banners/**",
-		"/api/v1/bar-banners/**",
 		"/api/v1/users/onboarding",
 		"/api/v1/users/logout",
+		"/api/v1/admin/register",
+		"/api/v1/admin/login",
+		"/api/v1/banners/activated/all",
+		"/api/v1/bar-banners/activated/all",
+		"/api/v1/banners/*/clicks",
 		"/actuator/health"
 	};
 
-	private static final String[] AUTHENTICATED_URLS = {
+	private static final String[] AUTHENTICATED_USER_URLS = {
 		"/api/v1/users/**",
 		"/api/v1/fixed-schedules/**",
+	};
+
+	private static final String[] AUTHENTICATED_ADMIN_URLS = {
+		"/api/v1/admin/**",
+		"/api/v1/banners/**",
+		"/api/v1/bar-banners/**",
 	};
 
 	private static final String[] ALLOWED_ORIGINS = {
@@ -108,12 +120,17 @@ public class SecurityConfig {
 			.authorizeHttpRequests(authorize -> authorize
 				.requestMatchers(SWAGGER_URLS).permitAll()
 				.requestMatchers(PUBLIC_URLS).permitAll()
-				.requestMatchers(AUTHENTICATED_URLS).authenticated()
+				.requestMatchers(AUTHENTICATED_USER_URLS).hasRole("USER")
+				.requestMatchers(AUTHENTICATED_ADMIN_URLS).hasRole("ADMIN")
 				.anyRequest().authenticated()
 			)
 			.oauth2Login(oauth -> oauth
 				.successHandler(oAuthLoginSuccessHandler)
 				.failureHandler(oAuthLoginFailureHandler)
+			)
+			.exceptionHandling(exception -> exception
+				.authenticationEntryPoint(customAuthenticationEntryPoint)
+				.accessDeniedHandler(customAccessDeniedHandler)
 			)
 			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 

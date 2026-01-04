@@ -14,7 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.ResultActions;
-import side.onetime.auth.service.CustomUserDetailsService;
 import side.onetime.configuration.ControllerTestConfig;
 import side.onetime.controller.EventController;
 import side.onetime.domain.enums.Category;
@@ -24,7 +23,6 @@ import side.onetime.dto.event.request.ModifyEventRequest;
 import side.onetime.dto.event.response.*;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
 import side.onetime.service.EventService;
-import side.onetime.util.JwtUtil;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -44,12 +42,6 @@ public class EventControllerTest extends ControllerTestConfig {
 
     @MockBean
     private EventService eventService;
-
-    @MockBean
-    private JwtUtil jwtUtil;
-
-    @MockBean
-    private CustomUserDetailsService customUserDetailsService;
 
     @Test
     @DisplayName("이벤트를 생성한다. (토큰 유무에 따라 로그인/비로그인 구분)")

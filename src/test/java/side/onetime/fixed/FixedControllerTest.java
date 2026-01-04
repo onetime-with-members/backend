@@ -1,14 +1,7 @@
 package side.onetime.fixed;
 
-import static com.epages.restdocs.apispec.ResourceDocumentation.*;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
-import static org.springframework.restdocs.payload.PayloadDocumentation.*;
-import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.util.List;
-
-import org.junit.jupiter.api.BeforeEach;
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
+import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -17,48 +10,30 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.restdocs.payload.JsonFieldType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.ResultActions;
-
-import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
-import com.epages.restdocs.apispec.ResourceSnippetParameters;
-
-import side.onetime.auth.dto.CustomUserDetails;
-import side.onetime.auth.service.CustomUserDetailsService;
-import side.onetime.configuration.ControllerTestConfig;
+import side.onetime.configuration.UserControllerTestConfig;
 import side.onetime.controller.FixedController;
-import side.onetime.domain.User;
 import side.onetime.dto.fixed.request.UpdateFixedScheduleRequest;
 import side.onetime.dto.fixed.response.FixedScheduleResponse;
 import side.onetime.dto.fixed.response.GetFixedScheduleResponse;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.FixedErrorStatus;
 import side.onetime.service.FixedScheduleService;
-import side.onetime.util.JwtUtil;
+
+import java.util.List;
+
+import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(FixedController.class)
-public class FixedControllerTest extends ControllerTestConfig {
+public class FixedControllerTest extends UserControllerTestConfig {
 
     @MockBean
     private FixedScheduleService fixedScheduleService;
-
-    @MockBean
-    private JwtUtil jwtUtil;
-
-    @MockBean
-    private CustomUserDetailsService customUserDetailsService;
-
-    private CustomUserDetails customUserDetails;
-
-    @BeforeEach
-    public void setupSecurityContext() {
-        User mockUser = User.builder().name("User").email("user@example.com").build();
-        customUserDetails = new CustomUserDetails(mockUser);
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities())
-        );
-    }
 
     @Test
     @DisplayName("고정 스케줄을 조회한다.")
