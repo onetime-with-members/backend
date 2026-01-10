@@ -8,13 +8,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import side.onetime.domain.AdminUser;
 import side.onetime.domain.User;
 import side.onetime.exception.CustomException;
-import side.onetime.exception.status.AdminErrorStatus;
 import side.onetime.exception.status.TokenErrorStatus;
 import side.onetime.exception.status.UserErrorStatus;
-import side.onetime.repository.AdminRepository;
 import side.onetime.repository.UserRepository;
 
 import javax.crypto.SecretKey;
@@ -47,7 +44,6 @@ public class JwtUtil {
     private String browserIdSalt;
 
     private final UserRepository userRepository;
-    private final AdminRepository adminRepository;
 
     /**
      * JWT 서명 키를 생성 및 반환.
@@ -178,20 +174,6 @@ public class JwtUtil {
 
         return userRepository.findById(getClaimFromToken(token, "userId", Long.class))
                 .orElseThrow(() -> new CustomException(UserErrorStatus._NOT_FOUND_USER));
-    }
-
-    /**
-     * 헤더에서 어드민 유저 객체 반환.
-     *
-     * @param authorizationHeader Authorization 헤더
-     * @return 어드민 유저 객체
-     */
-    public AdminUser getAdminUserFromHeader(String authorizationHeader) {
-        String token = getTokenFromHeader(authorizationHeader);
-        validateToken(token);
-
-        return adminRepository.findById(getClaimFromToken(token, "userId", Long.class))
-                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
     }
 
     /**

@@ -12,8 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.restdocs.payload.JsonFieldType;
-import side.onetime.auth.service.CustomUserDetailsService;
-import side.onetime.configuration.ControllerTestConfig;
+import side.onetime.configuration.AdminControllerTestConfig;
 import side.onetime.controller.AdminController;
 import side.onetime.domain.enums.AdminStatus;
 import side.onetime.domain.enums.Category;
@@ -23,7 +22,6 @@ import side.onetime.dto.admin.request.RegisterAdminUserRequest;
 import side.onetime.dto.admin.request.UpdateAdminUserStatusRequest;
 import side.onetime.dto.admin.response.*;
 import side.onetime.service.AdminService;
-import side.onetime.util.JwtUtil;
 
 import java.util.List;
 
@@ -36,16 +34,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AdminController.class)
-public class AdminControllerTest extends ControllerTestConfig {
+public class AdminControllerTest extends AdminControllerTestConfig {
 
     @MockBean
     private AdminService adminService;
-
-    @MockBean
-    private JwtUtil jwtUtil;
-
-    @MockBean
-    private CustomUserDetailsService customUserDetailsService;
 
     @Test
     @DisplayName("관리자 계정 회원가입을 진행한다.")
@@ -146,20 +138,17 @@ public class AdminControllerTest extends ControllerTestConfig {
     @DisplayName("관리자 프로필 조회를 진행한다.")
     public void getAdminUserProfile() throws Exception {
         // given
-        String accessToken = "Bearer temp.jwt.access.token";
-
         GetAdminUserProfileResponse response = new GetAdminUserProfileResponse(
                 "관리자 이름",
                 "admin@example.com"
         );
 
         // when
-        Mockito.when(adminService.getAdminUserProfile(any(String.class)))
+        Mockito.when(adminService.getAdminUserProfile())
                 .thenReturn(response);
 
         // then
-        mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/admin/profile")
-                        .header("Authorization", accessToken))
+        mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/admin/profile"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.is_success").value(true))
                 .andExpect(jsonPath("$.code").value("200"))
@@ -191,20 +180,17 @@ public class AdminControllerTest extends ControllerTestConfig {
     @DisplayName("전체 관리자 정보를 조회한다.")
     public void getAllAdminUserDetail() throws Exception {
         // given
-        String accessToken = "Bearer temp.jwt.access.token";
-
         List<AdminUserDetailResponse> response = List.of(
                 new AdminUserDetailResponse(1L, "마스터 관리자", "master@example.com", AdminStatus.MASTER),
                 new AdminUserDetailResponse(2L, "일반 관리자", "admin@example.com", AdminStatus.APPROVED)
         );
 
         // when
-        Mockito.when(adminService.getAllAdminUserDetail(any(String.class)))
+        Mockito.when(adminService.getAllAdminUserDetail())
                 .thenReturn(response);
 
         // then
-        mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/admin/all")
-                        .header("Authorization", accessToken))
+        mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/admin/all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.is_success").value(true))
                 .andExpect(jsonPath("$.code").value("200"))
@@ -240,18 +226,16 @@ public class AdminControllerTest extends ControllerTestConfig {
     @DisplayName("관리자 권한을 수정한다.")
     public void updateAdminUserStatus() throws Exception {
         // given
-        String accessToken = "Bearer temp.jwt.access.token";
         String requestContent = objectMapper.writeValueAsString(
                 new UpdateAdminUserStatusRequest(2L, AdminStatus.APPROVED)
         );
 
         // when
-        Mockito.doNothing().when(adminService).updateAdminUserStatus(any(String.class), any(UpdateAdminUserStatusRequest.class));
+        Mockito.doNothing().when(adminService).updateAdminUserStatus(any(UpdateAdminUserStatusRequest.class));
 
         // then
         mockMvc.perform(RestDocumentationRequestBuilders.patch("/api/v1/admin/status")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("Authorization", accessToken)
                         .content(requestContent))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.is_success").value(true))
@@ -283,15 +267,11 @@ public class AdminControllerTest extends ControllerTestConfig {
     @Test
     @DisplayName("관리자 계정을 탈퇴한다.")
     public void withdrawAdminUser() throws Exception {
-        // given
-        String accessToken = "Bearer temp.jwt.access.token";
-
-        // when
-        Mockito.doNothing().when(adminService).withdrawAdminUser(any(String.class));
+        // given & when
+        Mockito.doNothing().when(adminService).withdrawAdminUser();
 
         // then
-        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/admin/withdraw")
-                        .header("Authorization", accessToken))
+        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/admin/withdraw"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.is_success").value(true))
                 .andExpect(jsonPath("$.code").value("200"))
@@ -318,8 +298,6 @@ public class AdminControllerTest extends ControllerTestConfig {
     @DisplayName("관리자 이벤트 대시보드 정보를 조회한다.")
     public void getAllDashboardEvents() throws Exception {
         // given
-        String accessToken = "Bearer temp.jwt.access.token";
-
         List<DashboardEvent> events = List.of(
                 new DashboardEvent(
                         100L, "1", "이벤트 제목", "10:00", "12:00",
@@ -332,12 +310,11 @@ public class AdminControllerTest extends ControllerTestConfig {
         GetAllDashboardEventsResponse response = GetAllDashboardEventsResponse.of(events, pageInfo);
 
         // when
-        Mockito.when(adminService.getAllDashboardEvents(any(String.class), any(Pageable.class), any(String.class), any(String.class)))
+        Mockito.when(adminService.getAllDashboardEvents(any(Pageable.class), any(String.class), any(String.class)))
                 .thenReturn(response);
 
         // then
         mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/admin/dashboard/events")
-                        .header("Authorization", accessToken)
                         .param("page", "1")
                         .param("keyword", "created_date")
                         .param("sorting", "desc"))
@@ -395,8 +372,6 @@ public class AdminControllerTest extends ControllerTestConfig {
     @DisplayName("관리자 유저 대시보드 정보를 조회한다.")
     public void getAllDashboardUsers() throws Exception {
         // given
-        String accessToken = "Bearer temp.jwt.access.token";
-
         List<DashboardUser> users = List.of(
                 new DashboardUser(
                         1L,
@@ -420,12 +395,11 @@ public class AdminControllerTest extends ControllerTestConfig {
         GetAllDashboardUsersResponse response = GetAllDashboardUsersResponse.of(users, pageInfo);
 
         // when
-        Mockito.when(adminService.getAllDashboardUsers(any(String.class), any(Pageable.class), any(String.class), any(String.class)))
+        Mockito.when(adminService.getAllDashboardUsers(any(Pageable.class), any(String.class), any(String.class)))
                 .thenReturn(response);
 
         // then
         mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/admin/dashboard/users")
-                        .header("Authorization", accessToken)
                         .param("page", "1")
                         .param("keyword", "created_date")
                         .param("sorting", "desc"))

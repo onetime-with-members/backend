@@ -16,9 +16,10 @@ import side.onetime.dto.banner.request.UpdateBarBannerRequest;
 import side.onetime.dto.banner.response.*;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.AdminErrorStatus;
+import side.onetime.repository.AdminRepository;
 import side.onetime.repository.BannerRepository;
 import side.onetime.repository.BarBannerRepository;
-import side.onetime.util.JwtUtil;
+import side.onetime.util.AdminAuthorizationUtil;
 import side.onetime.util.S3Util;
 
 import java.util.List;
@@ -30,7 +31,7 @@ public class BannerService {
 
     private final BannerRepository bannerRepository;
     private final BarBannerRepository barBannerRepository;
-    private final JwtUtil jwtUtil;
+    private final AdminRepository adminRepository;
     private final S3Util s3Util;
 
     /**
@@ -39,13 +40,13 @@ public class BannerService {
      * 요청 정보를 바탕으로 배너를 등록합니다.
      * 기본적으로 비활성화 및 삭제되지 않은 상태로 저장됩니다.
      *
-     * @param authorizationHeader 요청자의 액세스 토큰
      * @param request 배너 등록 요청 객체
      * @param imageFile 배너 등록 이미지 객체
      */
     @Transactional
-    public void registerBanner(String authorizationHeader, RegisterBannerRequest request, MultipartFile imageFile) {
-        jwtUtil.getAdminUserFromHeader(authorizationHeader);
+    public void registerBanner(RegisterBannerRequest request, MultipartFile imageFile) {
+        adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
+                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
         Banner newBanner = bannerRepository.save(request.toEntity());
 
         String imageUrl = uploadBannerImage(newBanner.getId(), imageFile);
@@ -58,12 +59,12 @@ public class BannerService {
      * 요청 정보를 바탕으로 배너를 등록합니다.
      * 기본적으로 비활성화 및 삭제되지 않은 상태로 저장됩니다.
      *
-     * @param authorizationHeader 요청자의 액세스 토큰
      * @param request 띠배너 등록 요청 객체
      */
     @Transactional
-    public void registerBarBanner(String authorizationHeader, RegisterBarBannerRequest request) {
-        jwtUtil.getAdminUserFromHeader(authorizationHeader);
+    public void registerBarBanner(RegisterBarBannerRequest request) {
+        adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
+                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
         BarBanner newBarBanner = request.toEntity();
         barBannerRepository.save(newBarBanner);
     }
@@ -74,13 +75,13 @@ public class BannerService {
      * 삭제되지 않은 상태의 배너를 ID 기준으로 조회합니다.
      * 해당 배너가 존재하지 않을 경우 예외가 발생합니다.
      *
-     * @param authorizationHeader 요청자의 액세스 토큰
      * @param id 조회할 배너 ID
      * @return 배너 응답 객체
      */
     @Transactional(readOnly = true)
-    public GetBannerResponse getBanner(String authorizationHeader, Long id) {
-        jwtUtil.getAdminUserFromHeader(authorizationHeader);
+    public GetBannerResponse getBanner(Long id) {
+        adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
+                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
         Banner banner = bannerRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_BANNER));
         return GetBannerResponse.from(banner);
@@ -92,13 +93,13 @@ public class BannerService {
      * 삭제되지 않은 상태의 배너를 ID 기준으로 조회합니다.
      * 해당 띠배너가 존재하지 않을 경우 예외가 발생합니다.
      *
-     * @param authorizationHeader 요청자의 액세스 토큰
      * @param id 조회할 띠배너 ID
      * @return 띠배너 응답 객체
      */
     @Transactional(readOnly = true)
-    public GetBarBannerResponse getBarBanner(String authorizationHeader, Long id) {
-        jwtUtil.getAdminUserFromHeader(authorizationHeader);
+    public GetBarBannerResponse getBarBanner(Long id) {
+        adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
+                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
         BarBanner barBanner = barBannerRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_BAR_BANNER));
         return GetBarBannerResponse.from(barBanner);
@@ -109,12 +110,12 @@ public class BannerService {
      *
      * 삭제되지 않은 모든 배너를 조회하여 응답 객체로 반환합니다.
      *
-     * @param authorizationHeader 요청자의 액세스 토큰
      * @return 배너 응답 객체 리스트
      */
     @Transactional(readOnly = true)
-    public GetAllBannersResponse getAllBanners(String authorizationHeader, Pageable pageable) {
-        jwtUtil.getAdminUserFromHeader(authorizationHeader);
+    public GetAllBannersResponse getAllBanners(Pageable pageable) {
+        adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
+                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
 
         List<GetBannerResponse> banners = bannerRepository.findAllByIsDeletedFalseOrderByCreatedDateDesc(pageable).stream()
                 .map(GetBannerResponse::from)
@@ -138,12 +139,12 @@ public class BannerService {
      *
      * 삭제되지 않은 모든 띠배너를 조회하여 응답 객체로 반환합니다.
      *
-     * @param authorizationHeader 요청자의 액세스 토큰
      * @return 띠배너 응답 객체 리스트
      */
     @Transactional(readOnly = true)
-    public GetAllBarBannersResponse getAllBarBanners(String authorizationHeader, Pageable pageable) {
-        jwtUtil.getAdminUserFromHeader(authorizationHeader);
+    public GetAllBarBannersResponse getAllBarBanners(Pageable pageable) {
+        adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
+                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
 
         List<GetBarBannerResponse> barBanners = barBannerRepository.findAllByIsDeletedFalseOrderByCreatedDateDesc(pageable).stream()
                 .map(GetBarBannerResponse::from)
@@ -200,14 +201,14 @@ public class BannerService {
      * 삭제되지 않은 배너를 ID 기준으로 조회합니다.
      * 요청 객체에서 null이 아닌 필드만 선택적으로 수정합니다.
      *
-     * @param authorizationHeader 요청자의 액세스 토큰
      * @param id 수정할 배너 ID
      * @param request 수정 요청 객체
      * @param imageFile 배너 수정 이미지 객체
      */
     @Transactional
-    public void updateBanner(String authorizationHeader, Long id, UpdateBannerRequest request, MultipartFile imageFile) {
-        jwtUtil.getAdminUserFromHeader(authorizationHeader);
+    public void updateBanner(Long id, UpdateBannerRequest request, MultipartFile imageFile) {
+        adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
+                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
         Banner banner = bannerRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_BANNER));
 
@@ -233,13 +234,13 @@ public class BannerService {
      * 삭제되지 않은 띠배너를 ID 기준으로 조회합니다.
      * 요청 객체에서 null이 아닌 필드만 선택적으로 수정합니다.
      *
-     * @param authorizationHeader 요청자의 액세스 토큰
      * @param id 수정할 띠배너 ID
      * @param request 수정 요청 객체
      */
     @Transactional
-    public void updateBarBanner(String authorizationHeader, Long id, UpdateBarBannerRequest request) {
-        jwtUtil.getAdminUserFromHeader(authorizationHeader);
+    public void updateBarBanner(Long id, UpdateBarBannerRequest request) {
+        adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
+                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
         BarBanner barBanner = barBannerRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_BAR_BANNER));
 
@@ -257,12 +258,12 @@ public class BannerService {
      * 삭제되지 않은 배너를 ID 기준으로 조회합니다.
      * 해당 배너의 삭제 상태를 true로 변경하고 S3에 저장된 이미지를 삭제합니다.
      *
-     * @param authorizationHeader 요청자의 액세스 토큰
      * @param id 삭제할 배너 ID
      */
     @Transactional
-    public void deleteBanner(String authorizationHeader, Long id) {
-        jwtUtil.getAdminUserFromHeader(authorizationHeader);
+    public void deleteBanner(Long id) {
+        adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
+                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
         Banner banner = bannerRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_BANNER));
         banner.markAsDeleted();
@@ -277,12 +278,12 @@ public class BannerService {
      * 삭제되지 않은 띠배너를 ID 기준으로 조회합니다.
      * 해당 배너의 삭제 상태를 true로 변경합니다.
      *
-     * @param authorizationHeader 요청자의 액세스 토큰
      * @param id 삭제할 띠배너 ID
      */
     @Transactional
-    public void deleteBarBanner(String authorizationHeader, Long id) {
-        jwtUtil.getAdminUserFromHeader(authorizationHeader);
+    public void deleteBarBanner(Long id) {
+        adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
+                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
         BarBanner barBanner = barBannerRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_BAR_BANNER));
         barBanner.markAsDeleted();
