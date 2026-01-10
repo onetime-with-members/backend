@@ -13,3 +13,7 @@ logging:
     side.onetime: debug
     org.springframework: info
     org.hibernate: info
+
+test:
+  auth:
+    enabled: true
