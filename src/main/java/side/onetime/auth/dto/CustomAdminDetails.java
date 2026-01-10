@@ -30,26 +30,6 @@ public record CustomAdminDetails(AdminUser admin) implements UserDetails {
         return admin.getName();
     }
 
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
-
     public Long getId() {
         return admin.getId();
     }
