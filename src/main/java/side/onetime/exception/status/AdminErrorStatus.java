@@ -15,7 +15,6 @@ public enum AdminErrorStatus implements BaseErrorCode {
     _IS_NOT_APPROVED_ADMIN_USER(HttpStatus.UNAUTHORIZED, "ADMIN-USER-003", "승인되지 않은 관리자 계정입니다."),
     _IS_NOT_EQUAL_PASSWORD(HttpStatus.BAD_REQUEST, "ADMIN-USER-004", "등록된 비밀번호와 다릅니다."),
     _ONLY_CAN_MASTER_ADMIN_USER(HttpStatus.UNAUTHORIZED, "ADMIN-USER-005", "마스터 관리자만 사용 가능한 기능입니다."),
-    _UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "ADMIN-USER-011", "인증된 관리자가 아닙니다."),
     // DashBoard
     _INVALID_SORT_KEYWORD(HttpStatus.BAD_REQUEST, "ADMIN-USER-006", "지원하지 않는 정렬 기준입니다."),
     // Banner

@@ -4,7 +4,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import side.onetime.auth.dto.CustomUserDetails;
 import side.onetime.exception.CustomException;
-import side.onetime.exception.status.UserErrorStatus;
 import side.onetime.global.common.status.ErrorStatus;
 
 import java.util.Optional;
@@ -24,14 +23,10 @@ public class UserAuthorizationUtil {
      * @return 로그인된 사용자의 ID
      */
     public static Long getLoginUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Object principal = Optional.ofNullable(authentication)
+        return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
                 .map(Authentication::getPrincipal)
-                .orElseThrow(() -> new CustomException(ErrorStatus._UNAUTHORIZED));
-
-        if (!(principal instanceof CustomUserDetails userDetails)) {
-            throw new CustomException(UserErrorStatus._UNAUTHORIZED);
-        }
-        return userDetails.getId();
+                .filter(principal -> principal instanceof CustomUserDetails)
+                .map(principal -> ((CustomUserDetails) principal).getId())
+                .orElseThrow(() -> new CustomException(ErrorStatus._UNIDENTIFIED_USER));
     }
 }
