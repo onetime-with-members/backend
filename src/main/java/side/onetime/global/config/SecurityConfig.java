@@ -50,6 +50,7 @@ public class SecurityConfig {
 		"/api/v1/banners/activated/all",
 		"/api/v1/bar-banners/activated/all",
 		"/api/v1/banners/*/clicks",
+		"/api/v1/test/**",
 		"/actuator/health"
 	};
 

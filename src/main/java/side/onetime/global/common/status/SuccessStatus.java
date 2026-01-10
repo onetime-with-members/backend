@@ -83,6 +83,8 @@ public enum SuccessStatus implements BaseCode {
     _DELETE_BANNER(HttpStatus.OK, "200", "배너 삭제에 성공했습니다."),
     _DELETE_BAR_BANNER(HttpStatus.OK, "200", "띠배너 삭제에 성공했습니다."),
     _INCREASE_BANNER_CLICK_COUNT(HttpStatus.OK, "200", "배너 클릭 수 증가에 성공했습니다."),
+    // Test
+    _TEST_LOGIN(HttpStatus.CREATED, "201", "테스트 로그인에 성공했습니다."),
     ;
 
     private final HttpStatus httpStatus;
