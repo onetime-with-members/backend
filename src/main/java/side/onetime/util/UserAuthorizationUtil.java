@@ -5,6 +5,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import side.onetime.auth.dto.CustomUserDetails;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.UserErrorStatus;
+import side.onetime.global.common.status.ErrorStatus;
+
+import java.util.Optional;
 
 public class UserAuthorizationUtil {
 
@@ -22,7 +25,9 @@ public class UserAuthorizationUtil {
      */
     public static Long getLoginUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Object principal = authentication.getPrincipal();
+        Object principal = Optional.ofNullable(authentication)
+                .map(Authentication::getPrincipal)
+                .orElseThrow(() -> new CustomException(ErrorStatus._UNAUTHORIZED));
 
         if (!(principal instanceof CustomUserDetails userDetails)) {
             throw new CustomException(UserErrorStatus._UNAUTHORIZED);

@@ -5,6 +5,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import side.onetime.auth.dto.CustomAdminDetails;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.AdminErrorStatus;
+import side.onetime.global.common.status.ErrorStatus;
+
+import java.util.Optional;
 
 public class AdminAuthorizationUtil {
 
@@ -22,10 +25,12 @@ public class AdminAuthorizationUtil {
      */
     public static Long getLoginAdminId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Object principal = authentication.getPrincipal();
+        Object principal = Optional.ofNullable(authentication)
+                .map(Authentication::getPrincipal)
+                .orElseThrow(() -> new CustomException(ErrorStatus._UNAUTHORIZED));
 
         if (!(principal instanceof CustomAdminDetails adminDetails)) {
-            throw new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER);
+            throw new CustomException(AdminErrorStatus._UNAUTHORIZED);
         }
         return adminDetails.getId();
     }
