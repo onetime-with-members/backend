@@ -88,3 +88,9 @@ management:
     enable:
       process.cpu: false
       system.cpu: false
+
+test:
+  auth:
+    enabled: false
+    secret-key: ${TEST_AUTH_SECRET_KEY}
+    user-id: ${TEST_AUTH_USER_ID}

@@ -16,3 +16,7 @@ logging:
     org.springframework.web: info
     org.hibernate.SQL: debug
     org.hibernate.type.descriptor.sql.BasicBinder: trace
+
+test:
+  auth:
+    enabled: true
