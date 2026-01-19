@@ -61,9 +61,9 @@ public class TestAuthControllerTest extends ControllerTestConfig {
 
         // then
         resultActions
-                .andExpect(status().isCreated())
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.is_success").value(true))
-                .andExpect(jsonPath("$.code").value("201"))
+                .andExpect(jsonPath("$.code").value("200"))
                 .andExpect(jsonPath("$.message").value("테스트 로그인에 성공했습니다."))
                 .andExpect(jsonPath("$.payload.access_token").value(accessToken))
                 .andExpect(jsonPath("$.payload.refresh_token").value(refreshToken))
