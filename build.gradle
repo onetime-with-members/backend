@@ -94,6 +94,12 @@ dependencies {
 
     // Jsoup
     implementation 'org.jsoup:jsoup:1.21.2'
+
+    // Testcontainers
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:testcontainers'
+    testImplementation 'org.testcontainers:junit-jupiter:1.19.0'
+    testImplementation 'org.testcontainers:mysql:1.20.1'
 }
 
 // QueryDSL 디렉토리
