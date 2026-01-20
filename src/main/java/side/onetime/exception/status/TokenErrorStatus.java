@@ -1,8 +1,9 @@
 package side.onetime.exception.status;
 
+import org.springframework.http.HttpStatus;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import side.onetime.global.common.code.BaseErrorCode;
 import side.onetime.global.common.dto.ErrorReasonDto;
 
@@ -18,6 +19,10 @@ public enum TokenErrorStatus implements BaseErrorCode {
     _INVALID_USER_TYPE(HttpStatus.BAD_REQUEST, "TOKEN-007", "알 수 없는 타입의 액세스 토큰이 발행되었습니다."),
     _NOT_FOUND_HEADER(HttpStatus.BAD_REQUEST, "TOKEN-008", "Authorization 헤더가 존재하지 않거나 형식이 잘못되었습니다."),
     _TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "TOKEN-009", "요청이 너무 많습니다. 잠시 후 다시 시도해주세요."),
+    _INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN-010", "유효하지 않은 리프레시 토큰입니다."),
+    _TOKEN_REUSE_DETECTED(HttpStatus.UNAUTHORIZED, "TOKEN-011", "토큰 재사용이 감지되었습니다. 보안을 위해 다시 로그인해주세요."),
+    _DUPLICATED_REQUEST(HttpStatus.TOO_MANY_REQUESTS, "TOKEN-012", "중복 요청입니다. 잠시 후 다시 시도해주세요."),
+    _ALREADY_USED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN-013", "이미 사용된 리프레시 토큰입니다."),
     ;
 
     private final HttpStatus httpStatus;

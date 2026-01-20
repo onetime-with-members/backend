@@ -1,0 +1,61 @@
+package side.onetime.repository.custom;
+
+import static side.onetime.domain.QRefreshToken.*;
+
+import java.time.LocalDateTime;
+
+import com.querydsl.jpa.impl.JPAQueryFactory;
+
+import lombok.RequiredArgsConstructor;
+import side.onetime.domain.enums.TokenStatus;
+
+@RequiredArgsConstructor
+public class RefreshTokenRepositoryImpl implements RefreshTokenRepositoryCustom {
+
+    private final JPAQueryFactory queryFactory;
+
+    @Override
+    public void revokeByUserIdAndBrowserId(Long userId, String browserId) {
+        queryFactory.update(refreshToken)
+                .set(refreshToken.status, TokenStatus.REVOKED)
+                .where(refreshToken.userId.eq(userId)
+                        .and(refreshToken.browserId.eq(browserId))
+                        .and(refreshToken.status.eq(TokenStatus.ACTIVE)))
+                .execute();
+    }
+
+    @Override
+    public void revokeAllByUserId(Long userId) {
+        queryFactory.update(refreshToken)
+                .set(refreshToken.status, TokenStatus.REVOKED)
+                .where(refreshToken.userId.eq(userId)
+                        .and(refreshToken.status.eq(TokenStatus.ACTIVE)))
+                .execute();
+    }
+
+    @Override
+    public void revokeAllByFamilyId(String familyId) {
+        queryFactory.update(refreshToken)
+                .set(refreshToken.status, TokenStatus.REVOKED)
+                .where(refreshToken.familyId.eq(familyId)
+                        .and(refreshToken.status.in(TokenStatus.ACTIVE, TokenStatus.ROTATED)))
+                .execute();
+    }
+
+    @Override
+    public int updateExpiredTokens(LocalDateTime now) {
+        return (int) queryFactory.update(refreshToken)
+                .set(refreshToken.status, TokenStatus.EXPIRED)
+                .where(refreshToken.status.eq(TokenStatus.ACTIVE)
+                        .and(refreshToken.expiryAt.lt(now)))
+                .execute();
+    }
+
+    @Override
+    public int hardDeleteOldInactiveTokens(LocalDateTime threshold) {
+        return (int) queryFactory.delete(refreshToken)
+                .where(refreshToken.status.in(TokenStatus.REVOKED, TokenStatus.EXPIRED, TokenStatus.ROTATED)
+                        .and(refreshToken.updatedDate.lt(threshold)))
+                .execute();
+    }
+}
