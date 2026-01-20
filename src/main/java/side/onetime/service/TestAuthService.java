@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import side.onetime.domain.RefreshToken;
@@ -38,6 +39,7 @@ public class TestAuthService {
      * @param request 테스트 로그인 요청 (시크릿 키 포함)
      * @return Access Token과 Refresh Token을 포함하는 응답 객체
      */
+    @Transactional
     public OnboardUserResponse login(TestLoginRequest request) {
         // 1. 시크릿 키 검증
         if (!testSecretKey.equals(request.secretKey())) {
