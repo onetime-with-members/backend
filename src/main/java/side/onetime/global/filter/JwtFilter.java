@@ -100,7 +100,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 path.equals("/") ||
                 path.startsWith("/swagger-ui") ||
                 path.startsWith("/v3/api-docs") ||
-                path.startsWith("/favicon.ico");
+                path.startsWith("/favicon.ico") ||
+                path.equals("/api/v1/tokens/action-reissue");
     }
 
     /**
