@@ -1,23 +1,37 @@
 package side.onetime.service;
 
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import side.onetime.domain.GuideViewLog;
 import side.onetime.domain.RefreshToken;
 import side.onetime.domain.User;
 import side.onetime.domain.enums.GuideType;
-import side.onetime.dto.user.request.*;
-import side.onetime.dto.user.response.*;
+import side.onetime.dto.user.request.CreateGuideViewLogRequest;
+import side.onetime.dto.user.request.LogoutUserRequest;
+import side.onetime.dto.user.request.OnboardUserRequest;
+import side.onetime.dto.user.request.UpdateUserPolicyAgreementRequest;
+import side.onetime.dto.user.request.UpdateUserProfileRequest;
+import side.onetime.dto.user.request.UpdateUserSleepTimeRequest;
+import side.onetime.dto.user.response.GetGuideViewLogResponse;
+import side.onetime.dto.user.response.GetUserPolicyAgreementResponse;
+import side.onetime.dto.user.response.GetUserProfileResponse;
+import side.onetime.dto.user.response.GetUserSleepTimeResponse;
+import side.onetime.dto.user.response.OnboardUserResponse;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.UserErrorStatus;
 import side.onetime.repository.GuideViewLogRepository;
 import side.onetime.repository.RefreshTokenRepository;
 import side.onetime.repository.UserRepository;
+import side.onetime.util.ClientInfoExtractor;
 import side.onetime.util.JwtUtil;
 import side.onetime.util.UserAuthorizationUtil;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,18 +41,20 @@ public class UserService {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final GuideViewLogRepository guideViewLogRepository;
+    private final ClientInfoExtractor clientInfoExtractor;
 
     /**
      * 유저 온보딩 처리 메서드.
      *
      * 회원가입 이후 필수 정보를 설정하고 유저를 저장한 뒤, 액세스 토큰과 리프레쉬 토큰을 발급합니다.
-     * 리프레쉬 토큰은 브라우저 식별자(browserId)와 함께 Redis에 저장됩니다.
+     * 리프레쉬 토큰은 브라우저 식별자(browserId)와 함께 MySQL에 저장됩니다.
      *
      * @param request 유저의 레지스터 토큰, 닉네임, 약관 동의, 수면 시간 등 온보딩 정보가 포함된 요청 객체
+     * @param httpRequest 클라이언트 정보 추출을 위한 HttpServletRequest
      * @return 발급된 액세스 토큰과 리프레쉬 토큰을 포함한 응답 객체
      */
     @Transactional
-    public OnboardUserResponse onboardUser(OnboardUserRequest request) {
+    public OnboardUserResponse onboardUser(OnboardUserRequest request, HttpServletRequest httpRequest) {
         String registerToken = request.registerToken();
         jwtUtil.validateToken(registerToken);
 
@@ -52,11 +68,24 @@ public class UserService {
 
         Long userId = newUser.getId();
         String browserId = jwtUtil.getClaimFromToken(registerToken, "browserId", String.class);
-        String accessToken = jwtUtil.generateAccessToken(userId, "USER");
-        String refreshToken = jwtUtil.generateRefreshToken(userId, browserId);
-        refreshTokenRepository.save(new RefreshToken(userId, browserId, refreshToken));
+        String userIp = clientInfoExtractor.extractClientIp(httpRequest);
+        String userAgent = clientInfoExtractor.extractUserAgent(httpRequest);
 
-        return OnboardUserResponse.of(accessToken, refreshToken);
+        // 새 토큰 생성
+        String jti = UUID.randomUUID().toString();
+        String accessToken = jwtUtil.generateAccessToken(userId, "USER");
+        String refreshTokenValue = jwtUtil.generateRefreshToken(userId, browserId, jti);
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiryAt = jwtUtil.calculateRefreshTokenExpiryAt(now);
+
+        RefreshToken refreshToken = RefreshToken.create(
+                userId, jti, browserId, refreshTokenValue,
+                now, expiryAt, userIp, userAgent
+        );
+        refreshTokenRepository.save(refreshToken);
+
+        return OnboardUserResponse.of(accessToken, refreshTokenValue);
     }
 
     /**
@@ -120,14 +149,13 @@ public class UserService {
      * 유저 서비스 탈퇴 메서드.
      *
      * 인증된 유저의 계정을 삭제합니다.
-     *
+     * (RefreshToken revoke는 userRepository.withdraw() 내부에서 처리)
      */
     @Transactional
     public void withdrawUser() {
         User user = userRepository.findById(UserAuthorizationUtil.getLoginUserId())
                 .orElseThrow(() -> new CustomException(UserErrorStatus._NOT_FOUND_USER));
         userRepository.withdraw(user);
-        refreshTokenRepository.deleteAllByUserId(user.getId());
     }
 
     /**
@@ -196,7 +224,7 @@ public class UserService {
     /**
      * 유저 로그아웃 메서드.
      *
-     * 로그아웃 시, 리프레쉬 토큰을 제거합니다.
+     * 로그아웃 시, 해당 브라우저의 리프레쉬 토큰을 REVOKED 상태로 변경합니다.
      *
      * @param request 리프레쉬 토큰 요청 데이터
      */
@@ -206,7 +234,7 @@ public class UserService {
         jwtUtil.validateToken(refreshToken);
         Long userId = jwtUtil.getClaimFromToken(refreshToken, "userId", Long.class);
         String browserId = jwtUtil.getClaimFromToken(refreshToken, "browserId", String.class);
-        refreshTokenRepository.deleteRefreshToken(userId, browserId);
+        refreshTokenRepository.revokeByUserIdAndBrowserId(userId, browserId);
     }
 
     /**

@@ -1,5 +1,8 @@
 package side.onetime.service;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -42,14 +45,26 @@ public class TestAuthService {
         }
 
         // 2. 고정된 테스트 유저 ID로 토큰 생성
-        String accessToken = jwtUtil.generateAccessToken(testUserId, "USER");
         String browserId = jwtUtil.hashUserAgent("E2E-Test-Agent");
-        String refreshToken = jwtUtil.generateRefreshToken(testUserId, browserId);
 
-        // 3. Refresh Token Redis 저장
-        RefreshToken token = new RefreshToken(testUserId, browserId, refreshToken);
-        refreshTokenRepository.save(token);
+        // 기존 브라우저의 ACTIVE 토큰 revoke
+        refreshTokenRepository.revokeByUserIdAndBrowserId(testUserId, browserId);
 
-        return OnboardUserResponse.of(accessToken, refreshToken);
+        // 새 토큰 생성
+        String jti = UUID.randomUUID().toString();
+        String accessToken = jwtUtil.generateAccessToken(testUserId, "USER");
+        String refreshTokenValue = jwtUtil.generateRefreshToken(testUserId, browserId, jti);
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiryAt = jwtUtil.calculateRefreshTokenExpiryAt(LocalDateTime.now());
+
+        // 3. Refresh Token MySQL 저장
+        RefreshToken refreshToken = RefreshToken.create(
+                testUserId, jti, browserId, refreshTokenValue,
+                now, expiryAt, "127.0.0.1", "E2E-Test-Agent"
+        );
+        refreshTokenRepository.save(refreshToken);
+
+        return OnboardUserResponse.of(accessToken, refreshTokenValue);
     }
 }

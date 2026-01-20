@@ -1,12 +1,31 @@
 package side.onetime.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import side.onetime.domain.enums.GuideType;
-import side.onetime.dto.user.request.*;
-import side.onetime.dto.user.response.*;
+import side.onetime.dto.user.request.CreateGuideViewLogRequest;
+import side.onetime.dto.user.request.LogoutUserRequest;
+import side.onetime.dto.user.request.OnboardUserRequest;
+import side.onetime.dto.user.request.UpdateUserPolicyAgreementRequest;
+import side.onetime.dto.user.request.UpdateUserProfileRequest;
+import side.onetime.dto.user.request.UpdateUserSleepTimeRequest;
+import side.onetime.dto.user.response.GetGuideViewLogResponse;
+import side.onetime.dto.user.response.GetUserPolicyAgreementResponse;
+import side.onetime.dto.user.response.GetUserProfileResponse;
+import side.onetime.dto.user.response.GetUserSleepTimeResponse;
+import side.onetime.dto.user.response.OnboardUserResponse;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.UserService;
@@ -28,9 +47,10 @@ public class UserController {
      */
     @PostMapping("/onboarding")
     public ResponseEntity<ApiResponse<OnboardUserResponse>> onboardUser(
-            @Valid @RequestBody OnboardUserRequest onboardUserRequest) {
+            @Valid @RequestBody OnboardUserRequest onboardUserRequest,
+            HttpServletRequest httpRequest) {
 
-        OnboardUserResponse onboardUserResponse = userService.onboardUser(onboardUserRequest);
+        OnboardUserResponse onboardUserResponse = userService.onboardUser(onboardUserRequest, httpRequest);
         return ApiResponse.onSuccess(SuccessStatus._ONBOARD_USER, onboardUserResponse);
     }
 
