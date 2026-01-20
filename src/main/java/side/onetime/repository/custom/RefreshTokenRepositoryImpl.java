@@ -21,6 +21,7 @@ public class RefreshTokenRepositoryImpl implements RefreshTokenRepositoryCustom 
     public void revokeByUserIdAndBrowserId(Long userId, String browserId) {
         queryFactory.update(refreshToken)
                 .set(refreshToken.status, TokenStatus.REVOKED)
+                .set(refreshToken.updatedDate, LocalDateTime.now())
                 .where(refreshToken.userId.eq(userId)
                         .and(refreshToken.browserId.eq(browserId))
                         .and(refreshToken.status.eq(TokenStatus.ACTIVE)))
@@ -32,6 +33,7 @@ public class RefreshTokenRepositoryImpl implements RefreshTokenRepositoryCustom 
     public void revokeAllByUserId(Long userId) {
         queryFactory.update(refreshToken)
                 .set(refreshToken.status, TokenStatus.REVOKED)
+                .set(refreshToken.updatedDate, LocalDateTime.now())
                 .where(refreshToken.userId.eq(userId)
                         .and(refreshToken.status.eq(TokenStatus.ACTIVE)))
                 .execute();
@@ -42,6 +44,7 @@ public class RefreshTokenRepositoryImpl implements RefreshTokenRepositoryCustom 
     public void revokeAllByFamilyId(String familyId) {
         queryFactory.update(refreshToken)
                 .set(refreshToken.status, TokenStatus.REVOKED)
+                .set(refreshToken.updatedDate, LocalDateTime.now())
                 .where(refreshToken.familyId.eq(familyId)
                         .and(refreshToken.status.in(TokenStatus.ACTIVE, TokenStatus.ROTATED)))
                 .execute();
@@ -52,6 +55,7 @@ public class RefreshTokenRepositoryImpl implements RefreshTokenRepositoryCustom 
     public int updateExpiredTokens(LocalDateTime now) {
         return (int) queryFactory.update(refreshToken)
                 .set(refreshToken.status, TokenStatus.EXPIRED)
+                .set(refreshToken.updatedDate, now)
                 .where(refreshToken.status.eq(TokenStatus.ACTIVE)
                         .and(refreshToken.expiryAt.lt(now)))
                 .execute();
