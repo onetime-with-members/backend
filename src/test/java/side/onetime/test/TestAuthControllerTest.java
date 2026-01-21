@@ -143,9 +143,9 @@ public class TestAuthControllerTest extends ControllerTestConfig {
 
         // then
         resultActions
-                .andExpect(status().isCreated())
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.is_success").value(true))
-                .andExpect(jsonPath("$.code").value("201"))
+                .andExpect(jsonPath("$.code").value("200"))
                 .andExpect(jsonPath("$.message").value("만료된 테스트 토큰이 발급되었습니다."))
                 .andExpect(jsonPath("$.payload.access_token").value(expiredAccessToken))
                 .andExpect(jsonPath("$.payload.refresh_token").doesNotExist())

@@ -86,7 +86,7 @@ public enum SuccessStatus implements BaseCode {
     _INCREASE_BANNER_CLICK_COUNT(HttpStatus.OK, "200", "배너 클릭 수 증가에 성공했습니다."),
     // Test
     _TEST_LOGIN(HttpStatus.OK, "200", "테스트 로그인에 성공했습니다."),
-    _TEST_EXPIRED_TOKEN(HttpStatus.CREATED, "201", "만료된 테스트 토큰이 발급되었습니다."),
+    _TEST_EXPIRED_TOKEN(HttpStatus.OK, "200", "만료된 테스트 토큰이 발급되었습니다."),
     ;
 
     private final HttpStatus httpStatus;
