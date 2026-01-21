@@ -19,11 +19,6 @@ import side.onetime.repository.RefreshTokenRepository;
 import side.onetime.util.ClientInfoExtractor;
 import side.onetime.util.JwtUtil;
 
-/**
- * 토큰 서비스
- *
- * Token Rotation + Grace Period를 적용한 Refresh Token 재발급 처리
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -53,6 +48,7 @@ public class TokenService {
     public ReissueTokenResponse reissueToken(ReissueTokenRequest reissueTokenRequest, HttpServletRequest httpRequest) {
         String refreshToken = reissueTokenRequest.refreshToken();
 
+        jwtUtil.validateToken(refreshToken);
         String jti = jwtUtil.getClaimFromToken(refreshToken, "jti", String.class);
         String userIp = clientInfoExtractor.extractClientIp(httpRequest);
         String userAgent = clientInfoExtractor.extractUserAgent(httpRequest);
