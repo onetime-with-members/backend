@@ -47,9 +47,6 @@ dependencies {
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-    // Redisson
-    implementation 'org.redisson:redisson-spring-boot-starter:3.46.0'
-
     // Security
     implementation 'org.springframework.boot:spring-boot-starter-security'
     testImplementation 'org.springframework.security:spring-security-test'
