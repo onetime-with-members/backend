@@ -120,6 +120,34 @@ Example: `feat: 만료된 액세스 토큰 발급 테스트 API를 추가한다`
 - Spring REST Docs for API documentation generation
 - Test config uses port 8091
 
+### Swagger 예외 케이스 문서화
+
+실패 케이스도 Swagger에 표시하려면 테스트에 `MockMvcRestDocumentationWrapper.document()` 추가:
+
+```java
+@Test
+@DisplayName("[FAILED] 실패 케이스 설명")
+public void someFailCase() throws Exception {
+    // ... 테스트 로직 ...
+
+    resultActions
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.code").value("ERROR-001"))
+            .andDo(MockMvcRestDocumentationWrapper.document("api/endpoint-fail-reason",
+                    preprocessRequest(prettyPrint()),
+                    preprocessResponse(prettyPrint()),
+                    resource(
+                            ResourceSnippetParameters.builder()
+                                    .tag("API Tag")
+                                    .build()
+                    )
+            ));
+}
+```
+
+- DisplayName에 `[FAILED]` prefix 추가
+- document 경로에 `-fail-reason` suffix 추가
+
 ## Key Configuration
 
 - Main config: `application.yaml`

@@ -92,7 +92,7 @@ public class TestAuthControllerTest extends ControllerTestConfig {
     }
 
     @Test
-    @DisplayName("잘못된 시크릿 키로 테스트 로그인 시 실패한다.")
+    @DisplayName("[FAILED] 잘못된 시크릿 키로 테스트 로그인 시 실패한다.")
     public void testLoginFailWithInvalidSecretKey() throws Exception {
         // given
         String invalidSecretKey = "invalid-secret-key";
@@ -116,7 +116,16 @@ public class TestAuthControllerTest extends ControllerTestConfig {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.is_success").value(false))
                 .andExpect(jsonPath("$.code").value("TEST-001"))
-                .andExpect(jsonPath("$.message").value("유효하지 않은 테스트 시크릿 키입니다."));
+                .andExpect(jsonPath("$.message").value("유효하지 않은 테스트 시크릿 키입니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("test/auth/login-fail-invalid-secret-key",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Test API")
+                                        .build()
+                        )
+                ));
     }
 
     @Test
@@ -174,7 +183,7 @@ public class TestAuthControllerTest extends ControllerTestConfig {
     }
 
     @Test
-    @DisplayName("잘못된 시크릿 키로 만료된 토큰 발급 시 실패한다.")
+    @DisplayName("[FAILED] 잘못된 시크릿 키로 만료된 토큰 발급 시 실패한다.")
     public void getExpiredTokenFailWithInvalidSecretKey() throws Exception {
         // given
         String invalidSecretKey = "invalid-secret-key";
@@ -198,6 +207,15 @@ public class TestAuthControllerTest extends ControllerTestConfig {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.is_success").value(false))
                 .andExpect(jsonPath("$.code").value("TEST-001"))
-                .andExpect(jsonPath("$.message").value("유효하지 않은 테스트 시크릿 키입니다."));
+                .andExpect(jsonPath("$.message").value("유효하지 않은 테스트 시크릿 키입니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("test/auth/expired-token-fail-invalid-secret-key",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Test API")
+                                        .build()
+                        )
+                ));
     }
 }
