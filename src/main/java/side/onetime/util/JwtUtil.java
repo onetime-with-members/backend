@@ -1,25 +1,31 @@
 package side.onetime.util;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-import side.onetime.domain.User;
-import side.onetime.exception.CustomException;
-import side.onetime.exception.status.TokenErrorStatus;
-import side.onetime.exception.status.UserErrorStatus;
-import side.onetime.repository.UserRepository;
-
-import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Date;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import side.onetime.domain.User;
+import side.onetime.exception.CustomException;
+import side.onetime.exception.status.TokenErrorStatus;
+import side.onetime.exception.status.UserErrorStatus;
+import side.onetime.repository.UserRepository;
 
 @Slf4j
 @Component
@@ -82,6 +88,23 @@ public class JwtUtil {
                 .claim("userType", userType.toUpperCase())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationMillis))
+                .signWith(this.getSigningKey())
+                .compact();
+    }
+
+    /**
+     * 만료된 액세스 토큰 생성 메서드 (테스트 전용).
+     *
+     * @param userId 유저 ID
+     * @param userType 유저 타입
+     * @return 이미 만료된 액세스 토큰
+     */
+    public String generateExpiredAccessToken(Long userId, String userType) {
+        return Jwts.builder()
+                .claim("userId", userId)
+                .claim("userType", userType.toUpperCase())
+                .issuedAt(new Date(System.currentTimeMillis() - 2000L))
+                .expiration(new Date(System.currentTimeMillis() - 1000L))
                 .signWith(this.getSigningKey())
                 .compact();
     }
