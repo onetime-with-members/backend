@@ -58,7 +58,7 @@ public class TestAuthService {
         String refreshTokenValue = jwtUtil.generateRefreshToken(testUserId, browserId, jti);
 
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiryAt = jwtUtil.calculateRefreshTokenExpiryAt(LocalDateTime.now());
+        LocalDateTime expiryAt = jwtUtil.calculateRefreshTokenExpiryAt(now);
 
         // 3. Refresh Token MySQL 저장
         RefreshToken refreshToken = RefreshToken.create(
