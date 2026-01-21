@@ -91,15 +91,19 @@ src/main/java/side/onetime/
 
 ## Commit Convention
 
-Format: `[type]: description (#issue-number)`
+Format: `type: description`
 
 Types:
-- `[feat]`: New feature
-- `[fix]`: Bug fix
-- `[refactor]`: Code refactoring
-- `[docs]`: Documentation
+- `feat`: New feature
+- `fix`: Bug fix
+- `refactor`: Code refactoring
+- `chore`: Maintenance tasks
 
-Example: `[feat] : 가이드 확인 여부를 조회/저장/삭제한다 (#300)`
+Example: `feat: 만료된 액세스 토큰 발급 테스트 API를 추가한다`
+
+### 커밋 제외 파일
+- `docs/` 디렉터리 (설계 문서)
+- OpenAPI 관련 생성 파일
 
 ## Branch Strategy
 
