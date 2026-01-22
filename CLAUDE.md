@@ -91,15 +91,19 @@ src/main/java/side/onetime/
 
 ## Commit Convention
 
-Format: `[type]: description (#issue-number)`
+Format: `type: description`
 
 Types:
-- `[feat]`: New feature
-- `[fix]`: Bug fix
-- `[refactor]`: Code refactoring
-- `[docs]`: Documentation
+- `feat`: New feature
+- `fix`: Bug fix
+- `refactor`: Code refactoring
+- `chore`: Maintenance tasks
 
-Example: `[feat] : 가이드 확인 여부를 조회/저장/삭제한다 (#300)`
+Example: `feat: 만료된 액세스 토큰 발급 테스트 API를 추가한다`
+
+### 커밋 제외 파일
+- `docs/` 디렉터리 (설계 문서)
+- OpenAPI 관련 생성 파일
 
 ## Branch Strategy
 
@@ -115,6 +119,34 @@ Example: `[feat] : 가이드 확인 여부를 조회/저장/삭제한다 (#300)`
 - MockMvc for controller integration tests
 - Spring REST Docs for API documentation generation
 - Test config uses port 8091
+
+### Swagger 예외 케이스 문서화
+
+실패 케이스도 Swagger에 표시하려면 테스트에 `MockMvcRestDocumentationWrapper.document()` 추가:
+
+```java
+@Test
+@DisplayName("[FAILED] 실패 케이스 설명")
+public void someFailCase() throws Exception {
+    // ... 테스트 로직 ...
+
+    resultActions
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.code").value("ERROR-001"))
+            .andDo(MockMvcRestDocumentationWrapper.document("api/endpoint-fail-reason",
+                    preprocessRequest(prettyPrint()),
+                    preprocessResponse(prettyPrint()),
+                    resource(
+                            ResourceSnippetParameters.builder()
+                                    .tag("API Tag")
+                                    .build()
+                    )
+            ));
+}
+```
+
+- DisplayName에 `[FAILED]` prefix 추가
+- document 경로에 `-fail-reason` suffix 추가
 
 ## Key Configuration
 

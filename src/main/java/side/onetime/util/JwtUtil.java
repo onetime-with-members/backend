@@ -94,6 +94,23 @@ public class JwtUtil {
     }
 
     /**
+     * 만료된 액세스 토큰 생성 메서드 (테스트 전용).
+     *
+     * @param userId 유저 ID
+     * @param userType 유저 타입
+     * @return 이미 만료된 액세스 토큰
+     */
+    public String generateExpiredAccessToken(Long userId, String userType) {
+        return Jwts.builder()
+                .claim("userId", userId)
+                .claim("userType", userType.toUpperCase())
+                .issuedAt(new Date(System.currentTimeMillis() - 2000L))
+                .expiration(new Date(System.currentTimeMillis() - 1000L))
+                .signWith(this.getSigningKey())
+                .compact();
+    }
+
+    /**
      * 레지스터 토큰 생성 메서드.
      *
      * @param provider 제공자

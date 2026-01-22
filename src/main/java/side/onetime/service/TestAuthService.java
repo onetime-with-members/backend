@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import side.onetime.domain.RefreshToken;
 import side.onetime.dto.test.request.TestLoginRequest;
-import side.onetime.dto.user.response.OnboardUserResponse;
+import side.onetime.dto.test.response.TestTokenResponse;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.TestErrorStatus;
 import side.onetime.repository.RefreshTokenRepository;
@@ -39,12 +39,10 @@ public class TestAuthService {
      * @param request 테스트 로그인 요청 (시크릿 키 포함)
      * @return Access Token과 Refresh Token을 포함하는 응답 객체
      */
-    @Transactional
-    public OnboardUserResponse login(TestLoginRequest request) {
+	@Transactional
+    public TestTokenResponse login(TestLoginRequest request) {
         // 1. 시크릿 키 검증
-        if (!testSecretKey.equals(request.secretKey())) {
-            throw new CustomException(TestErrorStatus._INVALID_SECRET_KEY);
-        }
+        validateSecretKey(request.secretKey());
 
         // 2. 고정된 테스트 유저 ID로 토큰 생성
         String browserId = jwtUtil.hashUserAgent("E2E-Test-Agent");
@@ -68,5 +66,31 @@ public class TestAuthService {
         refreshTokenRepository.save(refreshToken);
 
         return OnboardUserResponse.of(accessToken, refreshTokenValue);
+        return TestTokenResponse.of(accessToken, refreshToken);
+    }
+
+    /**
+     * 만료된 액세스 토큰 발급 API.
+     *
+     * 시크릿 키를 검증한 후, 이미 만료된 액세스 토큰을 발급합니다.
+     * E2E 테스트에서 401 처리, 토큰 재발급 플로우 테스트에 사용됩니다.
+     *
+     * @param request 테스트 로그인 요청 (시크릿 키 포함)
+     * @return 만료된 Access Token을 포함하는 응답 객체
+     */
+    public TestTokenResponse generateExpiredToken(TestLoginRequest request) {
+        // 1. 시크릿 키 검증
+        validateSecretKey(request.secretKey());
+
+        // 2. 만료된 액세스 토큰 생성
+        String expiredToken = jwtUtil.generateExpiredAccessToken(testUserId, "USER");
+
+        return TestTokenResponse.ofAccessToken(expiredToken);
+    }
+
+    private void validateSecretKey(String secretKey) {
+        if (!testSecretKey.equals(secretKey)) {
+            throw new CustomException(TestErrorStatus._INVALID_SECRET_KEY);
+        }
     }
 }

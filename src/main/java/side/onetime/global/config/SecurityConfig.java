@@ -74,6 +74,7 @@ public class SecurityConfig {
 		"https://dev-app.onetime-with-members.workers.dev",
 		"https://admin.onetime-with-members.workers.dev",
 		"https://dev-admin.onetime-with-members.workers.dev",
+		"https://discord.onetime.run/",
 	};
 
 	/**
