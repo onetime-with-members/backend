@@ -65,8 +65,7 @@ public class TestAuthService {
         );
         refreshTokenRepository.save(refreshToken);
 
-        return OnboardUserResponse.of(accessToken, refreshTokenValue);
-        return TestTokenResponse.of(accessToken, refreshToken);
+        return TestTokenResponse.of(accessToken, refreshToken.getTokenValue());
     }
 
     /**
