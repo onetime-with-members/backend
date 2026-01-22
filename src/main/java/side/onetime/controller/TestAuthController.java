@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import side.onetime.dto.test.request.TestLoginRequest;
-import side.onetime.dto.user.response.OnboardUserResponse;
+import side.onetime.dto.test.response.TestTokenResponse;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.TestAuthService;
@@ -33,10 +33,27 @@ public class TestAuthController {
      * @return Access Token과 Refresh Token을 포함하는 응답 객체
      */
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<OnboardUserResponse>> testLogin(
+    public ResponseEntity<ApiResponse<TestTokenResponse>> testLogin(
             @Valid @RequestBody TestLoginRequest request) {
 
-        OnboardUserResponse response = testAuthService.login(request);
+        TestTokenResponse response = testAuthService.login(request);
         return ApiResponse.onSuccess(SuccessStatus._TEST_LOGIN, response);
+    }
+
+    /**
+     * 만료된 토큰 발급 API.
+     *
+     * E2E 테스트 환경에서 401 처리, 토큰 재발급 플로우 테스트를 위해
+     * 이미 만료된 액세스 토큰을 발급합니다.
+     *
+     * @param request 시크릿 키를 포함한 요청 객체
+     * @return 만료된 Access Token을 포함하는 응답 객체
+     */
+    @PostMapping("/expired-token")
+    public ResponseEntity<ApiResponse<TestTokenResponse>> getExpiredToken(
+            @Valid @RequestBody TestLoginRequest request) {
+
+        TestTokenResponse response = testAuthService.generateExpiredToken(request);
+        return ApiResponse.onSuccess(SuccessStatus._TEST_EXPIRED_TOKEN, response);
     }
 }
