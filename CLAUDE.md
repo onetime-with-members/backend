@@ -11,7 +11,6 @@ OneTime is a Spring Boot-based backend API for a collaborative event scheduling 
 - **Language**: Java 17
 - **Framework**: Spring Boot 3.3.2
 - **Database**: MySQL 8.0 with Spring Data JPA, QueryDSL 5.0
-- **Cache**: Redis with Redisson 3.46.0 (distributed locking)
 - **Security**: Spring Security, OAuth2 (Google, Kakao, Naver), JWT (JJWT 0.12.2)
 - **Cloud**: AWS S3 (Spring Cloud AWS 3.1.1), CodeDeploy
 - **Documentation**: Spring REST Docs 3.0.0, SpringDoc OpenAPI 2.1.0
@@ -56,7 +55,6 @@ src/main/java/side/onetime/
 ├── global/
 │   ├── config/          # Spring configurations
 │   ├── filter/          # JwtFilter
-│   ├── lock/            # @DistributedLock annotation & AOP
 │   └── common/          # ApiResponse<T>, status codes, BaseEntity
 ├── exception/           # CustomException, GlobalExceptionHandler
 ├── infra/               # External integrations (Everytime client)
@@ -79,7 +77,6 @@ src/main/java/side/onetime/
 
 ### Patterns
 - **Soft Delete**: `@SQLDelete`, `@SQLRestriction` with `Status` enum (ACTIVE, DELETED)
-- **Distributed Locking**: `@DistributedLock` annotation for race condition prevention
 - **DTO Conversion**: `toEntity()` methods, static factory `of()` methods
 - **Error Handling**: Domain-specific error status enums (e.g., `EventErrorStatus`)
 - **Dependency Injection**: Constructor injection with `@RequiredArgsConstructor`
