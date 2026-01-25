@@ -12,10 +12,6 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
     show-sql: true
-  data:
-    redis:
-      host: localhost
-      port: 6379
 
 jwt:
   secret: test-secret-key-for-testing-purpose-only-should-be-256-bits-long
