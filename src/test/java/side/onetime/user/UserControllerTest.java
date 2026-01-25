@@ -1,8 +1,11 @@
 package side.onetime.user;
 
-import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
-import com.epages.restdocs.apispec.ResourceSnippetParameters;
-import com.epages.restdocs.apispec.Schema;
+import static com.epages.restdocs.apispec.ResourceDocumentation.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -12,23 +15,28 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.ResultActions;
+
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
+import com.epages.restdocs.apispec.ResourceSnippetParameters;
+import com.epages.restdocs.apispec.Schema;
+
 import side.onetime.configuration.UserControllerTestConfig;
 import side.onetime.controller.UserController;
 import side.onetime.domain.enums.GuideType;
 import side.onetime.domain.enums.Language;
-import side.onetime.dto.user.request.*;
-import side.onetime.dto.user.response.*;
+import side.onetime.dto.user.request.CreateGuideViewLogRequest;
+import side.onetime.dto.user.request.OnboardUserRequest;
+import side.onetime.dto.user.request.UpdateUserPolicyAgreementRequest;
+import side.onetime.dto.user.request.UpdateUserProfileRequest;
+import side.onetime.dto.user.request.UpdateUserSleepTimeRequest;
+import side.onetime.dto.user.response.GetGuideViewLogResponse;
+import side.onetime.dto.user.response.GetUserPolicyAgreementResponse;
+import side.onetime.dto.user.response.GetUserProfileResponse;
+import side.onetime.dto.user.response.GetUserSleepTimeResponse;
+import side.onetime.dto.user.response.OnboardUserResponse;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.UserErrorStatus;
 import side.onetime.service.UserService;
-
-import static com.epages.restdocs.apispec.ResourceDocumentation.parameterWithName;
-import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
-import static org.mockito.ArgumentMatchers.any;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
-import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserController.class)
 public class UserControllerTest extends UserControllerTestConfig {
@@ -41,7 +49,7 @@ public class UserControllerTest extends UserControllerTestConfig {
     public void onboardUser() throws Exception {
         // given
         OnboardUserResponse response = new OnboardUserResponse("sampleAccessToken", "sampleRefreshToken");
-        Mockito.when(userService.onboardUser(any(OnboardUserRequest.class))).thenReturn(response);
+        Mockito.when(userService.onboardUser(any(OnboardUserRequest.class), anyString(), anyString())).thenReturn(response);
 
         OnboardUserRequest request = new OnboardUserRequest(
                 "sampleRegisterToken",

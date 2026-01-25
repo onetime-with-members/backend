@@ -1,7 +1,6 @@
 spring:
   jpa:
     show-sql: true
-    generate-ddl: true
     hibernate:
       ddl-auto: update
     properties:
@@ -9,7 +8,7 @@ spring:
         format_sql: true
   sql:
     init:
-      mode: always
+      mode: never
 logging:
   level:
     side.onetime: debug

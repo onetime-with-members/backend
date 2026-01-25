@@ -47,9 +47,6 @@ dependencies {
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-    // Redisson
-    implementation 'org.redisson:redisson-spring-boot-starter:3.46.0'
-
     // Security
     implementation 'org.springframework.boot:spring-boot-starter-security'
     testImplementation 'org.springframework.security:spring-security-test'
@@ -94,6 +91,12 @@ dependencies {
 
     // Jsoup
     implementation 'org.jsoup:jsoup:1.21.2'
+
+    // Testcontainers
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:testcontainers'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:mysql'
 }
 
 // QueryDSL 디렉토리
@@ -132,7 +135,6 @@ openapi3 {
 tasks.withType(GenerateSwaggerUI).configureEach {
     dependsOn 'openapi3'
 
-    delete file('src/main/resources/static/docs/')
     copy {
         from "build/resources/main/static/docs"
         into "src/main/resources/static/docs/"

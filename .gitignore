@@ -39,3 +39,6 @@ out/
 ### Claude Code ###
 .claude
 /docs
+
+### Auto-generated files ###
+src/main/resources/static/docs/open-api-3.0.1.json

@@ -3,6 +3,7 @@ package side.onetime.util;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Date;
 
@@ -136,18 +137,41 @@ public class JwtUtil {
      * 리프레시 토큰 생성 메서드.
      *
      * @param userId 유저 ID
+     * @param userType 유저 타입 (USER, ADMIN)
      * @param browserId 브라우저 식별값 (User-Agent 기반 해시)
+     * @param jti JWT 고유 식별자 (Token Rotation 추적용)
      * @return 생성된 리프레시 토큰
      */
-    public String generateRefreshToken(Long userId, String browserId) {
+    public String generateRefreshToken(Long userId, String userType, String browserId, String jti) {
         return Jwts.builder()
                 .claim("userId", userId)
+                .claim("userType", userType.toUpperCase())
                 .claim("browserId", browserId)
+                .claim("jti", jti)
                 .claim("type", "REFRESH_TOKEN")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION_TIME))
                 .signWith(this.getSigningKey())
                 .compact();
+    }
+
+    /**
+     * 리프레시 토큰 만료 시간 반환 (밀리초)
+     *
+     * @return 리프레시 토큰 만료 시간 (ms)
+     */
+    public long getRefreshTokenExpirationTime() {
+        return REFRESH_TOKEN_EXPIRATION_TIME;
+    }
+
+    /**
+     * 리프레시 토큰 만료 시각 계산
+     *
+     * @param issuedAt 발급 시각
+     * @return 만료 시각 (issuedAt + REFRESH_TOKEN_EXPIRATION_TIME)
+     */
+    public LocalDateTime calculateRefreshTokenExpiryAt(LocalDateTime issuedAt) {
+        return issuedAt.plusSeconds(REFRESH_TOKEN_EXPIRATION_TIME / 1000);
     }
 
     /**

@@ -1,32 +1,36 @@
 package side.onetime.repository.custom;
 
+import static side.onetime.domain.QEvent.*;
+import static side.onetime.domain.QEventParticipation.*;
+import static side.onetime.domain.QFixedSelection.*;
+import static side.onetime.domain.QGuideViewLog.*;
+import static side.onetime.domain.QMember.*;
+import static side.onetime.domain.QRefreshToken.*;
+import static side.onetime.domain.QSchedule.*;
+import static side.onetime.domain.QSelection.*;
+import static side.onetime.domain.QUser.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.data.domain.Pageable;
+
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
 import side.onetime.domain.User;
 import side.onetime.domain.enums.EventStatus;
 import side.onetime.domain.enums.Language;
 import side.onetime.domain.enums.Status;
+import side.onetime.domain.enums.TokenStatus;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.AdminErrorStatus;
 import side.onetime.util.NamingUtil;
-
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static side.onetime.domain.QEvent.event;
-import static side.onetime.domain.QEventParticipation.eventParticipation;
-import static side.onetime.domain.QFixedSelection.fixedSelection;
-import static side.onetime.domain.QGuideViewLog.guideViewLog;
-import static side.onetime.domain.QMember.member;
-import static side.onetime.domain.QSchedule.schedule;
-import static side.onetime.domain.QSelection.selection;
-import static side.onetime.domain.QUser.user;
 
 @RequiredArgsConstructor
 public class UserRepositoryImpl implements UserRepositoryCustom {
@@ -99,6 +103,13 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 
         queryFactory.delete(guideViewLog)
                 .where(guideViewLog.user.eq(activeUser))
+                .execute();
+
+        // RefreshToken revoke 처리
+        queryFactory.update(refreshToken)
+                .set(refreshToken.status, TokenStatus.REVOKED)
+                .where(refreshToken.userId.eq(activeUser.getId())
+                        .and(refreshToken.status.eq(TokenStatus.ACTIVE)))
                 .execute();
 
         queryFactory.update(user)

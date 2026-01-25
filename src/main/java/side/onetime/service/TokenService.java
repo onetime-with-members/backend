@@ -1,14 +1,19 @@
 package side.onetime.service;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import side.onetime.domain.RefreshToken;
+import side.onetime.domain.enums.TokenStatus;
 import side.onetime.dto.token.request.ReissueTokenRequest;
 import side.onetime.dto.token.response.ReissueTokenResponse;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.TokenErrorStatus;
-import side.onetime.global.lock.annotation.DistributedLock;
 import side.onetime.repository.RefreshTokenRepository;
 import side.onetime.util.JwtUtil;
 
@@ -17,52 +22,107 @@ import side.onetime.util.JwtUtil;
 @RequiredArgsConstructor
 public class TokenService {
 
+    private static final int GRACE_PERIOD_SECONDS = 3;
+
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtUtil jwtUtil;
 
     /**
      * 리프레시 토큰으로 액세스/리프레시 토큰을 재발행 하는 메서드.
      *
-     * - 리프레시 토큰에서 userId, browserId 추출
-     * - 동일 browserId에 대해 최근 요청 이력이 존재하면 쿨다운 예외 발생 (0.5초 제한)
-     * - Redis에서 저장된 리프레시 토큰과 비교하여 유효성 검증
-     * - 새로운 액세스/리프레시 토큰 발급 및 Redis에 저장
-     * - 중복 재발행을 방지하기 위해 refreshToken 단위로 분산 락(@DistributedLock) 적용
-     *
-     * [예외 처리]
-     * - 저장된 토큰이 없거나 일치하지 않으면 400 에러 반환
-     * - 너무 자주 요청 시 429 에러 반환
+     * Token Rotation 전략 적용:
+     * - ACTIVE 토큰 → 정상 재발급, 기존 토큰은 ROTATED 처리 (원자적 업데이트)
+     * - ROTATED 토큰 (Grace Period 내) → 중복 요청으로 간주, 429 에러
+     * - ROTATED 토큰 (Grace Period 초과) → 공격 탐지, family 전체 revoke
+     * - REVOKED/EXPIRED 토큰 → 재로그인 필요
      *
      * @param reissueTokenRequest 요청 객체 (리프레시 토큰 포함)
+     * @param userIp 클라이언트 IP 주소
+     * @param userAgent 클라이언트 User-Agent
      * @return 새 액세스/리프레시 토큰
      * @throws CustomException 유효하지 않은 토큰이거나 요청이 너무 잦을 경우
      */
-    @DistributedLock(prefix = "lock:reissue", key = "#reissueTokenRequest.refreshToken", waitTime = 0)
-    public ReissueTokenResponse reissueToken(ReissueTokenRequest reissueTokenRequest) {
+    @Transactional
+    public ReissueTokenResponse reissueToken(ReissueTokenRequest reissueTokenRequest, String userIp, String userAgent) {
         String refreshToken = reissueTokenRequest.refreshToken();
 
-        Long userId = jwtUtil.getClaimFromToken(refreshToken, "userId", Long.class);
-        String browserId = jwtUtil.getClaimFromToken(refreshToken, "browserId", String.class);
+        jwtUtil.validateToken(refreshToken);
+        String jti = jwtUtil.getClaimFromToken(refreshToken, "jti", String.class);
 
-        // 쿨다운 체크
-        if (refreshTokenRepository.isInCooldown(userId, browserId)) {
-            throw new CustomException(TokenErrorStatus._TOO_MANY_REQUESTS);
-        }
-
-        String existRefreshToken = refreshTokenRepository.findByUserIdAndBrowserId(userId, browserId)
+        RefreshToken token = refreshTokenRepository.findByJti(jti)
                 .orElseThrow(() -> new CustomException(TokenErrorStatus._NOT_FOUND_REFRESH_TOKEN));
 
-        if (!existRefreshToken.equals(refreshToken)) {
-            throw new CustomException(TokenErrorStatus._NOT_FOUND_REFRESH_TOKEN);
+        // 토큰 값 검증: DB에 저장된 토큰과 요청 토큰 비교
+        if (!token.getTokenValue().equals(refreshToken)) {
+            throw new CustomException(TokenErrorStatus._INVALID_REFRESH_TOKEN);
         }
 
-        String newAccessToken = jwtUtil.generateAccessToken(userId, "USER");
-        String newRefreshToken = jwtUtil.generateRefreshToken(userId, browserId);
-        refreshTokenRepository.save(new RefreshToken(userId, browserId, newRefreshToken));
+        // 1. ACTIVE 토큰 → 정상 재발급
+        if (token.isActive()) {
+            return rotateToken(token, userIp, userAgent);
+        }
 
-        // 쿨다운 설정 (0.5초)
-        refreshTokenRepository.setCooldown(userId, browserId, 500);
+        // 2. ROTATED 토큰 → Grace Period 체크
+        if (token.getStatus() == TokenStatus.ROTATED) {
+            if (isWithinGracePeriod(token)) {
+                // 중복 요청 → 무시
+                throw new CustomException(TokenErrorStatus._DUPLICATED_REQUEST);
+            } else {
+                // 공격 탐지 → family 전체 revoke
+                log.warn("[Token Reuse Detected] familyId={}, jti={}, ip={}",
+                        token.getFamilyId(), jti, userIp);
+                refreshTokenRepository.revokeAllByFamilyId(token.getFamilyId());
+                throw new CustomException(TokenErrorStatus._TOKEN_REUSE_DETECTED);
+            }
+        }
+
+        // 3. REVOKED, EXPIRED → 재로그인 필요
+        throw new CustomException(TokenErrorStatus._INVALID_REFRESH_TOKEN);
+    }
+
+    /**
+     * Token Rotation 수행 (원자적 업데이트)
+     *
+     * 기존 토큰을 ROTATED 상태로 변경하고 새 토큰을 생성합니다.
+     * 원자적 업데이트를 사용하여 동시 요청 시 race condition을 방지합니다.
+     *
+     * @param oldToken 기존 토큰
+     * @param userIp 요청 IP
+     * @param userAgent 요청 User-Agent
+     * @return 새 토큰 응답
+     * @throws CustomException 토큰이 이미 사용된 경우 (동시 요청으로 인한 race condition)
+     */
+    private ReissueTokenResponse rotateToken(RefreshToken oldToken, String userIp, String userAgent) {
+        LocalDateTime now = LocalDateTime.now();
+
+        // 원자적 업데이트: ACTIVE 상태인 경우에만 ROTATED로 변경
+        int updated = refreshTokenRepository.markAsRotatedIfActive(oldToken.getId(), now, userIp);
+        if (updated == 0) {
+            // 이미 다른 요청에서 토큰을 rotate 했음 (race condition)
+            throw new CustomException(TokenErrorStatus._ALREADY_USED_REFRESH_TOKEN);
+        }
+
+        // 새 토큰 생성 (기존 토큰의 userType 유지)
+        String newJti = UUID.randomUUID().toString();
+        String newAccessToken = jwtUtil.generateAccessToken(oldToken.getUserId(), oldToken.getUserType());
+        String newRefreshToken = jwtUtil.generateRefreshToken(oldToken.getUserId(), oldToken.getUserType(), oldToken.getBrowserId(), newJti);
+
+        LocalDateTime expiryAt = jwtUtil.calculateRefreshTokenExpiryAt(now);
+
+        RefreshToken newToken = oldToken.rotate(newJti, newRefreshToken, now, expiryAt, userIp, userAgent);
+        refreshTokenRepository.save(newToken);
 
         return ReissueTokenResponse.of(newAccessToken, newRefreshToken);
+    }
+
+    /**
+     * Grace Period (3초) 내인지 확인
+     *
+     * @param token 확인할 토큰
+     * @return Grace Period 내 여부
+     */
+    private boolean isWithinGracePeriod(RefreshToken token) {
+        return token.getLastUsedAt() != null &&
+                token.getLastUsedAt().plusSeconds(GRACE_PERIOD_SECONDS).isAfter(LocalDateTime.now());
     }
 }

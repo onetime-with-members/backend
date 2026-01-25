@@ -1,14 +1,22 @@
 package side.onetime.auth.handler;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import side.onetime.auth.dto.GoogleUserInfo;
 import side.onetime.auth.dto.KakaoUserInfo;
 import side.onetime.auth.dto.NaverUserInfo;
@@ -17,12 +25,8 @@ import side.onetime.domain.RefreshToken;
 import side.onetime.domain.User;
 import side.onetime.repository.RefreshTokenRepository;
 import side.onetime.repository.UserRepository;
+import side.onetime.util.ClientInfoExtractor;
 import side.onetime.util.JwtUtil;
-
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 @Slf4j
 @Component
@@ -38,6 +42,7 @@ public class OAuthLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHand
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final ClientInfoExtractor clientInfoExtractor;
 
     /**
      * OAuth2 인증 성공 처리 메서드.
@@ -141,12 +146,27 @@ public class OAuthLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHand
     private void handleExistingUser(HttpServletRequest request, HttpServletResponse response, User user) throws IOException {
         Long userId = user.getId();
         String browserId = jwtUtil.hashUserAgent(request.getHeader("User-Agent"));
+        String userIp = clientInfoExtractor.extractClientIp(request);
+        String userAgent = clientInfoExtractor.extractUserAgent(request);
 
-        String accessToken = jwtUtil.generateAccessToken(userId,"USER");
-        String refreshToken = jwtUtil.generateRefreshToken(userId, browserId);
-        refreshTokenRepository.save(new RefreshToken(userId, browserId, refreshToken));
+        // 기존 브라우저의 ACTIVE 토큰 revoke
+        refreshTokenRepository.revokeByUserIdAndBrowserId(userId, browserId);
 
-        String redirectUri = String.format(ACCESS_TOKEN_REDIRECT_URI, "true", accessToken, refreshToken);
+        // 새 토큰 생성
+        String jti = UUID.randomUUID().toString();
+        String accessToken = jwtUtil.generateAccessToken(userId, "USER");
+        String refreshTokenValue = jwtUtil.generateRefreshToken(userId, "USER", browserId, jti);
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiryAt = jwtUtil.calculateRefreshTokenExpiryAt(now);
+
+        RefreshToken refreshToken = RefreshToken.create(
+                userId, "USER", jti, browserId, refreshTokenValue,
+                now, expiryAt, userIp, userAgent
+        );
+        refreshTokenRepository.save(refreshToken);
+
+        String redirectUri = String.format(ACCESS_TOKEN_REDIRECT_URI, "true", accessToken, refreshTokenValue);
         getRedirectStrategy().sendRedirect(request, response, redirectUri);
     }
 }

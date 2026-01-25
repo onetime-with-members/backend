@@ -1,8 +1,11 @@
 package side.onetime.token;
 
-import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
-import com.epages.restdocs.apispec.ResourceSnippetParameters;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static com.epages.restdocs.apispec.ResourceDocumentation.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -12,18 +15,16 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.ResultActions;
+
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
+import com.epages.restdocs.apispec.ResourceSnippetParameters;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import side.onetime.configuration.ControllerTestConfig;
 import side.onetime.controller.TokenController;
 import side.onetime.dto.token.request.ReissueTokenRequest;
 import side.onetime.dto.token.response.ReissueTokenResponse;
 import side.onetime.service.TokenService;
-
-import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
-import static org.mockito.ArgumentMatchers.any;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
-import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(TokenController.class)
 public class TokenControllerTest extends ControllerTestConfig {
@@ -40,7 +41,7 @@ public class TokenControllerTest extends ControllerTestConfig {
         String newRefreshToken = "newRefreshToken";
         ReissueTokenResponse response = ReissueTokenResponse.of(newAccessToken, newRefreshToken);
 
-        Mockito.when(tokenService.reissueToken(any(ReissueTokenRequest.class)))
+        Mockito.when(tokenService.reissueToken(any(ReissueTokenRequest.class), anyString(), anyString()))
                 .thenReturn(response);
 
         ReissueTokenRequest request = new ReissueTokenRequest(oldRefreshToken);

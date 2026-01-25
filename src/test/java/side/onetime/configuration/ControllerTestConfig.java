@@ -16,8 +16,11 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 import side.onetime.auth.service.CustomAdminDetailsService;
 import side.onetime.auth.service.CustomUserDetailsService;
+import side.onetime.util.ClientInfoExtractor;
 import side.onetime.util.JwtUtil;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
@@ -42,6 +45,9 @@ public abstract class ControllerTestConfig {
     @MockBean
     private CustomAdminDetailsService customAdminDetailsService;
 
+    @MockBean
+    private ClientInfoExtractor clientInfoExtractor;
+
     @BeforeEach
     void setUp(final RestDocumentationContextProvider restDocumentation) {
         mockMvc = MockMvcBuilders.webAppContextSetup(context)
@@ -51,5 +57,9 @@ public abstract class ControllerTestConfig {
                 .build();
 
         SecurityContextHolder.clearContext();
+
+        // ClientInfoExtractor mock 기본 반환값 설정
+        when(clientInfoExtractor.extractClientIp(any())).thenReturn("127.0.0.1");
+        when(clientInfoExtractor.extractUserAgent(any())).thenReturn("Mozilla/5.0");
     }
 }

@@ -1,2 +1,39 @@
 server:
   port: 8091
+
+spring:
+  profiles:
+    active: test
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+    show-sql: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+jwt:
+  secret: test-secret-key-for-testing-purpose-only-should-be-256-bits-long
+  expiration:
+    access: 1800000
+    refresh: 1209600000
+    register: 300000
+  redirect:
+    access: "http://localhost:3000/auth?is_member=%s&access_token=%s&refresh_token=%s"
+    register: "http://localhost:3000/auth?is_member=false&register_token=%s&name=%s"
+
+refresh-token:
+  cleanup:
+    update-expired-cron: "0 0 3 * * *"
+    hard-delete-cron: "0 30 3 * * *"
+    retention-days: 30
+
+test:
+  auth:
+    enabled: true
+    secret-key: test-api-secret-key
