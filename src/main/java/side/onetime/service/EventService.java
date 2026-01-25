@@ -538,7 +538,7 @@ public class EventService {
         List<GetParticipatedEventResponse> userParticipatedEvents = participations.stream()
                 .map(ep -> {
                     Event event = ep.getEvent();
-                    List<EventParticipation> eventParticipations = eventParticipationRepository.findAllByEventWithEventAndMemberAndUser(event);
+                    List<EventParticipation> eventParticipations = eventParticipationRepository.findAllByEventWithEventAndUser(event);
 
                     GetParticipantsResponse participants = this.getParticipants(event, eventParticipations);
                     List<GetMostPossibleTime> mostPossibleTimes = this.getMostPossibleTimes(event, eventParticipations);

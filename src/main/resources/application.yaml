@@ -30,11 +30,6 @@ spring:
               - profile
             redirect-uri: ${OAUTH_GOOGLE_REDIRECT_URI}
 
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-
   cloud:
     aws:
       credentials:
