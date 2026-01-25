@@ -20,7 +20,6 @@ import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.epages.restdocs.apispec.Schema;
 
-import jakarta.servlet.http.HttpServletRequest;
 import side.onetime.configuration.UserControllerTestConfig;
 import side.onetime.controller.UserController;
 import side.onetime.domain.enums.GuideType;
@@ -50,7 +49,7 @@ public class UserControllerTest extends UserControllerTestConfig {
     public void onboardUser() throws Exception {
         // given
         OnboardUserResponse response = new OnboardUserResponse("sampleAccessToken", "sampleRefreshToken");
-        Mockito.when(userService.onboardUser(any(OnboardUserRequest.class), any(HttpServletRequest.class))).thenReturn(response);
+        Mockito.when(userService.onboardUser(any(OnboardUserRequest.class), anyString(), anyString())).thenReturn(response);
 
         OnboardUserRequest request = new OnboardUserRequest(
                 "sampleRegisterToken",

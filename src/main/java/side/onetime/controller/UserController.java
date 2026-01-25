@@ -29,6 +29,7 @@ import side.onetime.dto.user.response.OnboardUserResponse;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.UserService;
+import side.onetime.util.ClientInfoExtractor;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -36,6 +37,7 @@ import side.onetime.service.UserService;
 public class UserController {
 
     private final UserService userService;
+    private final ClientInfoExtractor clientInfoExtractor;
 
     /**
      * 유저 온보딩 API.
@@ -43,6 +45,7 @@ public class UserController {
      * 제공된 레지스터 토큰을 검증한 후, 해당 정보를 기반으로 유저 데이터를 저장하고, 액세스 및 리프레쉬 토큰을 발급합니다.
      *
      * @param onboardUserRequest 유저의 레지스터 토큰, 닉네임, 약관 동의 여부, 수면 시간 정보를 포함하는 요청 객체
+     * @param httpRequest HttpServletRequest (IP, User-Agent 추출용)
      * @return 발급된 액세스 토큰과 리프레쉬 토큰을 포함하는 응답 객체
      */
     @PostMapping("/onboarding")
@@ -50,7 +53,9 @@ public class UserController {
             @Valid @RequestBody OnboardUserRequest onboardUserRequest,
             HttpServletRequest httpRequest) {
 
-        OnboardUserResponse onboardUserResponse = userService.onboardUser(onboardUserRequest, httpRequest);
+        String userIp = clientInfoExtractor.extractClientIp(httpRequest);
+        String userAgent = clientInfoExtractor.extractUserAgent(httpRequest);
+        OnboardUserResponse onboardUserResponse = userService.onboardUser(onboardUserRequest, userIp, userAgent);
         return ApiResponse.onSuccess(SuccessStatus._ONBOARD_USER, onboardUserResponse);
     }
 

@@ -17,7 +17,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import jakarta.servlet.http.HttpServletRequest;
 import side.onetime.domain.RefreshToken;
 import side.onetime.domain.enums.TokenStatus;
 import side.onetime.dto.token.request.ReissueTokenRequest;
@@ -26,7 +25,6 @@ import side.onetime.exception.CustomException;
 import side.onetime.exception.status.TokenErrorStatus;
 import side.onetime.repository.RefreshTokenRepository;
 import side.onetime.service.TokenService;
-import side.onetime.util.ClientInfoExtractor;
 import side.onetime.util.JwtUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,12 +40,6 @@ class TokenServiceTest {
     @Mock
     private JwtUtil jwtUtil;
 
-    @Mock
-    private ClientInfoExtractor clientInfoExtractor;
-
-    @Mock
-    private HttpServletRequest httpRequest;
-
     private static final String TEST_JTI = "test-jti-uuid";
     private static final String TEST_REFRESH_TOKEN = "test.refresh.token";
     private static final String TEST_NEW_ACCESS_TOKEN = "new.access.token";
@@ -61,8 +53,6 @@ class TokenServiceTest {
     void setUp() {
         // Common mock setup
         given(jwtUtil.getClaimFromToken(TEST_REFRESH_TOKEN, "jti", String.class)).willReturn(TEST_JTI);
-        given(clientInfoExtractor.extractClientIp(httpRequest)).willReturn(TEST_USER_IP);
-        given(clientInfoExtractor.extractUserAgent(httpRequest)).willReturn(TEST_USER_AGENT);
     }
 
     private RefreshToken createTestToken(TokenStatus status, LocalDateTime lastUsedAt) {
@@ -115,7 +105,7 @@ class TokenServiceTest {
                     .willReturn(LocalDateTime.now().plusDays(14));
 
             // when
-            ReissueTokenResponse response = tokenService.reissueToken(request, httpRequest);
+            ReissueTokenResponse response = tokenService.reissueToken(request, TEST_USER_IP, TEST_USER_AGENT);
 
             // then
             assertThat(response.accessToken()).isEqualTo(TEST_NEW_ACCESS_TOKEN);
@@ -142,7 +132,7 @@ class TokenServiceTest {
             given(refreshTokenRepository.findByJti(TEST_JTI)).willReturn(Optional.of(token));
 
             // when & then
-            assertThatThrownBy(() -> tokenService.reissueToken(request, httpRequest))
+            assertThatThrownBy(() -> tokenService.reissueToken(request, TEST_USER_IP, TEST_USER_AGENT))
                     .isInstanceOf(CustomException.class)
                     .satisfies(ex -> {
                         CustomException customEx = (CustomException) ex;
@@ -161,7 +151,7 @@ class TokenServiceTest {
             given(refreshTokenRepository.findByJti(TEST_JTI)).willReturn(Optional.of(rotatedToken));
 
             // when & then
-            assertThatThrownBy(() -> tokenService.reissueToken(request, httpRequest))
+            assertThatThrownBy(() -> tokenService.reissueToken(request, TEST_USER_IP, TEST_USER_AGENT))
                     .isInstanceOf(CustomException.class)
                     .satisfies(ex -> {
                         CustomException customEx = (CustomException) ex;
@@ -180,7 +170,7 @@ class TokenServiceTest {
             given(refreshTokenRepository.findByJti(TEST_JTI)).willReturn(Optional.of(rotatedToken));
 
             // when & then
-            assertThatThrownBy(() -> tokenService.reissueToken(request, httpRequest))
+            assertThatThrownBy(() -> tokenService.reissueToken(request, TEST_USER_IP, TEST_USER_AGENT))
                     .isInstanceOf(CustomException.class)
                     .satisfies(ex -> {
                         CustomException customEx = (CustomException) ex;
@@ -200,7 +190,7 @@ class TokenServiceTest {
             given(refreshTokenRepository.findByJti(TEST_JTI)).willReturn(Optional.of(revokedToken));
 
             // when & then
-            assertThatThrownBy(() -> tokenService.reissueToken(request, httpRequest))
+            assertThatThrownBy(() -> tokenService.reissueToken(request, TEST_USER_IP, TEST_USER_AGENT))
                     .isInstanceOf(CustomException.class)
                     .satisfies(ex -> {
                         CustomException customEx = (CustomException) ex;
@@ -218,7 +208,7 @@ class TokenServiceTest {
             given(refreshTokenRepository.findByJti(TEST_JTI)).willReturn(Optional.of(expiredToken));
 
             // when & then
-            assertThatThrownBy(() -> tokenService.reissueToken(request, httpRequest))
+            assertThatThrownBy(() -> tokenService.reissueToken(request, TEST_USER_IP, TEST_USER_AGENT))
                     .isInstanceOf(CustomException.class)
                     .satisfies(ex -> {
                         CustomException customEx = (CustomException) ex;
@@ -234,7 +224,7 @@ class TokenServiceTest {
             given(refreshTokenRepository.findByJti(TEST_JTI)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> tokenService.reissueToken(request, httpRequest))
+            assertThatThrownBy(() -> tokenService.reissueToken(request, TEST_USER_IP, TEST_USER_AGENT))
                     .isInstanceOf(CustomException.class)
                     .satisfies(ex -> {
                         CustomException customEx = (CustomException) ex;
@@ -255,7 +245,7 @@ class TokenServiceTest {
                     .willReturn(0);
 
             // when & then
-            assertThatThrownBy(() -> tokenService.reissueToken(request, httpRequest))
+            assertThatThrownBy(() -> tokenService.reissueToken(request, TEST_USER_IP, TEST_USER_AGENT))
                     .isInstanceOf(CustomException.class)
                     .satisfies(ex -> {
                         CustomException customEx = (CustomException) ex;

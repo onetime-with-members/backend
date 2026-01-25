@@ -7,7 +7,6 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import side.onetime.domain.GuideViewLog;
 import side.onetime.domain.RefreshToken;
@@ -29,7 +28,6 @@ import side.onetime.exception.status.UserErrorStatus;
 import side.onetime.repository.GuideViewLogRepository;
 import side.onetime.repository.RefreshTokenRepository;
 import side.onetime.repository.UserRepository;
-import side.onetime.util.ClientInfoExtractor;
 import side.onetime.util.JwtUtil;
 import side.onetime.util.UserAuthorizationUtil;
 
@@ -41,7 +39,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final GuideViewLogRepository guideViewLogRepository;
-    private final ClientInfoExtractor clientInfoExtractor;
 
     /**
      * 유저 온보딩 처리 메서드.
@@ -50,11 +47,12 @@ public class UserService {
      * 리프레쉬 토큰은 브라우저 식별자(browserId)와 함께 MySQL에 저장됩니다.
      *
      * @param request 유저의 레지스터 토큰, 닉네임, 약관 동의, 수면 시간 등 온보딩 정보가 포함된 요청 객체
-     * @param httpRequest 클라이언트 정보 추출을 위한 HttpServletRequest
+     * @param userIp 클라이언트 IP 주소
+     * @param userAgent 클라이언트 User-Agent
      * @return 발급된 액세스 토큰과 리프레쉬 토큰을 포함한 응답 객체
      */
     @Transactional
-    public OnboardUserResponse onboardUser(OnboardUserRequest request, HttpServletRequest httpRequest) {
+    public OnboardUserResponse onboardUser(OnboardUserRequest request, String userIp, String userAgent) {
         String registerToken = request.registerToken();
         jwtUtil.validateToken(registerToken);
 
@@ -68,8 +66,6 @@ public class UserService {
 
         Long userId = newUser.getId();
         String browserId = jwtUtil.getClaimFromToken(registerToken, "browserId", String.class);
-        String userIp = clientInfoExtractor.extractClientIp(httpRequest);
-        String userAgent = clientInfoExtractor.extractUserAgent(httpRequest);
 
         // 새 토큰 생성
         String jti = UUID.randomUUID().toString();

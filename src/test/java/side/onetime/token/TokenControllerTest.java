@@ -20,7 +20,6 @@ import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
 import com.epages.restdocs.apispec.ResourceSnippetParameters;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import jakarta.servlet.http.HttpServletRequest;
 import side.onetime.configuration.ControllerTestConfig;
 import side.onetime.controller.TokenController;
 import side.onetime.dto.token.request.ReissueTokenRequest;
@@ -42,7 +41,7 @@ public class TokenControllerTest extends ControllerTestConfig {
         String newRefreshToken = "newRefreshToken";
         ReissueTokenResponse response = ReissueTokenResponse.of(newAccessToken, newRefreshToken);
 
-        Mockito.when(tokenService.reissueToken(any(ReissueTokenRequest.class), any(HttpServletRequest.class)))
+        Mockito.when(tokenService.reissueToken(any(ReissueTokenRequest.class), anyString(), anyString()))
                 .thenReturn(response);
 
         ReissueTokenRequest request = new ReissueTokenRequest(oldRefreshToken);

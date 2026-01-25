@@ -14,6 +14,7 @@ import side.onetime.dto.token.response.ReissueTokenResponse;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.TokenService;
+import side.onetime.util.ClientInfoExtractor;
 
 @RestController
 @RequestMapping("/api/v1/tokens")
@@ -21,6 +22,7 @@ import side.onetime.service.TokenService;
 public class TokenController {
 
     private final TokenService tokenService;
+    private final ClientInfoExtractor clientInfoExtractor;
 
     /**
      * 액세스 토큰 재발행 API.
@@ -34,7 +36,9 @@ public class TokenController {
             @Valid @RequestBody ReissueTokenRequest reissueAccessTokenRequest,
             HttpServletRequest httpRequest) {
 
-        ReissueTokenResponse reissueTokenResponse = tokenService.reissueToken(reissueAccessTokenRequest, httpRequest);
+        String userIp = clientInfoExtractor.extractClientIp(httpRequest);
+        String userAgent = clientInfoExtractor.extractUserAgent(httpRequest);
+        ReissueTokenResponse reissueTokenResponse = tokenService.reissueToken(reissueAccessTokenRequest, userIp, userAgent);
         return ApiResponse.onSuccess(SuccessStatus._REISSUE_TOKENS, reissueTokenResponse);
     }
 }

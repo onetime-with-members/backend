@@ -6,7 +6,6 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import side.onetime.domain.RefreshToken;
@@ -16,7 +15,6 @@ import side.onetime.dto.token.response.ReissueTokenResponse;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.TokenErrorStatus;
 import side.onetime.repository.RefreshTokenRepository;
-import side.onetime.util.ClientInfoExtractor;
 import side.onetime.util.JwtUtil;
 
 @Slf4j
@@ -28,7 +26,6 @@ public class TokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtUtil jwtUtil;
-    private final ClientInfoExtractor clientInfoExtractor;
 
     /**
      * 리프레시 토큰으로 액세스/리프레시 토큰을 재발행 하는 메서드.
@@ -40,18 +37,17 @@ public class TokenService {
      * - REVOKED/EXPIRED 토큰 → 재로그인 필요
      *
      * @param reissueTokenRequest 요청 객체 (리프레시 토큰 포함)
-     * @param httpRequest HttpServletRequest (IP, User-Agent 추출용)
+     * @param userIp 클라이언트 IP 주소
+     * @param userAgent 클라이언트 User-Agent
      * @return 새 액세스/리프레시 토큰
      * @throws CustomException 유효하지 않은 토큰이거나 요청이 너무 잦을 경우
      */
     @Transactional
-    public ReissueTokenResponse reissueToken(ReissueTokenRequest reissueTokenRequest, HttpServletRequest httpRequest) {
+    public ReissueTokenResponse reissueToken(ReissueTokenRequest reissueTokenRequest, String userIp, String userAgent) {
         String refreshToken = reissueTokenRequest.refreshToken();
 
         jwtUtil.validateToken(refreshToken);
         String jti = jwtUtil.getClaimFromToken(refreshToken, "jti", String.class);
-        String userIp = clientInfoExtractor.extractClientIp(httpRequest);
-        String userAgent = clientInfoExtractor.extractUserAgent(httpRequest);
 
         RefreshToken token = refreshTokenRepository.findByJti(jti)
                 .orElseThrow(() -> new CustomException(TokenErrorStatus._NOT_FOUND_REFRESH_TOKEN));
