@@ -1,28 +1,32 @@
 package side.onetime.util;
 
-import io.jsonwebtoken.*;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.util.Base64;
+import java.util.Date;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-import side.onetime.domain.AdminUser;
 import side.onetime.domain.User;
 import side.onetime.exception.CustomException;
-import side.onetime.exception.status.AdminErrorStatus;
 import side.onetime.exception.status.TokenErrorStatus;
 import side.onetime.exception.status.UserErrorStatus;
-import side.onetime.repository.AdminRepository;
 import side.onetime.repository.UserRepository;
-
-import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
-import java.util.Date;
 
 @Slf4j
 @Component
@@ -47,7 +51,6 @@ public class JwtUtil {
     private String browserIdSalt;
 
     private final UserRepository userRepository;
-    private final AdminRepository adminRepository;
 
     /**
      * JWT 서명 키를 생성 및 반환.
@@ -91,6 +94,23 @@ public class JwtUtil {
     }
 
     /**
+     * 만료된 액세스 토큰 생성 메서드 (테스트 전용).
+     *
+     * @param userId 유저 ID
+     * @param userType 유저 타입
+     * @return 이미 만료된 액세스 토큰
+     */
+    public String generateExpiredAccessToken(Long userId, String userType) {
+        return Jwts.builder()
+                .claim("userId", userId)
+                .claim("userType", userType.toUpperCase())
+                .issuedAt(new Date(System.currentTimeMillis() - 2000L))
+                .expiration(new Date(System.currentTimeMillis() - 1000L))
+                .signWith(this.getSigningKey())
+                .compact();
+    }
+
+    /**
      * 레지스터 토큰 생성 메서드.
      *
      * @param provider 제공자
@@ -117,18 +137,41 @@ public class JwtUtil {
      * 리프레시 토큰 생성 메서드.
      *
      * @param userId 유저 ID
+     * @param userType 유저 타입 (USER, ADMIN)
      * @param browserId 브라우저 식별값 (User-Agent 기반 해시)
+     * @param jti JWT 고유 식별자 (Token Rotation 추적용)
      * @return 생성된 리프레시 토큰
      */
-    public String generateRefreshToken(Long userId, String browserId) {
+    public String generateRefreshToken(Long userId, String userType, String browserId, String jti) {
         return Jwts.builder()
                 .claim("userId", userId)
+                .claim("userType", userType.toUpperCase())
                 .claim("browserId", browserId)
+                .claim("jti", jti)
                 .claim("type", "REFRESH_TOKEN")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION_TIME))
                 .signWith(this.getSigningKey())
                 .compact();
+    }
+
+    /**
+     * 리프레시 토큰 만료 시간 반환 (밀리초)
+     *
+     * @return 리프레시 토큰 만료 시간 (ms)
+     */
+    public long getRefreshTokenExpirationTime() {
+        return REFRESH_TOKEN_EXPIRATION_TIME;
+    }
+
+    /**
+     * 리프레시 토큰 만료 시각 계산
+     *
+     * @param issuedAt 발급 시각
+     * @return 만료 시각 (issuedAt + REFRESH_TOKEN_EXPIRATION_TIME)
+     */
+    public LocalDateTime calculateRefreshTokenExpiryAt(LocalDateTime issuedAt) {
+        return issuedAt.plusSeconds(REFRESH_TOKEN_EXPIRATION_TIME / 1000);
     }
 
     /**
@@ -178,20 +221,6 @@ public class JwtUtil {
 
         return userRepository.findById(getClaimFromToken(token, "userId", Long.class))
                 .orElseThrow(() -> new CustomException(UserErrorStatus._NOT_FOUND_USER));
-    }
-
-    /**
-     * 헤더에서 어드민 유저 객체 반환.
-     *
-     * @param authorizationHeader Authorization 헤더
-     * @return 어드민 유저 객체
-     */
-    public AdminUser getAdminUserFromHeader(String authorizationHeader) {
-        String token = getTokenFromHeader(authorizationHeader);
-        validateToken(token);
-
-        return adminRepository.findById(getClaimFromToken(token, "userId", Long.class))
-                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
     }
 
     /**

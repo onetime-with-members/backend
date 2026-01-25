@@ -1,15 +1,35 @@
 package side.onetime.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import side.onetime.domain.enums.GuideType;
-import side.onetime.dto.user.request.*;
-import side.onetime.dto.user.response.*;
+import side.onetime.dto.user.request.CreateGuideViewLogRequest;
+import side.onetime.dto.user.request.LogoutUserRequest;
+import side.onetime.dto.user.request.OnboardUserRequest;
+import side.onetime.dto.user.request.UpdateUserPolicyAgreementRequest;
+import side.onetime.dto.user.request.UpdateUserProfileRequest;
+import side.onetime.dto.user.request.UpdateUserSleepTimeRequest;
+import side.onetime.dto.user.response.GetGuideViewLogResponse;
+import side.onetime.dto.user.response.GetUserPolicyAgreementResponse;
+import side.onetime.dto.user.response.GetUserProfileResponse;
+import side.onetime.dto.user.response.GetUserSleepTimeResponse;
+import side.onetime.dto.user.response.OnboardUserResponse;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.UserService;
+import side.onetime.util.ClientInfoExtractor;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -17,6 +37,7 @@ import side.onetime.service.UserService;
 public class UserController {
 
     private final UserService userService;
+    private final ClientInfoExtractor clientInfoExtractor;
 
     /**
      * 유저 온보딩 API.
@@ -24,13 +45,17 @@ public class UserController {
      * 제공된 레지스터 토큰을 검증한 후, 해당 정보를 기반으로 유저 데이터를 저장하고, 액세스 및 리프레쉬 토큰을 발급합니다.
      *
      * @param onboardUserRequest 유저의 레지스터 토큰, 닉네임, 약관 동의 여부, 수면 시간 정보를 포함하는 요청 객체
+     * @param httpRequest HttpServletRequest (IP, User-Agent 추출용)
      * @return 발급된 액세스 토큰과 리프레쉬 토큰을 포함하는 응답 객체
      */
     @PostMapping("/onboarding")
     public ResponseEntity<ApiResponse<OnboardUserResponse>> onboardUser(
-            @Valid @RequestBody OnboardUserRequest onboardUserRequest) {
+            @Valid @RequestBody OnboardUserRequest onboardUserRequest,
+            HttpServletRequest httpRequest) {
 
-        OnboardUserResponse onboardUserResponse = userService.onboardUser(onboardUserRequest);
+        String userIp = clientInfoExtractor.extractClientIp(httpRequest);
+        String userAgent = clientInfoExtractor.extractUserAgent(httpRequest);
+        OnboardUserResponse onboardUserResponse = userService.onboardUser(onboardUserRequest, userIp, userAgent);
         return ApiResponse.onSuccess(SuccessStatus._ONBOARD_USER, onboardUserResponse);
     }
 

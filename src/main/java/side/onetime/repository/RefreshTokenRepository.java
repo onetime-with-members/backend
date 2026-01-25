@@ -1,88 +1,47 @@
 package side.onetime.repository;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Repository;
-import side.onetime.domain.RefreshToken;
-
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
-@Repository
-@RequiredArgsConstructor
-public class RefreshTokenRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-    @Value("${jwt.refresh-token.expiration-time}")
-    private long REFRESH_TOKEN_EXPIRATION_TIME;
+import side.onetime.domain.RefreshToken;
+import side.onetime.repository.custom.RefreshTokenRepositoryCustom;
 
-    private static final int REFRESH_TOKEN_LIMIT = 5;
-    private static final String COOLDOWN_PREFIX = "cooldown:reissue:";
+public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long>, RefreshTokenRepositoryCustom {
 
-    private final RedisTemplate<String, String> redisTemplate;
+    /**
+     * jti(JWT ID)로 RefreshToken 조회
+     *
+     * @param jti JWT 고유 식별자
+     * @return RefreshToken
+     */
+    Optional<RefreshToken> findByJti(String jti);
 
-    public void save(RefreshToken refreshToken) {
-        String key = "refreshToken:" + refreshToken.getUserId();
-        String value = refreshToken.getBrowserId() + ":" + refreshToken.getRefreshToken();
-
-        List<String> existing = redisTemplate.opsForList().range(key, 0, -1);
-
-        if (existing != null) {
-            // 기존 토큰 제거
-            existing.removeIf(token -> token.startsWith(refreshToken.getBrowserId() + ":"));
-            redisTemplate.delete(key);
-            for (String item : existing) {
-                redisTemplate.opsForList().rightPush(key, item);
-            }
-        }
-
-        // 최신 토큰 맨 앞에 추가
-        redisTemplate.opsForList().leftPush(key, value);
-        redisTemplate.opsForList().trim(key, 0, REFRESH_TOKEN_LIMIT - 1);
-        redisTemplate.expire(key, REFRESH_TOKEN_EXPIRATION_TIME, TimeUnit.MILLISECONDS);
-    }
-
-    public Optional<String> findByUserIdAndBrowserId(Long userId, String browserId) {
-        String key = "refreshToken:" + userId;
-        List<String> tokens = redisTemplate.opsForList().range(key, 0, -1);
-
-        if (tokens == null) return Optional.empty();
-
-        return tokens.stream()
-                .filter(t -> t.startsWith(browserId + ":"))
-                .findFirst()
-                .map(t -> t.substring(browserId.length() + 1));
-    }
-
-    public boolean isInCooldown(Long userId, String browserId) {
-        String key = COOLDOWN_PREFIX + userId + ":" + browserId;
-        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
-    }
-
-    public void setCooldown(Long userId, String browserId, long millis) {
-        String key = COOLDOWN_PREFIX + userId + ":" + browserId;
-        redisTemplate.opsForValue().set(key, "1", millis, TimeUnit.MILLISECONDS);
-    }
-
-    public void deleteAllByUserId(Long userId) {
-        String pattern = "refreshToken:" + userId;
-        redisTemplate.delete(pattern);
-    }
-
-    public void deleteRefreshToken(Long userId, String browserId) {
-        String key = "refreshToken:" + userId;
-
-        List<String> tokens = redisTemplate.opsForList().range(key, 0, -1);
-        if (tokens == null || tokens.isEmpty()) return;
-
-        tokens.removeIf(token -> token.startsWith(browserId + ":"));
-
-        redisTemplate.delete(key);
-        for (String token : tokens) {
-            redisTemplate.opsForList().rightPush(key, token);
-        }
-
-        redisTemplate.expire(key, REFRESH_TOKEN_EXPIRATION_TIME, TimeUnit.MILLISECONDS);
-    }
+    /**
+     * 원자적 업데이트: ACTIVE 상태인 경우에만 ROTATED로 변경
+     * Race condition 방지를 위해 WHERE 절에서 상태 체크
+     * updatedDate도 함께 업데이트 (JPA auditing이 bulk 쿼리에서 동작하지 않음)
+     *
+     * @param tokenId    토큰 ID
+     * @param lastUsedAt 마지막 사용 시각
+     * @param lastUsedIp 마지막 사용 IP
+     * @return 업데이트된 행 수 (0이면 이미 rotate됨)
+     */
+    @Modifying
+    @Query("""
+        UPDATE RefreshToken r
+        SET r.status = 'ROTATED',
+            r.lastUsedAt = :lastUsedAt,
+            r.lastUsedIp = :lastUsedIp,
+            r.updatedDate = :lastUsedAt
+        WHERE r.id = :tokenId
+          AND r.status = 'ACTIVE'
+    """)
+    int markAsRotatedIfActive(@Param("tokenId") Long tokenId,
+                              @Param("lastUsedAt") LocalDateTime lastUsedAt,
+                              @Param("lastUsedIp") String lastUsedIp);
 }

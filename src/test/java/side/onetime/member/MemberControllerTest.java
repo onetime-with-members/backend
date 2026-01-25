@@ -11,7 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.ResultActions;
-import side.onetime.auth.service.CustomUserDetailsService;
 import side.onetime.configuration.ControllerTestConfig;
 import side.onetime.controller.MemberController;
 import side.onetime.dto.member.request.IsDuplicateRequest;
@@ -22,7 +21,6 @@ import side.onetime.dto.member.response.LoginMemberResponse;
 import side.onetime.dto.member.response.RegisterMemberResponse;
 import side.onetime.dto.member.response.ScheduleResponse;
 import side.onetime.service.MemberService;
-import side.onetime.util.JwtUtil;
 
 import java.util.List;
 
@@ -38,12 +36,6 @@ public class MemberControllerTest extends ControllerTestConfig {
 
     @MockBean
     private MemberService memberService;
-
-    @MockBean
-    private JwtUtil jwtUtil;
-
-    @MockBean
-    private CustomUserDetailsService customUserDetailsService;
 
     @Test
     @DisplayName("멤버를 등록한다.")

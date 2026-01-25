@@ -12,11 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.ResultActions;
-import side.onetime.auth.service.CustomUserDetailsService;
 import side.onetime.configuration.ControllerTestConfig;
 import side.onetime.controller.ScheduleController;
-import side.onetime.domain.User;
-import side.onetime.dto.event.response.GetParticipantsResponse;
 import side.onetime.dto.schedule.request.CreateDateScheduleRequest;
 import side.onetime.dto.schedule.request.CreateDayScheduleRequest;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
@@ -25,13 +22,13 @@ import side.onetime.dto.schedule.response.DaySchedule;
 import side.onetime.dto.schedule.response.PerDateSchedulesResponse;
 import side.onetime.dto.schedule.response.PerDaySchedulesResponse;
 import side.onetime.service.ScheduleService;
-import side.onetime.util.JwtUtil;
 
 import java.util.List;
 import java.util.UUID;
 
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
@@ -40,14 +37,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(ScheduleController.class)
 public class ScheduleControllerTest extends ControllerTestConfig {
+
     @MockBean
     private ScheduleService scheduleService;
-
-    @MockBean
-    private JwtUtil jwtUtil;
-
-    @MockBean
-    private CustomUserDetailsService customUserDetailsService;
 
     @Test
     @DisplayName("요일 스케줄을 등록한다. (토큰 유무에 따라 로그인/비로그인 구분)")

@@ -11,6 +11,7 @@ permissions:
 jobs:
   build-and-push:
     name: Build and Push to ECR
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     environment: prod
     steps:

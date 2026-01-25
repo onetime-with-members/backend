@@ -91,15 +91,19 @@ src/main/java/side/onetime/
 
 ## Commit Convention
 
-Format: `[type]: description (#issue-number)`
+Format: `type: description`
 
 Types:
-- `[feat]`: New feature
-- `[fix]`: Bug fix
-- `[refactor]`: Code refactoring
-- `[docs]`: Documentation
+- `feat`: New feature
+- `fix`: Bug fix
+- `refactor`: Code refactoring
+- `chore`: Maintenance tasks
 
-Example: `[feat] : 가이드 확인 여부를 조회/저장/삭제한다 (#300)`
+Example: `feat: 만료된 액세스 토큰 발급 테스트 API를 추가한다`
+
+### 커밋 제외 파일
+- `docs/` 디렉터리 (설계 문서)
+- OpenAPI 관련 생성 파일
 
 ## Branch Strategy
 
@@ -116,9 +120,69 @@ Example: `[feat] : 가이드 확인 여부를 조회/저장/삭제한다 (#300)`
 - Spring REST Docs for API documentation generation
 - Test config uses port 8091
 
+### Swagger 예외 케이스 문서화
+
+실패 케이스도 Swagger에 표시하려면 테스트에 `MockMvcRestDocumentationWrapper.document()` 추가:
+
+```java
+@Test
+@DisplayName("[FAILED] 실패 케이스 설명")
+public void someFailCase() throws Exception {
+    // ... 테스트 로직 ...
+
+    resultActions
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.code").value("ERROR-001"))
+            .andDo(MockMvcRestDocumentationWrapper.document("api/endpoint-fail-reason",
+                    preprocessRequest(prettyPrint()),
+                    preprocessResponse(prettyPrint()),
+                    resource(
+                            ResourceSnippetParameters.builder()
+                                    .tag("API Tag")
+                                    .build()
+                    )
+            ));
+}
+```
+
+- DisplayName에 `[FAILED]` prefix 추가
+- document 경로에 `-fail-reason` suffix 추가
+
 ## Key Configuration
 
 - Main config: `application.yaml`
 - Profiles: `local`, `dev`, `prod`
 - Server port: 8090 (default)
 - Swagger UI: `/swagger-ui.html`
+
+## Documentation (IMPORTANT)
+
+모든 기능 설계 및 문서화는 반드시 `docs/` 디렉터리에 작성해야 합니다.
+
+### 문서 구조
+```
+docs/
+├── design/              # 기능 설계 문서 (구현 전 설계 검토용)
+│   └── *.md
+├── features/            # 구현된 기능 명세 문서
+│   └── *.md
+└── sql/                 # DDL, 마이그레이션 스크립트
+    └── *.sql
+```
+
+### 문서화 규칙
+1. **새 기능 구현 전**: `docs/design/` 에 설계 문서 작성 후 검토
+2. **기능 구현 완료 후**: `docs/features/` 에 기능 명세 이동 또는 작성
+3. **DB 스키마 변경 시**: `docs/sql/` 에 DDL 스크립트 보관
+
+## Test API (E2E Testing)
+
+테스트 환경(local, dev)에서만 동작하는 테스트 전용 API가 있습니다.
+
+### 테스트 로그인 API
+- **Endpoint**: `POST /api/v1/test/auth/login`
+- **Purpose**: Cypress E2E 테스트에서 소셜 로그인 없이 토큰 발급
+- **Security**: `@ConditionalOnProperty`로 PROD에서 빈 자체 미생성
+- **Config**: `test.auth.enabled=true` (local/dev만), `test.auth.secret-key` 환경변수 필요
+
+설계 문서: `docs/design/test-login-api.md`

@@ -63,6 +63,12 @@ jwt:
 scheduling:
   cron: ${CRON}
 
+refresh-token:
+  cleanup:
+    update-expired-cron: ${REFRESH_TOKEN_UPDATE_EXPIRED_CRON:0 0 3 * * *}
+    hard-delete-cron: ${REFRESH_TOKEN_HARD_DELETE_CRON:0 30 3 * * *}
+    retention-days: ${REFRESH_TOKEN_RETENTION_DAYS:30}
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -88,3 +94,9 @@ management:
     enable:
       process.cpu: false
       system.cpu: false
+
+test:
+  auth:
+    enabled: false
+    secret-key: ${TEST_AUTH_SECRET_KEY}
+    user-id: ${TEST_AUTH_USER_ID}
