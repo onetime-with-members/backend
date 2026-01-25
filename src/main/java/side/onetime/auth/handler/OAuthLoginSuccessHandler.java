@@ -155,13 +155,13 @@ public class OAuthLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHand
         // 새 토큰 생성
         String jti = UUID.randomUUID().toString();
         String accessToken = jwtUtil.generateAccessToken(userId, "USER");
-        String refreshTokenValue = jwtUtil.generateRefreshToken(userId, browserId, jti);
+        String refreshTokenValue = jwtUtil.generateRefreshToken(userId, "USER", browserId, jti);
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiryAt = jwtUtil.calculateRefreshTokenExpiryAt(now);
 
         RefreshToken refreshToken = RefreshToken.create(
-                userId, jti, browserId, refreshTokenValue,
+                userId, "USER", jti, browserId, refreshTokenValue,
                 now, expiryAt, userIp, userAgent
         );
         refreshTokenRepository.save(refreshToken);

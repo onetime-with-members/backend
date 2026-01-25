@@ -53,14 +53,14 @@ public class TestAuthService {
         // 새 토큰 생성
         String jti = UUID.randomUUID().toString();
         String accessToken = jwtUtil.generateAccessToken(testUserId, "USER");
-        String refreshTokenValue = jwtUtil.generateRefreshToken(testUserId, browserId, jti);
+        String refreshTokenValue = jwtUtil.generateRefreshToken(testUserId, "USER", browserId, jti);
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiryAt = jwtUtil.calculateRefreshTokenExpiryAt(now);
 
         // 3. Refresh Token MySQL 저장
         RefreshToken refreshToken = RefreshToken.create(
-                testUserId, jti, browserId, refreshTokenValue,
+                testUserId, "USER", jti, browserId, refreshTokenValue,
                 now, expiryAt, "127.0.0.1", "E2E-Test-Agent"
         );
         refreshTokenRepository.save(refreshToken);

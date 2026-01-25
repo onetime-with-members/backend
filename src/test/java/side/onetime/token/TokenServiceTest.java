@@ -47,6 +47,7 @@ class TokenServiceTest {
     private static final String TEST_USER_IP = "127.0.0.1";
     private static final String TEST_USER_AGENT = "Mozilla/5.0";
     private static final String TEST_BROWSER_ID = "browser-hash-123";
+    private static final String TEST_USER_TYPE = "USER";
     private static final Long TEST_USER_ID = 1L;
 
     @BeforeEach
@@ -57,7 +58,7 @@ class TokenServiceTest {
 
     private RefreshToken createTestToken(TokenStatus status, LocalDateTime lastUsedAt) {
         RefreshToken token = RefreshToken.create(
-                TEST_USER_ID, TEST_JTI, TEST_BROWSER_ID, TEST_REFRESH_TOKEN,
+                TEST_USER_ID, TEST_USER_TYPE, TEST_JTI, TEST_BROWSER_ID, TEST_REFRESH_TOKEN,
                 LocalDateTime.now(), LocalDateTime.now().plusDays(14),
                 TEST_USER_IP, TEST_USER_AGENT
         );
@@ -98,8 +99,8 @@ class TokenServiceTest {
             given(refreshTokenRepository.findByJti(TEST_JTI)).willReturn(Optional.of(activeToken));
             given(refreshTokenRepository.markAsRotatedIfActive(eq(1L), any(LocalDateTime.class), eq(TEST_USER_IP)))
                     .willReturn(1);
-            given(jwtUtil.generateAccessToken(TEST_USER_ID, "USER")).willReturn(TEST_NEW_ACCESS_TOKEN);
-            given(jwtUtil.generateRefreshToken(eq(TEST_USER_ID), eq(TEST_BROWSER_ID), anyString()))
+            given(jwtUtil.generateAccessToken(TEST_USER_ID, TEST_USER_TYPE)).willReturn(TEST_NEW_ACCESS_TOKEN);
+            given(jwtUtil.generateRefreshToken(eq(TEST_USER_ID), eq(TEST_USER_TYPE), eq(TEST_BROWSER_ID), anyString()))
                     .willReturn(TEST_NEW_REFRESH_TOKEN);
             given(jwtUtil.calculateRefreshTokenExpiryAt(any(LocalDateTime.class)))
                     .willReturn(LocalDateTime.now().plusDays(14));

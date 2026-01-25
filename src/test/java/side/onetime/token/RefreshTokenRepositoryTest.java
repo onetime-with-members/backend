@@ -33,13 +33,14 @@ class RefreshTokenRepositoryTest extends DatabaseTestConfig {
     private EntityManager entityManager;
 
     private static final Long TEST_USER_ID = 1L;
+    private static final String TEST_USER_TYPE = "USER";
     private static final String TEST_BROWSER_ID = "browser-hash-123";
     private static final String TEST_USER_IP = "127.0.0.1";
     private static final String TEST_USER_AGENT = "Mozilla/5.0";
 
     private RefreshToken createAndSaveToken(String jti) {
         RefreshToken token = RefreshToken.create(
-                TEST_USER_ID, jti, TEST_BROWSER_ID, "token-value-" + jti,
+                TEST_USER_ID, TEST_USER_TYPE, jti, TEST_BROWSER_ID, "token-value-" + jti,
                 LocalDateTime.now(), LocalDateTime.now().plusDays(14),
                 TEST_USER_IP, TEST_USER_AGENT
         );
@@ -229,7 +230,7 @@ class RefreshTokenRepositoryTest extends DatabaseTestConfig {
         void updateExpiredTokens_Success() {
             // given
             RefreshToken expiredToken = RefreshToken.create(
-                    TEST_USER_ID, "expired-jti", TEST_BROWSER_ID, "expired-token-value",
+                    TEST_USER_ID, TEST_USER_TYPE, "expired-jti", TEST_BROWSER_ID, "expired-token-value",
                     LocalDateTime.now().minusDays(15), LocalDateTime.now().minusDays(1),
                     TEST_USER_IP, TEST_USER_AGENT
             );
@@ -237,7 +238,7 @@ class RefreshTokenRepositoryTest extends DatabaseTestConfig {
             Long expiredId = expiredToken.getId();
 
             RefreshToken validToken = RefreshToken.create(
-                    TEST_USER_ID, "valid-jti", TEST_BROWSER_ID, "valid-token-value",
+                    TEST_USER_ID, TEST_USER_TYPE, "valid-jti", TEST_BROWSER_ID, "valid-token-value",
                     LocalDateTime.now(), LocalDateTime.now().plusDays(14),
                     TEST_USER_IP, TEST_USER_AGENT
             );

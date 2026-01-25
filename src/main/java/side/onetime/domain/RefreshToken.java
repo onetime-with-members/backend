@@ -47,6 +47,9 @@ public class RefreshToken extends BaseEntity {
     @Column(name = "users_id", nullable = false)
     private Long userId;
 
+    @Column(name = "user_type", nullable = false, length = 20)
+    private String userType;
+
     @Column(nullable = false, unique = true, length = 128)
     private String jti;
 
@@ -85,6 +88,7 @@ public class RefreshToken extends BaseEntity {
      * 신규 Refresh Token 생성 (로그인 시)
      *
      * @param userId      사용자 ID
+     * @param userType    사용자 타입 (USER, ADMIN)
      * @param jti         JWT 고유 식별자
      * @param browserId   브라우저 식별자 (User-Agent 해시)
      * @param tokenValue  Refresh Token JWT 문자열
@@ -94,13 +98,14 @@ public class RefreshToken extends BaseEntity {
      * @param userAgent   발급 시 User-Agent
      * @return 새로 생성된 RefreshToken 엔티티
      */
-    public static RefreshToken create(Long userId, String jti, String browserId,
+    public static RefreshToken create(Long userId, String userType, String jti, String browserId,
                                       String tokenValue, LocalDateTime issuedAt,
                                       LocalDateTime expiryAt, String userIp,
                                       String userAgent) {
         RefreshToken token = new RefreshToken();
         token.familyId = UUID.randomUUID().toString();
         token.userId = userId;
+        token.userType = userType;
         token.jti = jti;
         token.browserId = browserId;
         token.tokenValue = tokenValue;
@@ -122,7 +127,7 @@ public class RefreshToken extends BaseEntity {
      * @param newExpiryAt   새 만료 시각
      * @param newUserIp     새 발급 시 IP
      * @param newUserAgent  새 발급 시 User-Agent
-     * @return 로테이션된 새 RefreshToken 엔티티 (같은 family_id 유지)
+     * @return 로테이션된 새 RefreshToken 엔티티 (같은 family_id, userType 유지)
      */
     public RefreshToken rotate(String newJti, String newTokenValue,
                                LocalDateTime newIssuedAt, LocalDateTime newExpiryAt,
@@ -130,6 +135,7 @@ public class RefreshToken extends BaseEntity {
         RefreshToken token = new RefreshToken();
         token.familyId = this.familyId;
         token.userId = this.userId;
+        token.userType = this.userType;
         token.jti = newJti;
         token.browserId = this.browserId;
         token.tokenValue = newTokenValue;

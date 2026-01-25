@@ -102,10 +102,10 @@ public class TokenService {
             throw new CustomException(TokenErrorStatus._ALREADY_USED_REFRESH_TOKEN);
         }
 
-        // 새 토큰 생성
+        // 새 토큰 생성 (기존 토큰의 userType 유지)
         String newJti = UUID.randomUUID().toString();
-        String newAccessToken = jwtUtil.generateAccessToken(oldToken.getUserId(), "USER");
-        String newRefreshToken = jwtUtil.generateRefreshToken(oldToken.getUserId(), oldToken.getBrowserId(), newJti);
+        String newAccessToken = jwtUtil.generateAccessToken(oldToken.getUserId(), oldToken.getUserType());
+        String newRefreshToken = jwtUtil.generateRefreshToken(oldToken.getUserId(), oldToken.getUserType(), oldToken.getBrowserId(), newJti);
 
         LocalDateTime expiryAt = jwtUtil.calculateRefreshTokenExpiryAt(now);
 

@@ -137,13 +137,15 @@ public class JwtUtil {
      * 리프레시 토큰 생성 메서드.
      *
      * @param userId 유저 ID
+     * @param userType 유저 타입 (USER, ADMIN)
      * @param browserId 브라우저 식별값 (User-Agent 기반 해시)
      * @param jti JWT 고유 식별자 (Token Rotation 추적용)
      * @return 생성된 리프레시 토큰
      */
-    public String generateRefreshToken(Long userId, String browserId, String jti) {
+    public String generateRefreshToken(Long userId, String userType, String browserId, String jti) {
         return Jwts.builder()
                 .claim("userId", userId)
+                .claim("userType", userType.toUpperCase())
                 .claim("browserId", browserId)
                 .claim("jti", jti)
                 .claim("type", "REFRESH_TOKEN")
