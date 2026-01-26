@@ -1,6 +1,7 @@
 package side.onetime.global.config;
 
-import lombok.RequiredArgsConstructor;
+import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -12,29 +13,29 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import lombok.RequiredArgsConstructor;
 import side.onetime.auth.exception.CustomAccessDeniedHandler;
 import side.onetime.auth.exception.CustomAuthenticationEntryPoint;
 import side.onetime.auth.handler.OAuthLoginFailureHandler;
 import side.onetime.auth.handler.OAuthLoginSuccessHandler;
 import side.onetime.global.filter.JwtFilter;
 
-import java.util.Arrays;
-
 @RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
+	
 	private final JwtFilter jwtFilter;
 	private final OAuthLoginSuccessHandler oAuthLoginSuccessHandler;
 	private final OAuthLoginFailureHandler oAuthLoginFailureHandler;
 	private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 	private final CustomAccessDeniedHandler customAccessDeniedHandler;
-
+	
 	private static final String[] SWAGGER_URLS = {
 		"/swagger-ui/**", "/v3/api-docs/**"
 	};
-
+	
 	private static final String[] PUBLIC_URLS = {
 		"/",
 		"/login/**",
@@ -53,20 +54,20 @@ public class SecurityConfig {
 		"/api/v1/test/**",
 		"/actuator/health"
 	};
-
+	
 	private static final String[] AUTHENTICATED_USER_URLS = {
 		"/api/v1/users/**",
 		"/api/v1/fixed-schedules/**",
 		"/api/v1/schedules/day/*/user",
 		"/api/v1/schedules/date/*/user",
 	};
-
+	
 	private static final String[] AUTHENTICATED_ADMIN_URLS = {
 		"/api/v1/admin/**",
 		"/api/v1/banners/**",
 		"/api/v1/bar-banners/**",
 	};
-
+	
 	private static final String[] ALLOWED_ORIGINS = {
 		"http://localhost:5173",
 		"http://localhost:3000",
@@ -78,7 +79,7 @@ public class SecurityConfig {
 		"https://dev-admin.onetime-with-members.workers.dev",
 		"https://discord.onetime.run",
 	};
-
+	
 	/**
 	 * CORS 설정을 구성하는 메서드.
 	 *
@@ -95,12 +96,12 @@ public class SecurityConfig {
 		config.setAllowCredentials(true);
 		config.setExposedHeaders(Arrays.asList("Authorization", "Set-Cookie"));
 		config.setMaxAge(3600L);
-
+		
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", config);
 		return source;
 	}
-
+	
 	/**
 	 * Spring Security의 필터 체인을 구성하는 메서드.
 	 *
@@ -122,10 +123,10 @@ public class SecurityConfig {
 			.cors(corsConfigurer -> corsConfigurer.configurationSource(corsConfigurationSource()))
 			.csrf(AbstractHttpConfigurer::disable)
 			.authorizeHttpRequests(authorize -> authorize
-				.requestMatchers(AUTHENTICATED_USER_URLS).hasRole("USER")
-				.requestMatchers(AUTHENTICATED_ADMIN_URLS).hasRole("ADMIN")
 				.requestMatchers(SWAGGER_URLS).permitAll()
 				.requestMatchers(PUBLIC_URLS).permitAll()
+				.requestMatchers(AUTHENTICATED_USER_URLS).hasRole("USER")
+				.requestMatchers(AUTHENTICATED_ADMIN_URLS).hasRole("ADMIN")
 				.anyRequest().authenticated()
 			)
 			.oauth2Login(oauth -> oauth
@@ -137,7 +138,7 @@ public class SecurityConfig {
 				.accessDeniedHandler(customAccessDeniedHandler)
 			)
 			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
+		
 		return httpSecurity.build();
 	}
 }
