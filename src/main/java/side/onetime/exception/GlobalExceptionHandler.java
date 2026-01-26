@@ -136,7 +136,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<ErrorReasonDto>> handleException(Exception e) {
         // 서버 내부 에러 발생 시 로그에 예외 내용 기록
-        logError(e.getMessage(), e);
+        log.error("🚨 Internal Server Error: {}", e.getMessage(), e);
         return ApiResponse.onFailure(ErrorStatus._INTERNAL_SERVER_ERROR);
     }
 
