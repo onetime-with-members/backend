@@ -32,7 +32,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     // 커스텀 예외 처리
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ApiResponse<ErrorReasonDto>> handleCustomException(CustomException e) {
-        logError("CustomException", e);
+        if (e.getHttpStatus().is5xxServerError()) {
+            log.error("CustomException (5xx): {}", e.getMessage(), e);
+        } else {
+            logError("CustomException", e);
+        }
         return ApiResponse.onFailure(e.getErrorCode());
     }
 
