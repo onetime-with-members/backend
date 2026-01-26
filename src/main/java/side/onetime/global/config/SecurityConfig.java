@@ -57,6 +57,8 @@ public class SecurityConfig {
 	private static final String[] AUTHENTICATED_USER_URLS = {
 		"/api/v1/users/**",
 		"/api/v1/fixed-schedules/**",
+		"/api/v1/schedules/day/*/user",
+		"/api/v1/schedules/date/*/user",
 	};
 
 	private static final String[] AUTHENTICATED_ADMIN_URLS = {
