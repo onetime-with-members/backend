@@ -122,10 +122,10 @@ public class SecurityConfig {
 			.cors(corsConfigurer -> corsConfigurer.configurationSource(corsConfigurationSource()))
 			.csrf(AbstractHttpConfigurer::disable)
 			.authorizeHttpRequests(authorize -> authorize
-				.requestMatchers(SWAGGER_URLS).permitAll()
-				.requestMatchers(PUBLIC_URLS).permitAll()
 				.requestMatchers(AUTHENTICATED_USER_URLS).hasRole("USER")
 				.requestMatchers(AUTHENTICATED_ADMIN_URLS).hasRole("ADMIN")
+				.requestMatchers(SWAGGER_URLS).permitAll()
+				.requestMatchers(PUBLIC_URLS).permitAll()
 				.anyRequest().authenticated()
 			)
 			.oauth2Login(oauth -> oauth
