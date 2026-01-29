@@ -154,14 +154,11 @@ public class StatisticsService {
             }
         }
 
-        // Dormant rate (refresh_token 기반 60일+ 미접속)
-        List<Object[]> dormantDistribution = statisticsRepository.findDormantUserDistribution();
-        long dormantUsers = dormantDistribution.stream()
-                .filter(row -> "60-89".equals(row[0]) || "90+".equals(row[0]))
-                .mapToLong(row -> ((Number) row[1]).longValue())
-                .sum();
-        long totalUserCount = userRepository.count();
-        double dormantRate = totalUserCount > 0 ? (double) dormantUsers / totalUserCount * 100 : 0;
+        // Dormant rate (기간 내 가입 유저 중 60일+ 미접속 비율)
+        Object[] dormantData = statisticsRepository.countDormantRateByDateRange(range.start(), range.end());
+        long dormantUsers = dormantData != null && dormantData[0] != null ? ((Number) dormantData[0]).longValue() : 0;
+        long totalUsersInRange = dormantData != null && dormantData[1] != null ? ((Number) dormantData[1]).longValue() : 0;
+        double dormantRate = totalUsersInRange > 0 ? (double) dormantUsers / totalUsersInRange * 100 : 0;
 
         return DashboardSummaryResponse.of(
                 totalUsers, activeUsers, totalEvents, mau,

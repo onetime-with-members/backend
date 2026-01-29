@@ -129,6 +129,28 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     List<Object[]> findDormantUserDistribution();
 
     /**
+     * 기간 내 가입 유저의 휴면율 (60일+ 미접속)
+     * 반환: [dormant_count, total_count]
+     */
+    @Query(value = """
+        SELECT
+            SUM(CASE WHEN days_inactive >= 60 THEN 1 ELSE 0 END) AS dormant_count,
+            COUNT(*) AS total_count
+        FROM (
+            SELECT u.users_id, COALESCE(DATEDIFF(NOW(), MAX(rt.last_used_at)), 999) AS days_inactive
+            FROM users u
+            LEFT JOIN refresh_token rt ON u.users_id = rt.users_id
+            WHERE u.status = 'ACTIVE'
+              AND u.created_date >= :startDate AND u.created_date < :endDate
+            GROUP BY u.users_id
+        ) sub
+        """, nativeQuery = true)
+    Object[] countDormantRateByDateRange(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
      * 휴면 유저 상세 리스트 (마케팅 동의자만)
      * refresh_token.last_used_at 기준 (status 무관)
      */
