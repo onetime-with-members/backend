@@ -87,6 +87,15 @@ public enum SuccessStatus implements BaseCode {
     // Test
     _TEST_LOGIN(HttpStatus.OK, "200", "테스트 로그인에 성공했습니다."),
     _TEST_EXPIRED_TOKEN(HttpStatus.OK, "200", "만료된 테스트 토큰이 발급되었습니다."),
+    // Statistics
+    _GET_MARKETING_TARGET_DETAIL(HttpStatus.OK, "200", "마케팅 타겟 상세 조회에 성공했습니다."),
+    _GET_COHORT_RETENTION(HttpStatus.OK, "200", "코호트 리텐션 조회에 성공했습니다."),
+    _GET_FUNNEL_ANALYSIS(HttpStatus.OK, "200", "퍼널 분석 조회에 성공했습니다."),
+    _GET_TTV_DISTRIBUTION(HttpStatus.OK, "200", "TTV 분포 조회에 성공했습니다."),
+    _GET_TIME_WEEKDAY_HEATMAP(HttpStatus.OK, "200", "시간대×요일 히트맵 조회에 성공했습니다."),
+    _GET_STICKINESS(HttpStatus.OK, "200", "점착도 조회에 성공했습니다."),
+    // Email
+    _SEND_EMAIL(HttpStatus.OK, "200", "이메일 발송에 성공했습니다."),
     ;
 
     private final HttpStatus httpStatus;
