@@ -31,6 +31,7 @@ import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.AdminService;
 import side.onetime.service.StatisticsService;
+import side.onetime.util.DateUtil;
 
 /**
  * Admin Statistics API Controller
@@ -128,13 +129,8 @@ public class AdminStatisticsApiController {
     public ResponseEntity<ApiResponse<FunnelAnalysisResponse>> getFunnelAnalysis(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
-        if (startDate == null) {
-            startDate = LocalDate.now().minusYears(1);
-        }
-        if (endDate == null) {
-            endDate = LocalDate.now();
-        }
-        FunnelAnalysisResponse response = statisticsService.getFunnelAnalysis(startDate, endDate);
+        LocalDate[] dates = DateUtil.resolveDateRange(startDate, endDate);
+        FunnelAnalysisResponse response = statisticsService.getFunnelAnalysis(dates[0], dates[1]);
         return ApiResponse.onSuccess(SuccessStatus._GET_FUNNEL_ANALYSIS, response);
     }
 
@@ -166,13 +162,8 @@ public class AdminStatisticsApiController {
     public ResponseEntity<ApiResponse<TtvDistributionResponse>> getTtvDistribution(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
-        if (startDate == null) {
-            startDate = LocalDate.now().minusYears(1);
-        }
-        if (endDate == null) {
-            endDate = LocalDate.now();
-        }
-        TtvDistributionResponse response = statisticsService.getTtvDistribution(startDate, endDate);
+        LocalDate[] dates = DateUtil.resolveDateRange(startDate, endDate);
+        TtvDistributionResponse response = statisticsService.getTtvDistribution(dates[0], dates[1]);
         return ApiResponse.onSuccess(SuccessStatus._GET_TTV_DISTRIBUTION, response);
     }
 
@@ -188,13 +179,8 @@ public class AdminStatisticsApiController {
     public ResponseEntity<ApiResponse<TimeWeekdayHeatmapResponse>> getTimeWeekdayHeatmap(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
-        if (startDate == null) {
-            startDate = LocalDate.now().minusYears(1);
-        }
-        if (endDate == null) {
-            endDate = LocalDate.now();
-        }
-        TimeWeekdayHeatmapResponse response = statisticsService.getTimeWeekdayHeatmap(startDate, endDate);
+        LocalDate[] dates = DateUtil.resolveDateRange(startDate, endDate);
+        TimeWeekdayHeatmapResponse response = statisticsService.getTimeWeekdayHeatmap(dates[0], dates[1]);
         return ApiResponse.onSuccess(SuccessStatus._GET_TIME_WEEKDAY_HEATMAP, response);
     }
 
