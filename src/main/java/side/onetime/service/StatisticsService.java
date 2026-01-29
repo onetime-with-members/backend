@@ -116,41 +116,37 @@ public class StatisticsService {
      */
     @Transactional(readOnly = true)
     public DashboardSummaryResponse getDashboardSummary(LocalDate startDate, LocalDate endDate) {
-        LocalDateTime startDateTime = startDate.atStartOfDay();
-        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
+        DateTimeRange range = DateTimeRange.of(startDate, endDate);
 
         // Native Query로 유저 통계 조회 (totalUsers, marketingAgreed)
-        List<Object[]> userStatsList = statisticsRepository.getUserStatsByDateRange(startDateTime, endDateTime);
-        Object[] userStats = userStatsList.isEmpty() ? null : userStatsList.get(0);
-        long totalUsers = userStats != null && userStats[0] != null ? ((Number) userStats[0]).longValue() : 0;
-        long marketingTargetUsers = userStats != null && userStats[1] != null ? ((Number) userStats[1]).longValue() : 0;
+        Object[] userStats = getFirstRow(statisticsRepository.getUserStatsByDateRange(range.start(), range.end()));
+        long totalUsers = extractLong(userStats, 0);
+        long marketingTargetUsers = extractLong(userStats, 1);
 
         // Native Query로 이벤트 통계 조회
-        List<Object[]> eventStatsList = statisticsRepository.getEventStatsByDateRange(startDateTime, endDateTime);
-        Object[] eventStats = eventStatsList.isEmpty() ? null : eventStatsList.get(0);
-        long totalEvents = eventStats != null && eventStats[0] != null ? ((Number) eventStats[0]).longValue() : 0;
+        Object[] eventStats = getFirstRow(statisticsRepository.getEventStatsByDateRange(range.start(), range.end()));
+        long totalEvents = extractLong(eventStats, 0);
 
         // Active users - refresh_token 기반 (기간 내 로그인)
-        List<Object[]> dauData = statisticsRepository.findDailyActiveUsers(startDateTime, endDateTime);
+        List<Object[]> dauData = statisticsRepository.findDailyActiveUsers(range.start(), range.end());
         long activeUsers = dauData.stream()
-                .mapToLong(row -> ((Number) row[1]).longValue())
+                .mapToLong(row -> extractLong(row, 1))
                 .max()
                 .orElse(0L);
 
         // MAU - refresh_token 기반 (기간 내)
-        List<Object[]> mauData = statisticsRepository.findMonthlyActiveUsers(startDateTime, endDateTime);
+        List<Object[]> mauData = statisticsRepository.findMonthlyActiveUsers(range.start(), range.end());
         long mau = mauData.stream()
-                .mapToLong(row -> ((Number) row[1]).longValue())
+                .mapToLong(row -> extractLong(row, 1))
                 .sum();
 
         // Average participants per event - Native Query 사용
-        List<Object[]> avgDataList = statisticsRepository.getAvgParticipantsData(startDateTime, endDateTime);
-        Object[] avgData = avgDataList.isEmpty() ? null : avgDataList.get(0);
+        Object[] avgData = getFirstRow(statisticsRepository.getAvgParticipantsData(range.start(), range.end()));
         double avgParticipants = 0;
-        if (avgData != null && avgData[0] != null) {
-            long eventCount = ((Number) avgData[0]).longValue();
-            long epCount = avgData[1] != null ? ((Number) avgData[1]).longValue() : 0;
-            long memberCount = avgData[2] != null ? ((Number) avgData[2]).longValue() : 0;
+        if (avgData != null) {
+            long eventCount = extractLong(avgData, 0);
+            long epCount = extractLong(avgData, 1);
+            long memberCount = extractLong(avgData, 2);
             if (eventCount > 0) {
                 avgParticipants = (double) (epCount + memberCount) / eventCount;
             }
@@ -179,20 +175,19 @@ public class StatisticsService {
      */
     @Transactional(readOnly = true)
     public DashboardChartsResponse getDashboardCharts(LocalDate startDate, LocalDate endDate) {
-        LocalDateTime startDateTime = startDate.atStartOfDay();
-        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
+        DateTimeRange range = DateTimeRange.of(startDate, endDate);
 
         // Monthly signups - Native Query 사용
-        DashboardChartsResponse.ChartData monthlySignups = getMonthlySignupsFromNativeQuery(startDateTime, endDateTime, startDate, endDate);
+        DashboardChartsResponse.ChartData monthlySignups = getMonthlySignupsFromNativeQuery(range.start(), range.end(), startDate, endDate);
 
         // Provider distribution - Native Query 사용
-        DashboardChartsResponse.ChartData providers = getProviderDistributionFromNativeQuery(startDateTime, endDateTime);
+        DashboardChartsResponse.ChartData providers = getProviderDistributionFromNativeQuery(range.start(), range.end());
 
         // Weekday distribution - Native Query 사용
-        DashboardChartsResponse.ChartData weekdayDistribution = getWeekdayDistributionFromNativeQuery(startDateTime, endDateTime);
+        DashboardChartsResponse.ChartData weekdayDistribution = getWeekdayDistributionFromNativeQuery(range.start(), range.end());
 
         // Top keywords - Native Query 사용
-        List<DashboardChartsResponse.KeywordItem> topKeywords = getTopKeywordsFromNativeQuery(startDateTime, endDateTime);
+        List<DashboardChartsResponse.KeywordItem> topKeywords = getTopKeywordsFromNativeQuery(range.start(), range.end());
 
         return DashboardChartsResponse.of(monthlySignups, providers, weekdayDistribution, topKeywords);
     }
@@ -203,19 +198,17 @@ public class StatisticsService {
      */
     @Transactional(readOnly = true)
     public UserStatisticsResponse getUserStatistics(LocalDate startDate, LocalDate endDate) {
-        LocalDateTime startDateTime = startDate.atStartOfDay();
-        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
+        DateTimeRange range = DateTimeRange.of(startDate, endDate);
 
         // Native Query로 유저 통계 조회
-        List<Object[]> userStatsList = statisticsRepository.getUserStatsByDateRange(startDateTime, endDateTime);
-        Object[] userStats = userStatsList.isEmpty() ? null : userStatsList.get(0);
-        long totalUsers = userStats != null && userStats[0] != null ? ((Number) userStats[0]).longValue() : 0;
-        long marketingAgreed = userStats != null && userStats[1] != null ? ((Number) userStats[1]).longValue() : 0;
+        Object[] userStats = getFirstRow(statisticsRepository.getUserStatsByDateRange(range.start(), range.end()));
+        long totalUsers = extractLong(userStats, 0);
+        long marketingAgreed = extractLong(userStats, 1);
 
         // DAU 기반 active users
-        List<Object[]> dauData = statisticsRepository.findDailyActiveUsers(startDateTime, endDateTime);
+        List<Object[]> dauData = statisticsRepository.findDailyActiveUsers(range.start(), range.end());
         long activeUsers = dauData.stream()
-                .mapToLong(row -> ((Number) row[1]).longValue())
+                .mapToLong(row -> extractLong(row, 1))
                 .max()
                 .orElse(0L);
 
@@ -225,21 +218,21 @@ public class StatisticsService {
         double marketingAgreementRate = totalUsers > 0 ? (double) marketingAgreed / totalUsers * 100 : 0;
 
         // Provider distribution - Native Query
-        Map<String, Long> providerDistribution = statisticsRepository.getProviderDistribution(startDateTime, endDateTime).stream()
+        Map<String, Long> providerDistribution = statisticsRepository.getProviderDistribution(range.start(), range.end()).stream()
                 .collect(Collectors.toMap(
                         row -> (String) row[0],
                         row -> ((Number) row[1]).longValue()
                 ));
 
         // Language distribution - Native Query
-        Map<String, Long> languageDistribution = statisticsRepository.getLanguageDistribution(startDateTime, endDateTime).stream()
+        Map<String, Long> languageDistribution = statisticsRepository.getLanguageDistribution(range.start(), range.end()).stream()
                 .collect(Collectors.toMap(
                         row -> (String) row[0],
                         row -> ((Number) row[1]).longValue()
                 ));
 
         // Monthly signups - Native Query (기존 메서드 활용)
-        List<UserStatisticsResponse.MonthlyData> monthlySignups = statisticsRepository.findMonthlySignups(startDateTime, endDateTime).stream()
+        List<UserStatisticsResponse.MonthlyData> monthlySignups = statisticsRepository.findMonthlySignups(range.start(), range.end()).stream()
                 .map(row -> new UserStatisticsResponse.MonthlyData((String) row[0], ((Number) row[1]).longValue()))
                 .toList();
 
@@ -256,48 +249,45 @@ public class StatisticsService {
      */
     @Transactional(readOnly = true)
     public EventStatisticsResponse getEventStatistics(LocalDate startDate, LocalDate endDate) {
-        LocalDateTime startDateTime = startDate.atStartOfDay();
-        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
+        DateTimeRange range = DateTimeRange.of(startDate, endDate);
 
         // Native Query로 이벤트 통계 조회
-        List<Object[]> eventStatsList = statisticsRepository.getEventStatsByDateRange(startDateTime, endDateTime);
-        Object[] eventStats = eventStatsList.isEmpty() ? null : eventStatsList.get(0);
-        long totalEvents = eventStats != null && eventStats[0] != null ? ((Number) eventStats[0]).longValue() : 0;
+        Object[] eventStats = getFirstRow(statisticsRepository.getEventStatsByDateRange(range.start(), range.end()));
+        long totalEvents = extractLong(eventStats, 0);
         long activeEvents = totalEvents; // All returned events are active
 
         // Average participants - Native Query
-        List<Object[]> avgDataList = statisticsRepository.getAvgParticipantsData(startDateTime, endDateTime);
-        Object[] avgData = avgDataList.isEmpty() ? null : avgDataList.get(0);
+        Object[] avgData = getFirstRow(statisticsRepository.getAvgParticipantsData(range.start(), range.end()));
         double avgParticipants = 0;
-        if (avgData != null && avgData[0] != null) {
-            long eventCount = ((Number) avgData[0]).longValue();
-            long epCount = avgData[1] != null ? ((Number) avgData[1]).longValue() : 0;
-            long memberCount = avgData[2] != null ? ((Number) avgData[2]).longValue() : 0;
+        if (avgData != null) {
+            long eventCount = extractLong(avgData, 0);
+            long epCount = extractLong(avgData, 1);
+            long memberCount = extractLong(avgData, 2);
             if (eventCount > 0) {
                 avgParticipants = (double) (epCount + memberCount) / eventCount;
             }
         }
 
         // Category distribution - Native Query
-        Map<String, Long> categoryDistribution = statisticsRepository.getCategoryDistribution(startDateTime, endDateTime).stream()
+        Map<String, Long> categoryDistribution = statisticsRepository.getCategoryDistribution(range.start(), range.end()).stream()
                 .collect(Collectors.toMap(
                         row -> (String) row[0],
-                        row -> ((Number) row[1]).longValue()
+                        row -> extractLong(row, 1)
                 ));
 
         // Weekday distribution - Native Query (DAYOFWEEK: 1=SUN, 2=MON, ..., 7=SAT)
         String[] dayNames = {"SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"};
-        Map<String, Long> weekdayDistribution = statisticsRepository.getEventWeekdayDistribution(startDateTime, endDateTime).stream()
+        Map<String, Long> weekdayDistribution = statisticsRepository.getEventWeekdayDistribution(range.start(), range.end()).stream()
                 .collect(Collectors.toMap(
                         row -> dayNames[((Number) row[0]).intValue() - 1],
-                        row -> ((Number) row[1]).longValue()
+                        row -> extractLong(row, 1)
                 ));
 
         // Monthly events - Native Query (이벤트용 쿼리 필요 - 기존 signups 쿼리 패턴 활용)
-        List<EventStatisticsResponse.MonthlyData> monthlyEvents = getMonthlyEventsFromNativeQuery(startDateTime, endDateTime);
+        List<EventStatisticsResponse.MonthlyData> monthlyEvents = getMonthlyEventsFromNativeQuery(range.start(), range.end());
 
         // Top keywords - Native Query
-        List<EventStatisticsResponse.KeywordData> topKeywords = extractTopKeywordsFromNativeQuery(startDateTime, endDateTime);
+        List<EventStatisticsResponse.KeywordData> topKeywords = extractTopKeywordsFromNativeQuery(range.start(), range.end());
 
         return EventStatisticsResponse.of(
                 totalEvents, activeEvents,
@@ -312,11 +302,10 @@ public class StatisticsService {
      */
     @Transactional(readOnly = true)
     public RetentionStatisticsResponse getRetentionStatistics(LocalDate startDate, LocalDate endDate) {
-        LocalDateTime startDateTime = startDate.atStartOfDay();
-        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
+        DateTimeRange range = DateTimeRange.of(startDate, endDate);
 
         // Monthly MAU (refresh_token 기반 - 로그인 사용자만)
-        List<Object[]> mauData = statisticsRepository.findMonthlyActiveUsers(startDateTime, endDateTime);
+        List<Object[]> mauData = statisticsRepository.findMonthlyActiveUsers(range.start(), range.end());
         List<RetentionStatisticsResponse.MonthlyMau> monthlyMau = mauData.stream()
                 .map(row -> new RetentionStatisticsResponse.MonthlyMau(
                         (String) row[0],
@@ -494,20 +483,16 @@ public class StatisticsService {
                 .sum();
 
         // Users with no events created (가입 7일 경과)
-        Long noEventUsers = statisticsRepository.countNoEventUsers(7);
-        if (noEventUsers == null) noEventUsers = 0L;
+        long noEventUsers = nullToZero(statisticsRepository.countNoEventUsers(7));
 
         // One-time users (created only 1 event)
-        Long oneTimeUsers = statisticsRepository.countOneTimeUsers();
-        if (oneTimeUsers == null) oneTimeUsers = 0L;
+        long oneTimeUsers = nullToZero(statisticsRepository.countOneTimeUsers());
 
         // VIP users (5+ events)
-        Long vipUsers = statisticsRepository.countVipUsers();
-        if (vipUsers == null) vipUsers = 0L;
+        long vipUsers = nullToZero(statisticsRepository.countVipUsers());
 
         // Events with zero participants
-        Long zeroParticipantEvents = statisticsRepository.countZeroParticipantEvents();
-        if (zeroParticipantEvents == null) zeroParticipantEvents = 0L;
+        long zeroParticipantEvents = nullToZero(statisticsRepository.countZeroParticipantEvents());
 
         return MarketingTargetsResponse.of(
                 marketingAgreed, dormantUsers, noEventUsers,
@@ -562,8 +547,7 @@ public class StatisticsService {
      */
     @Transactional(readOnly = true)
     public MarketingTargetDetailResponse getNoEventUsers(int daysAfterSignup, int limit, String sort, String search) {
-        Long totalCount = statisticsRepository.countNoEventUsers(daysAfterSignup);
-        if (totalCount == null) totalCount = 0L;
+        long totalCount = nullToZero(statisticsRepository.countNoEventUsers(daysAfterSignup));
 
         List<Object[]> rows = statisticsRepositoryCustom.findNoEventUserDetailsWithSortAndSearch(daysAfterSignup, limit, sort, search);
         List<MarketingTargetDetailResponse.UserDetail> users = rows.stream()
@@ -579,8 +563,7 @@ public class StatisticsService {
      */
     @Transactional(readOnly = true)
     public MarketingTargetDetailResponse getOneTimeUsers(int limit, String sort, String search) {
-        Long totalCount = statisticsRepository.countOneTimeUsers();
-        if (totalCount == null) totalCount = 0L;
+        long totalCount = nullToZero(statisticsRepository.countOneTimeUsers());
 
         List<Object[]> rows = statisticsRepositoryCustom.findOneTimeUserDetailsWithSortAndSearch(limit, sort, search);
         List<MarketingTargetDetailResponse.UserDetail> users = rows.stream()
@@ -596,8 +579,7 @@ public class StatisticsService {
      */
     @Transactional(readOnly = true)
     public MarketingTargetDetailResponse getVipUsers(int limit, String sort, String search) {
-        Long totalCount = statisticsRepository.countVipUsers();
-        if (totalCount == null) totalCount = 0L;
+        long totalCount = nullToZero(statisticsRepository.countVipUsers());
 
         List<Object[]> rows = statisticsRepositoryCustom.findVipUserDetailsWithSortAndSearch(limit, sort, search);
         List<MarketingTargetDetailResponse.UserDetail> users = rows.stream()
@@ -613,8 +595,7 @@ public class StatisticsService {
      */
     @Transactional(readOnly = true)
     public MarketingTargetDetailResponse getZeroParticipantEvents(int limit, String sort, String search) {
-        Long totalCount = statisticsRepository.countZeroParticipantEvents();
-        if (totalCount == null) totalCount = 0L;
+        long totalCount = nullToZero(statisticsRepository.countZeroParticipantEvents());
 
         List<Object[]> rows = statisticsRepositoryCustom.findZeroParticipantEventDetailsWithSortAndSearch(limit, sort, search);
         List<MarketingTargetDetailResponse.EventDetail> events = rows.stream()
@@ -786,10 +767,8 @@ public class StatisticsService {
     public TtvDistributionResponse getTtvDistribution(LocalDate startDate, LocalDate endDate) {
         DateTimeRange range = DateTimeRange.of(startDate, endDate);
 
-        Long totalUsers = statisticsRepository.countSignups(range.start(), range.end());
-        Long usersWithEvent = statisticsRepository.countUsersWithAnyEvent(range.start(), range.end());
-        totalUsers = totalUsers != null ? totalUsers : 0L;
-        usersWithEvent = usersWithEvent != null ? usersWithEvent : 0L;
+        long totalUsers = nullToZero(statisticsRepository.countSignups(range.start(), range.end()));
+        long usersWithEvent = nullToZero(statisticsRepository.countUsersWithAnyEvent(range.start(), range.end()));
 
         List<Integer> ttvDays = statisticsRepository.findTtvDistribution(range.start(), range.end());
 
@@ -904,13 +883,11 @@ public class StatisticsService {
         // Current month MAU
         LocalDateTime monthStart = now.withDayOfMonth(1).atStartOfDay();
         LocalDateTime monthEnd = now.plusDays(1).atStartOfDay();
-        Long currentMau = statisticsRepository.countMau(monthStart, monthEnd);
-        currentMau = currentMau != null ? currentMau : 0L;
+        long currentMau = nullToZero(statisticsRepository.countMau(monthStart, monthEnd));
 
         // Current week WAU (last 7 days)
         LocalDateTime weekStart = now.minusDays(6).atStartOfDay();
-        Long currentWau = statisticsRepository.countWau(weekStart, monthEnd);
-        currentWau = currentWau != null ? currentWau : 0L;
+        long currentWau = nullToZero(statisticsRepository.countWau(weekStart, monthEnd));
 
         // Current stickiness
         double currentStickiness = currentMau > 0 ? Math.round((double) currentWau / currentMau * 1000.0) / 10.0 : 0;
