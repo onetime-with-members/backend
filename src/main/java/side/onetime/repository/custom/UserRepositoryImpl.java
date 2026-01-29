@@ -168,4 +168,77 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 
         return query.fetch();
     }
+
+    /**
+     * 검색, 기간 필터를 포함한 사용자 조회 메서드
+     */
+    @Override
+    public List<User> findAllWithFilters(Pageable pageable, String sortField, String sorting,
+                                          String search, LocalDateTime startDate, LocalDateTime endDate) {
+        Order order = sorting.equalsIgnoreCase("asc") ? Order.ASC : Order.DESC;
+        String field = NamingUtil.toCamelCase(sortField);
+
+        JPAQuery<User> query = queryFactory.selectFrom(user)
+                .where(user.status.eq(Status.ACTIVE));
+
+        // 검색 조건 (이름, 이메일, 닉네임)
+        if (search != null && !search.trim().isEmpty()) {
+            String searchTerm = search.trim();
+            query.where(
+                    user.name.containsIgnoreCase(searchTerm)
+                            .or(user.email.containsIgnoreCase(searchTerm))
+                            .or(user.nickname.containsIgnoreCase(searchTerm))
+            );
+        }
+
+        // 기간 필터 (가입일 기준)
+        if (startDate != null) {
+            query.where(user.createdDate.goe(startDate));
+        }
+        if (endDate != null) {
+            query.where(user.createdDate.lt(endDate));
+        }
+
+        // 정렬
+        PathBuilder<User> pathBuilder = new PathBuilder<>(User.class, "user");
+        OrderSpecifier<?> orderSpecifier = switch (field) {
+            case "id" -> new OrderSpecifier<>(order, pathBuilder.getNumber(field, Long.class));
+            case "name", "email", "nickname", "provider" -> new OrderSpecifier<>(order, pathBuilder.getString(field));
+            case "language" -> new OrderSpecifier<>(order, pathBuilder.getEnum(field, Language.class));
+            case "createdDate" -> new OrderSpecifier<>(order, pathBuilder.getComparable(field, LocalDateTime.class));
+            default -> new OrderSpecifier<>(order, pathBuilder.getComparable("createdDate", LocalDateTime.class));
+        };
+        query.orderBy(orderSpecifier);
+
+        query.offset(pageable.getOffset()).limit(pageable.getPageSize());
+        return query.fetch();
+    }
+
+    /**
+     * 검색, 기간 필터를 포함한 사용자 개수 조회
+     */
+    @Override
+    public long countWithFilters(String search, LocalDateTime startDate, LocalDateTime endDate) {
+        JPAQuery<Long> query = queryFactory.select(user.count())
+                .from(user)
+                .where(user.status.eq(Status.ACTIVE));
+
+        if (search != null && !search.trim().isEmpty()) {
+            String searchTerm = search.trim();
+            query.where(
+                    user.name.containsIgnoreCase(searchTerm)
+                            .or(user.email.containsIgnoreCase(searchTerm))
+                            .or(user.nickname.containsIgnoreCase(searchTerm))
+            );
+        }
+        if (startDate != null) {
+            query.where(user.createdDate.goe(startDate));
+        }
+        if (endDate != null) {
+            query.where(user.createdDate.lt(endDate));
+        }
+
+        Long count = query.fetchOne();
+        return count != null ? count : 0;
+    }
 }

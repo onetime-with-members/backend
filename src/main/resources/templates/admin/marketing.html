@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout/default}">
+<head>
+    <title th:text="#{marketing.title} + ' - ' + #{admin.title}">Marketing Targets - OneTime Admin</title>
+    <style>
+        .clickable-card {
+            cursor: pointer;
+            transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        .clickable-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        }
+        .detail-table {
+            font-size: 0.85rem;
+        }
+        .detail-table th {
+            white-space: nowrap;
+            background-color: #f8f9fc;
+        }
+        .detail-table td {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .modal-xl {
+            max-width: 95%;
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800" th:text="#{marketing.title}">Marketing Targets</h1>
+    </div>
+
+    <!-- Date Filter -->
+    <div th:replace="~{admin/fragments/date-filter :: dateFilter}"></div>
+
+    <!-- Info Alert -->
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="fas fa-info-circle mr-2"></i>
+        <span th:text="#{marketing.clickToView}">Click on each card to view the detailed list.</span>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2 clickable-card" onclick="showDetail('agreed')">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                <span th:text="#{marketing.agreedUsers}">Marketing Agreed</span>
+                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                                   th:title="#{info.agreedUsers}"></i>
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                 th:text="${#numbers.formatInteger(data.marketingAgreedUsers, 0, 'COMMA')}">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-square fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2 clickable-card" onclick="showDetail('dormant')">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                <span th:text="#{marketing.dormantUsers}">Dormant Users</span>
+                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                                   th:title="#{info.dormantUsers}"></i>
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                 th:text="${#numbers.formatInteger(data.dormantUsers, 0, 'COMMA')}">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2 clickable-card" onclick="showDetail('noEvent')">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                <span th:text="#{marketing.noEventUsers}">No Event Users</span>
+                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                                   th:title="#{info.noEventUsers}"></i>
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                 th:text="${#numbers.formatInteger(data.noEventUsers, 0, 'COMMA')}">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-minus fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Cards -->
+    <div class="row">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2 clickable-card" onclick="showDetail('oneTime')">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                <span th:text="#{marketing.oneTimeUsers}">One-time Users</span>
+                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                                   th:title="#{info.oneTimeUsers}"></i>
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                 th:text="${#numbers.formatInteger(data.oneTimeUsers, 0, 'COMMA')}">0</div>
+                            <small class="text-muted" th:text="#{marketing.oneTimeDesc}">Created only 1 event</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2 clickable-card" onclick="showDetail('vip')">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                <span th:text="#{marketing.vipUsers}">VIP Users</span>
+                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                                   th:title="#{info.vipUsers}"></i>
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                 th:text="${#numbers.formatInteger(data.vipUsers, 0, 'COMMA')}">0</div>
+                            <small class="text-muted" th:text="#{marketing.vipDesc}">Created 5+ events</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-crown fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-secondary shadow h-100 py-2 clickable-card" onclick="showDetail('zeroParticipant')">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
+                                <span th:text="#{marketing.zeroParticipant}">Zero Participant Events</span>
+                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                                   th:title="#{info.zeroParticipant}"></i>
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                 th:text="${#numbers.formatInteger(data.zeroParticipantEvents, 0, 'COMMA')}">0</div>
+                            <small class="text-muted" th:text="#{marketing.zeroParticipantDesc}">Events with no participants</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-times fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="detailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailModalLabel">Detail View</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="detailLoading" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <div id="detailContent" style="display: none;">
+                        <div class="mb-3">
+                            <span class="badge badge-primary" id="totalCountBadge">Total: 0</span>
+                            <span class="badge badge-secondary" id="showingCountBadge">Showing: 0</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover detail-table" id="detailTable">
+                                <thead id="detailTableHead"></thead>
+                                <tbody id="detailTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" id="btnDownloadCsv">
+                        <i class="fas fa-download mr-1"></i> CSV
+                    </button>
+                    <a href="/admin/email" class="btn btn-primary" id="btnSendEmail">
+                        <i class="fas fa-envelope mr-1"></i> <span th:text="#{marketing.emailSend}">Send Email</span>
+                    </a>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" th:text="#{filter.reset}">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script th:inline="javascript">
+    const typeConfig = {
+        agreed: {
+            title: /*[[#{marketing.agreedUsers}]]*/ 'Marketing Agreed',
+            endpoint: '/admin/api/statistics/marketing/agreed',
+            isEvent: false
+        },
+        dormant: {
+            title: /*[[#{marketing.dormantUsers}]]*/ 'Dormant Users',
+            endpoint: '/admin/api/statistics/marketing/dormant',
+            isEvent: false
+        },
+        noEvent: {
+            title: /*[[#{marketing.noEventUsers}]]*/ 'No Event Users',
+            endpoint: '/admin/api/statistics/marketing/no-event',
+            isEvent: false
+        },
+        oneTime: {
+            title: /*[[#{marketing.oneTimeUsers}]]*/ 'One-time Users',
+            endpoint: '/admin/api/statistics/marketing/one-time',
+            isEvent: false
+        },
+        vip: {
+            title: /*[[#{marketing.vipUsers}]]*/ 'VIP Users',
+            endpoint: '/admin/api/statistics/marketing/vip',
+            isEvent: false
+        },
+        zeroParticipant: {
+            title: /*[[#{marketing.zeroParticipant}]]*/ 'Zero Participant Events',
+            endpoint: '/admin/api/statistics/marketing/zero-participant',
+            isEvent: true
+        }
+    };
+
+    function showDetail(type) {
+        const config = typeConfig[type];
+        if (!config) return;
+
+        currentType = type;
+        $('#detailModalLabel').text(config.title);
+        $('#detailLoading').show();
+        $('#detailContent').hide();
+        $('#detailModal').modal('show');
+
+        fetch(config.endpoint + '?limit=100')
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    renderDetail(data.payload, config.isEvent);
+                } else {
+                    alert('Failed to load data');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to load data');
+            })
+            .finally(() => {
+                $('#detailLoading').hide();
+                $('#detailContent').show();
+            });
+    }
+
+    function renderDetail(data, isEvent) {
+        const items = isEvent ? data.events : data.users;
+        const count = items ? items.length : 0;
+
+        $('#totalCountBadge').text('Total: ' + data.totalCount.toLocaleString());
+        $('#showingCountBadge').text('Showing: ' + count);
+
+        if (isEvent) {
+            renderEventTable(items);
+        } else {
+            renderUserTable(items);
+        }
+    }
+
+    function renderUserTable(users) {
+        const thead = `
+            <tr>
+                <th>ID</th>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Nickname</th>
+                <th>Provider</th>
+                <th>Language</th>
+                <th>Marketing</th>
+                <th>Created</th>
+                <th>Extra</th>
+            </tr>
+        `;
+        $('#detailTableHead').html(thead);
+
+        let tbody = '';
+        if (!users || users.length === 0) {
+            tbody = '<tr><td colspan="9" class="text-center text-muted">No data</td></tr>';
+        } else {
+            users.forEach(user => {
+                let extra = '';
+                if (user.daysInactive !== null && user.daysInactive !== undefined) {
+                    extra = `<span class="badge badge-warning">${user.daysInactive}d inactive</span>`;
+                } else if (user.daysSinceSignup !== null && user.daysSinceSignup !== undefined) {
+                    extra = `<span class="badge badge-info">${user.daysSinceSignup}d since signup</span>`;
+                } else if (user.eventCount !== null && user.eventCount !== undefined) {
+                    extra = `<span class="badge badge-success">${user.eventCount} events</span>`;
+                }
+
+                tbody += `
+                    <tr>
+                        <td>${user.userId || '-'}</td>
+                        <td title="${user.email || ''}">${user.email || '-'}</td>
+                        <td>${user.name || '-'}</td>
+                        <td>${user.nickname || '-'}</td>
+                        <td><span class="badge badge-secondary">${user.provider || '-'}</span></td>
+                        <td>${user.language || '-'}</td>
+                        <td>${user.marketingPolicyAgreement ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-danger"></i>'}</td>
+                        <td>${user.createdDate ? new Date(user.createdDate).toLocaleDateString() : '-'}</td>
+                        <td>${extra}</td>
+                    </tr>
+                `;
+            });
+        }
+        $('#detailTableBody').html(tbody);
+    }
+
+    function renderEventTable(events) {
+        const thead = `
+            <tr>
+                <th>Event ID</th>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Creator</th>
+                <th>Creator Email</th>
+                <th>Created</th>
+                <th>Days</th>
+            </tr>
+        `;
+        $('#detailTableHead').html(thead);
+
+        let tbody = '';
+        if (!events || events.length === 0) {
+            tbody = '<tr><td colspan="7" class="text-center text-muted">No data</td></tr>';
+        } else {
+            events.forEach(event => {
+                tbody += `
+                    <tr>
+                        <td>${event.eventId || '-'}</td>
+                        <td title="${event.title || ''}">${event.title || '-'}</td>
+                        <td><span class="badge badge-info">${event.category || '-'}</span></td>
+                        <td>${event.creatorNickname || event.creatorName || '-'}</td>
+                        <td title="${event.creatorEmail || ''}">${event.creatorEmail || '-'}</td>
+                        <td>${event.createdDate ? new Date(event.createdDate).toLocaleDateString() : '-'}</td>
+                        <td><span class="badge badge-warning">${event.daysSinceCreated || 0}d</span></td>
+                    </tr>
+                `;
+            });
+        }
+        $('#detailTableBody').html(tbody);
+    }
+
+    // CSV Download
+    let currentType = null;
+
+    $('#btnDownloadCsv').on('click', function() {
+        if (!currentType) return;
+        window.location.href = `/admin/api/export/marketing/csv?type=${currentType}&limit=1000`;
+    });
+
+    // Initialize Bootstrap tooltips
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+</script>
+</th:block>
+</body>
+</html>

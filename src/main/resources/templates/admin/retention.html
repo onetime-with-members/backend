@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout/default}">
+<head>
+    <title th:text="#{retention.title} + ' - ' + #{admin.title}">Retention Analysis - OneTime Admin</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800" th:text="#{retention.title}">Retention Analysis</h1>
+    </div>
+
+    <!-- Date Filter -->
+    <div th:replace="~{admin/fragments/date-filter :: dateFilter}"></div>
+
+    <!-- Summary Cards -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                <span th:text="#{retention.dormant30}">Dormant 30d+</span>
+                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                                   th:title="#{info.dormant30}"></i>
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                 th:text="${#numbers.formatInteger(data.dormantUsers30Days, 0, 'COMMA')}">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                <span th:text="#{retention.dormant60}">Dormant 60d+</span>
+                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                                   th:title="#{info.dormant60}"></i>
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                 th:text="${#numbers.formatInteger(data.dormantUsers60Days, 0, 'COMMA')}">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                <span th:text="#{retention.dormant90}">Dormant 90d+</span>
+                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                                   th:title="#{info.dormant90}"></i>
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                 th:text="${#numbers.formatInteger(data.dormantUsers90Days, 0, 'COMMA')}">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-slash fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                <span th:text="#{retention.returningRate}">Returning Rate</span>
+                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                                   th:title="#{info.returningRate}"></i>
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                 th:text="${#numbers.formatDecimal(data.returningUserRate, 1, 1) + '%'}">0%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-redo fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly MAU Chart -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <span th:text="#{retention.monthlyMau}">Monthly Active Users (MAU)</span>
+                        <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                           th:title="#{info.monthlyMau}"></i>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="mauChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conversion Funnel -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <span th:text="#{retention.funnel}">Conversion Funnel</span>
+                        <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                           th:title="#{info.funnel}"></i>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="funnelLoading" class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <div id="funnelContent" style="display: none;">
+                        <div id="funnelChart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TTV Distribution -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <span th:text="#{retention.ttv}">Time to Value (TTV)</span>
+                        <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                           th:title="#{info.ttv}"></i>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="ttvLoading" class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <div id="ttvContent" style="display: none;">
+                        <!-- TTV Summary Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-3">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1"
+                                             th:text="#{retention.ttvAverage}">Average</div>
+                                        <div class="h4 mb-0 font-weight-bold" id="ttvAverage">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-3">
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1"
+                                             th:text="#{retention.ttvMedian}">Median</div>
+                                        <div class="h4 mb-0 font-weight-bold" id="ttvMedian">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-3">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1"
+                                             th:text="#{retention.activationRate}">Activation Rate</div>
+                                        <div class="h4 mb-0 font-weight-bold" id="ttvActivation">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-3">
+                                        <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
+                                            Users with Event</div>
+                                        <div class="h4 mb-0 font-weight-bold" id="ttvUsersWithEvent">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- TTV Distribution Chart -->
+                        <div class="chart-bar">
+                            <canvas id="ttvChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WAU/MAU Stickiness -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <span th:text="#{retention.stickiness}">Stickiness (WAU/MAU)</span>
+                        <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                           th:title="#{info.stickiness}"></i>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="stickinessLoading" class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <div id="stickinessContent" style="display: none;">
+                        <!-- Stickiness Summary Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="card bg-gradient-primary text-white">
+                                    <div class="card-body text-center py-3">
+                                        <div class="text-xs font-weight-bold text-uppercase mb-1">Current Stickiness</div>
+                                        <div class="h3 mb-0 font-weight-bold" id="stickinessValue">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-3">
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1"
+                                             th:text="#{retention.currentWau}">This Week WAU</div>
+                                        <div class="h4 mb-0 font-weight-bold" id="stickinessWau">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-3">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1"
+                                             th:text="#{retention.currentMau}">This Month MAU</div>
+                                        <div class="h4 mb-0 font-weight-bold" id="stickinessMau">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Stickiness Trend Chart -->
+                        <div class="chart-area">
+                            <canvas id="stickinessChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cohort Retention Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <span th:text="#{retention.cohort}">Cohort Retention Analysis</span>
+                        <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                           th:title="#{info.cohort}"></i>
+                    </h6>
+                    <select id="cohortMonths" class="form-control form-control-sm" style="width: auto;">
+                        <option value="6">6 months</option>
+                        <option value="12" selected>12 months</option>
+                    </select>
+                </div>
+                <div class="card-body">
+                    <div id="cohortLoading" class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <div id="cohortContent" style="display: none;">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm" id="cohortTable" style="font-size: 0.8rem;">
+                                <thead id="cohortHeader"></thead>
+                                <tbody id="cohortBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                M0 = signup month, M1 = 1 month later, etc. Values show % of users still active.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script th:inline="javascript">
+    const mauData = /*[[${data.monthlyMau}]]*/ [];
+
+    new Chart(document.getElementById('mauChart'), {
+        type: 'line',
+        data: {
+            labels: mauData.map(d => d.month),
+            datasets: [{
+                label: 'MAU',
+                data: mauData.map(d => d.count),
+                backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                borderColor: '#4e73df',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // Initialize Bootstrap tooltips
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+        loadFunnelData();
+        loadTtvData();
+        loadStickinessData();
+        loadCohortData(12);
+    });
+
+    // WAU/MAU Stickiness
+    let stickinessChart = null;
+
+    function loadStickinessData() {
+        $('#stickinessLoading').show();
+        $('#stickinessContent').hide();
+
+        fetch('/admin/api/statistics/stickiness?months=12')
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    renderStickiness(data.payload);
+                }
+            })
+            .catch(error => console.error('Error loading stickiness:', error))
+            .finally(() => {
+                $('#stickinessLoading').hide();
+                $('#stickinessContent').show();
+            });
+    }
+
+    function renderStickiness(stickinessData) {
+        // Update summary cards
+        document.getElementById('stickinessValue').textContent = stickinessData.current_stickiness.toFixed(1) + '%';
+        document.getElementById('stickinessWau').textContent = stickinessData.current_wau.toLocaleString();
+        document.getElementById('stickinessMau').textContent = stickinessData.current_mau.toLocaleString();
+
+        // Render trend chart
+        const ctx = document.getElementById('stickinessChart').getContext('2d');
+
+        if (stickinessChart) {
+            stickinessChart.destroy();
+        }
+
+        const trend = stickinessData.trend || [];
+        const labels = trend.map(t => t.month);
+        const stickinessValues = trend.map(t => t.stickiness);
+        const wauValues = trend.map(t => t.wau);
+        const mauValues = trend.map(t => t.mau);
+
+        stickinessChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Stickiness (%)',
+                        data: stickinessValues,
+                        borderColor: '#4e73df',
+                        backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'WAU',
+                        data: wauValues,
+                        borderColor: '#36b9cc',
+                        backgroundColor: 'transparent',
+                        borderDash: [5, 5],
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    },
+                    {
+                        label: 'MAU',
+                        data: mauValues,
+                        borderColor: '#1cc88a',
+                        backgroundColor: 'transparent',
+                        borderDash: [5, 5],
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'Stickiness (%)' },
+                        beginAtZero: true,
+                        max: 100
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: { display: true, text: 'Users' },
+                        beginAtZero: true,
+                        grid: { drawOnChartArea: false }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                if (context.dataset.label === 'Stickiness (%)') {
+                                    return `${context.dataset.label}: ${context.raw.toFixed(1)}%`;
+                                }
+                                return `${context.dataset.label}: ${context.raw.toLocaleString()}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // TTV Distribution
+    let ttvChart = null;
+
+    function loadTtvData() {
+        $('#ttvLoading').show();
+        $('#ttvContent').hide();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const startDate = urlParams.get('startDate') || '';
+        const endDate = urlParams.get('endDate') || '';
+
+        let url = '/admin/api/statistics/ttv';
+        if (startDate || endDate) {
+            const params = new URLSearchParams();
+            if (startDate) params.append('startDate', startDate);
+            if (endDate) params.append('endDate', endDate);
+            url += '?' + params.toString();
+        }
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    renderTtv(data.payload);
+                }
+            })
+            .catch(error => console.error('Error loading TTV:', error))
+            .finally(() => {
+                $('#ttvLoading').hide();
+                $('#ttvContent').show();
+            });
+    }
+
+    function renderTtv(ttvData) {
+        // Update summary cards
+        document.getElementById('ttvAverage').textContent = ttvData.average_days.toFixed(1) + ' days';
+        document.getElementById('ttvMedian').textContent = ttvData.median_days.toFixed(0) + ' days';
+        document.getElementById('ttvActivation').textContent = ttvData.activation_rate.toFixed(1) + '%';
+        document.getElementById('ttvUsersWithEvent').textContent =
+            ttvData.users_with_event.toLocaleString() + ' / ' + ttvData.total_users.toLocaleString();
+
+        // Render bar chart
+        const ctx = document.getElementById('ttvChart').getContext('2d');
+
+        if (ttvChart) {
+            ttvChart.destroy();
+        }
+
+        const distribution = ttvData.distribution || [];
+        const labels = distribution.map(d => d.label);
+        const counts = distribution.map(d => d.count);
+        const percentages = distribution.map(d => d.percentage);
+
+        ttvChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Users',
+                    data: counts,
+                    backgroundColor: [
+                        'rgba(28, 200, 138, 0.8)',   // Same day - green
+                        'rgba(54, 185, 204, 0.8)',  // 1-3 days - cyan
+                        'rgba(78, 115, 223, 0.8)',  // 4-7 days - blue
+                        'rgba(246, 194, 62, 0.8)',  // 8-14 days - yellow
+                        'rgba(231, 74, 59, 0.8)',   // 15-30 days - red
+                        'rgba(133, 135, 150, 0.8)'  // 31+ days - gray
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Users'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const idx = context.dataIndex;
+                                return `${context.raw.toLocaleString()} users (${percentages[idx]}%)`;
+                            }
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    // Funnel Analysis
+    function loadFunnelData() {
+        $('#funnelLoading').show();
+        $('#funnelContent').hide();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const startDate = urlParams.get('startDate') || '';
+        const endDate = urlParams.get('endDate') || '';
+
+        let url = '/admin/api/statistics/funnel';
+        if (startDate || endDate) {
+            const params = new URLSearchParams();
+            if (startDate) params.append('startDate', startDate);
+            if (endDate) params.append('endDate', endDate);
+            url += '?' + params.toString();
+        }
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    renderFunnel(data.payload);
+                }
+            })
+            .catch(error => console.error('Error loading funnel:', error))
+            .finally(() => {
+                $('#funnelLoading').hide();
+                $('#funnelContent').show();
+            });
+    }
+
+    function renderFunnel(funnelData) {
+        const container = document.getElementById('funnelChart');
+        const steps = funnelData.steps;
+
+        if (!steps || steps.length === 0) {
+            container.innerHTML = '<p class="text-muted text-center">No data available</p>';
+            return;
+        }
+
+        const maxCount = steps[0].count;
+        const colors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e'];
+
+        let html = '<div class="funnel-container">';
+
+        steps.forEach((step, idx) => {
+            const widthPercent = maxCount > 0 ? (step.count / maxCount) * 100 : 0;
+            const color = colors[idx % colors.length];
+            const dropoffText = idx > 0 && step.dropoff_rate > 0
+                ? `<span class="text-danger ml-2">(-${step.dropoff_rate.toFixed(1)}%)</span>`
+                : '';
+
+            html += `
+                <div class="funnel-step mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="font-weight-bold">${step.label}</span>
+                        <span>
+                            <strong>${step.count.toLocaleString()}</strong>
+                            <span class="text-muted ml-1">(${step.rate.toFixed(1)}%)</span>
+                            ${dropoffText}
+                        </span>
+                    </div>
+                    <div class="progress" style="height: 30px;">
+                        <div class="progress-bar" role="progressbar"
+                             style="width: ${widthPercent}%; background-color: ${color};"
+                             aria-valuenow="${widthPercent}" aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Arrow between steps
+            if (idx < steps.length - 1) {
+                html += `
+                    <div class="text-center text-muted mb-2">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                `;
+            }
+        });
+
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    // Cohort Retention Table
+    function loadCohortData(months) {
+        $('#cohortLoading').show();
+        $('#cohortContent').hide();
+
+        fetch(`/admin/api/statistics/cohort?months=${months}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    renderCohortTable(data.payload);
+                }
+            })
+            .catch(error => console.error('Error loading cohort:', error))
+            .finally(() => {
+                $('#cohortLoading').hide();
+                $('#cohortContent').show();
+            });
+    }
+
+    function renderCohortTable(cohortData) {
+        const header = document.getElementById('cohortHeader');
+        const body = document.getElementById('cohortBody');
+
+        // Build header
+        let headerHtml = '<tr>';
+        headerHtml += '<th class="text-center" th:text="#{retention.cohortMonth}">Cohort</th>';
+        headerHtml += '<th class="text-center" th:text="#{retention.cohortSize}">Size</th>';
+        cohortData.periods.forEach(p => {
+            headerHtml += `<th class="text-center">${p}</th>`;
+        });
+        headerHtml += '</tr>';
+        header.innerHTML = headerHtml;
+
+        // Build body
+        let bodyHtml = '';
+        if (cohortData.cohorts.length === 0) {
+            bodyHtml = `<tr><td colspan="${cohortData.periods.length + 2}" class="text-center text-muted">No data available</td></tr>`;
+        } else {
+            cohortData.cohorts.forEach(row => {
+                bodyHtml += '<tr>';
+                bodyHtml += `<td class="text-center font-weight-bold">${row.month}</td>`;
+                bodyHtml += `<td class="text-center">${row.size}</td>`;
+                row.retention.forEach((rate, idx) => {
+                    const color = getHeatmapColor(rate, idx === 0);
+                    const displayValue = rate > 0 ? rate.toFixed(1) + '%' : '-';
+                    bodyHtml += `<td class="text-center" style="background-color: ${color}">${displayValue}</td>`;
+                });
+                bodyHtml += '</tr>';
+            });
+        }
+        body.innerHTML = bodyHtml;
+    }
+
+    function getHeatmapColor(rate, isFirst) {
+        if (rate === 0) return '#f8f9fa';
+        if (isFirst) return 'rgba(28, 200, 138, 0.3)'; // Green for M0
+        const intensity = Math.min(rate / 100, 1);
+        return `rgba(78, 115, 223, ${0.1 + intensity * 0.5})`;
+    }
+
+    // Cohort months selector
+    $('#cohortMonths').on('change', function() {
+        loadCohortData($(this).val());
+    });
+</script>
+</th:block>
+</body>
+</html>

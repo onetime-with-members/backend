@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout/default}">
+<head>
+    <title th:text="#{dashboard.title} + ' - ' + #{admin.title}">Dashboard - OneTime Admin</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800" th:text="#{dashboard.title}">Dashboard</h1>
+        <div>
+            <button class="btn btn-sm btn-outline-primary" id="btnRefresh" onclick="location.reload()">
+                <i class="fas fa-sync-alt mr-1"></i> Refresh
+            </button>
+            <small class="text-muted ml-2" th:text="#{admin.dataAsOf} + ' ' + ${#temporals.format(#temporals.createNow(), 'HH:mm:ss')}">
+                Data as of 12:00:00
+            </small>
+        </div>
+    </div>
+
+    <!-- Date Filter -->
+    <div th:replace="~{admin/fragments/date-filter :: dateFilter}"></div>
+
+    <!-- Summary Cards Row -->
+    <div class="row">
+        <!-- Total Users Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                <span th:text="#{dashboard.totalUsers}">Total Users</span>
+                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                                   th:title="#{info.totalUsers}"></i>
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                 th:text="${#numbers.formatInteger(summary.totalUsers, 0, 'COMMA')}">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Events Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                <span th:text="#{dashboard.totalEvents}">Total Events</span>
+                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                                   th:title="#{info.totalEvents}"></i>
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                 th:text="${#numbers.formatInteger(summary.totalEvents, 0, 'COMMA')}">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAU Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                <span th:text="#{dashboard.mau}">MAU (This Month)</span>
+                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                                   th:title="#{info.mau}"></i>
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                 th:text="${#numbers.formatInteger(summary.mau, 0, 'COMMA')}">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dormant Rate Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                <span th:text="#{dashboard.dormantRate}">Dormant Rate (60d+)</span>
+                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                                   th:title="#{info.dormantRate}"></i>
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                 th:text="${#numbers.formatDecimal(summary.dormantRate, 1, 1) + '%'}">0%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bed fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Stats Row -->
+    <div class="row">
+        <!-- Avg Participants Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-secondary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
+                                <span th:text="#{dashboard.avgParticipants}">Avg Participants/Event</span>
+                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                                   th:title="#{info.avgParticipants}"></i>
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                 th:text="${#numbers.formatDecimal(summary.avgParticipantsPerEvent, 1, 2)}">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-friends fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Marketing Target Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                <span th:text="#{dashboard.marketingTargets}">Marketing Targets</span>
+                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                                   th:title="#{info.marketingTargets}"></i>
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                 th:text="${#numbers.formatInteger(summary.marketingTargetUsers, 0, 'COMMA')}">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bullhorn fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row">
+        <!-- Monthly Signups Chart (Area Chart) -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary" th:text="#{dashboard.monthlySignups}">Monthly New Signups</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="signupsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- OAuth Provider Ratio (Pie Chart) -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary" th:text="#{dashboard.providerRatio}">OAuth Provider Ratio</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2">
+                        <canvas id="providersChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small" id="providerLegend">
+                        <!-- Legend will be dynamically generated -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Charts Row -->
+    <div class="row">
+        <!-- Weekday Event Distribution (Bar Chart) -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary" th:text="#{dashboard.eventsByWeekday}">Events by Weekday</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-bar">
+                        <canvas id="weekdayChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOP Keywords (Table) -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary" th:text="#{dashboard.topKeywords}">Event Title Keywords TOP 10</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead>
+                                <tr>
+                                    <th th:text="#{table.rank}">Rank</th>
+                                    <th th:text="#{table.keyword}">Keyword</th>
+                                    <th th:text="#{table.count}">Count</th>
+                                    <th th:text="#{table.ratio}">Ratio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="item, stat : ${charts.topKeywords}">
+                                    <td th:text="${stat.index + 1}">1</td>
+                                    <td th:text="${item.keyword}">Keyword</td>
+                                    <td th:text="${item.count}">0</td>
+                                    <td th:text="${#numbers.formatDecimal(item.percentage, 1, 1) + '%'}">0%</td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(charts.topKeywords)}">
+                                    <td colspan="4" class="text-center text-muted" th:text="#{misc.noData}">No data available</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Page specific scripts -->
+<th:block layout:fragment="scripts">
+<script th:inline="javascript">
+    // Chart.js data (from Thymeleaf)
+    const signupsData = /*[[${charts.monthlySignups}]]*/ {labels: [], data: []};
+    const providersData = /*[[${charts.providers}]]*/ {labels: [], data: []};
+    const weekdayData = /*[[${charts.weekdayDistribution}]]*/ {labels: [], data: []};
+    const newSignupsLabel = /*[[#{misc.newSignups}]]*/ 'New Signups';
+
+    // Color palette (SB Admin 2 style)
+    const colors = {
+        primary: '#4e73df',
+        success: '#1cc88a',
+        info: '#36b9cc',
+        warning: '#f6c23e',
+        danger: '#e74a3b',
+        secondary: '#858796'
+    };
+
+    const chartColors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'];
+
+    // Monthly Signups Area Chart
+    new Chart(document.getElementById('signupsChart'), {
+        type: 'line',
+        data: {
+            labels: signupsData.labels,
+            datasets: [{
+                label: newSignupsLabel,
+                data: signupsData.data,
+                backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                borderColor: colors.primary,
+                pointBackgroundColor: colors.primary,
+                pointBorderColor: colors.primary,
+                pointHoverBackgroundColor: colors.primary,
+                pointHoverBorderColor: colors.primary,
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // OAuth Provider Doughnut Chart
+    const providersChart = new Chart(document.getElementById('providersChart'), {
+        type: 'doughnut',
+        data: {
+            labels: providersData.labels,
+            datasets: [{
+                data: providersData.data,
+                backgroundColor: chartColors.slice(0, providersData.labels.length),
+                hoverBorderColor: 'rgba(234, 236, 244, 1)'
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            cutout: '70%'
+        }
+    });
+
+    // Generate legend for providers chart
+    const legendContainer = document.getElementById('providerLegend');
+    providersData.labels.forEach((label, index) => {
+        const colorIndex = index % chartColors.length;
+        const legendItem = document.createElement('span');
+        legendItem.className = 'mr-2';
+        legendItem.innerHTML = `<i class="fas fa-circle" style="color: ${chartColors[colorIndex]}"></i> ${label}`;
+        legendContainer.appendChild(legendItem);
+    });
+
+    // Weekday Bar Chart
+    new Chart(document.getElementById('weekdayChart'), {
+        type: 'bar',
+        data: {
+            labels: weekdayData.labels,
+            datasets: [{
+                label: 'Events',
+                data: weekdayData.data,
+                backgroundColor: colors.primary,
+                borderColor: colors.primary,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // Initialize Bootstrap tooltips
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+</script>
+</th:block>
+</body>
+</html>

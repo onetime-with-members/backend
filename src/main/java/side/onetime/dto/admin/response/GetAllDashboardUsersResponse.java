@@ -7,12 +7,12 @@ import java.util.List;
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record GetAllDashboardUsersResponse(
-        List<DashboardUser> users,
+        List<DashboardUser> dashboardUsers,
         PageInfo pageInfo
 ) {
-    public static GetAllDashboardUsersResponse of(List<DashboardUser> users, PageInfo pageInfo) {
+    public static GetAllDashboardUsersResponse of(List<DashboardUser> dashboardUsers, PageInfo pageInfo) {
         return new GetAllDashboardUsersResponse(
-                users,
+                dashboardUsers,
                 pageInfo
         );
     }

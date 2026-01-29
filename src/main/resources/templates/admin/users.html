@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout/default}">
+<head>
+    <title th:text="#{users.title} + ' - ' + #{admin.title}">User Statistics - OneTime Admin</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800" th:text="#{users.title}">User Statistics</h1>
+    </div>
+
+    <!-- Date Filter -->
+    <div th:replace="~{admin/fragments/date-filter :: dateFilter}"></div>
+
+    <!-- Summary Cards -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                <span th:text="#{users.totalUsers}">Total Users</span>
+                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                                   th:title="#{info.totalUsers}"></i>
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                 th:text="${#numbers.formatInteger(data.totalUsers, 0, 'COMMA')}">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                <span th:text="#{users.activeUsers}">Active Users (30d)</span>
+                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                                   th:title="#{info.activeUsers}"></i>
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                 th:text="${#numbers.formatInteger(data.activeUsers, 0, 'COMMA')}">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                <span th:text="#{users.marketingAgreement}">Marketing Agreement</span>
+                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
+                                   th:title="#{info.marketingAgreement}"></i>
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"
+                                 th:text="${#numbers.formatDecimal(data.marketingAgreementRate, 1, 1) + '%'}">0%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bullhorn fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Provider Distribution -->
+    <div class="row">
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary" th:text="#{users.providerDistribution}">OAuth Provider Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th th:text="#{table.provider}">Provider</th>
+                                    <th th:text="#{table.count}">Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="entry : ${data.providerDistribution}">
+                                    <td th:text="${entry.key}">Provider</td>
+                                    <td th:text="${entry.value}">0</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary" th:text="#{users.languageDistribution}">Language Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th th:text="#{table.language}">Language</th>
+                                    <th th:text="#{table.count}">Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="entry : ${data.languageDistribution}">
+                                    <td th:text="${entry.key}">Language</td>
+                                    <td th:text="${entry.value}">0</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Signups Chart -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary" th:text="#{users.monthlySignups}">Monthly Signups</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="monthlySignupsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User List (Full Width) -->
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h4 class="mb-1 font-weight-bold text-gray-800">Users</h4>
+                <p class="text-muted mb-0" th:text="#{users.userListDesc}">모든 유저들의 목록을 보여주는 페이지입니다.</p>
+            </div>
+            <div class="d-flex align-items-center">
+                <select id="userSort" class="form-control form-control-sm" style="width: auto;">
+                    <option value="created_date:desc" th:text="#{sort.newest}">Newest</option>
+                    <option value="created_date:asc" th:text="#{sort.oldest}">Oldest</option>
+                    <option value="name:asc" th:text="#{sort.nameAsc}">Name (A-Z)</option>
+                    <option value="name:desc" th:text="#{sort.nameDesc}">Name (Z-A)</option>
+                </select>
+            </div>
+        </div>
+        <!-- Search & Date Filter -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <input type="text" id="userSearch" class="form-control form-control-sm"
+                           th:placeholder="#{search.userPlaceholder}" placeholder="이름, 이메일, 닉네임 검색...">
+                    <div class="input-group-append">
+                        <button class="btn btn-sm btn-primary" type="button" onclick="loadUserList(1)">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                    <span class="text-muted mr-2" th:text="#{filter.createdDate}">가입일:</span>
+                    <input type="date" id="userStartDate" class="form-control form-control-sm mr-2" style="width: 150px;">
+                    <span class="text-muted mr-2">~</span>
+                    <input type="date" id="userEndDate" class="form-control form-control-sm mr-2" style="width: 150px;">
+                    <button class="btn btn-sm btn-outline-secondary" type="button" onclick="clearUserDateFilter()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-2 text-right">
+                <span id="userTotalCount" class="text-muted"></span>
+            </div>
+        </div>
+        <div id="userListLoading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <div id="userListContent" style="display: none;">
+            <div class="table-responsive">
+                <table class="table table-hover" style="font-size: 0.9rem;">
+                    <thead class="thead-light">
+                        <tr>
+                            <th style="min-width: 120px;" th:text="#{table.name}">Name</th>
+                            <th style="min-width: 200px;" th:text="#{table.email}">Email</th>
+                            <th style="width: 100px;" class="text-center" th:text="#{table.provider}">Provider</th>
+                            <th style="width: 80px;" class="text-center" th:text="#{table.language}">Language</th>
+                            <th style="width: 100px;" class="text-center" th:text="#{table.participated}">Participated</th>
+                            <th style="width: 180px;" class="text-center" th:text="#{table.createdDate}">Created Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userListBody"></tbody>
+                </table>
+            </div>
+            <nav aria-label="User pagination">
+                <ul class="pagination justify-content-center" id="userPagination"></ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script th:inline="javascript">
+    const monthlyData = /*[[${data.monthlySignups}]]*/ [];
+    const newSignupsLabel = /*[[#{misc.newSignups}]]*/ 'New Signups';
+
+    new Chart(document.getElementById('monthlySignupsChart'), {
+        type: 'bar',
+        data: {
+            labels: monthlyData.map(d => d.month),
+            datasets: [{
+                label: newSignupsLabel,
+                data: monthlyData.map(d => d.count),
+                backgroundColor: '#4e73df',
+                borderColor: '#4e73df',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // User List
+    let currentUserPage = 1;
+    let currentUserSort = 'created_date';
+    let currentUserSorting = 'desc';
+
+    function loadUserList(page = 1) {
+        currentUserPage = page;
+        $('#userListLoading').show();
+        $('#userListContent').hide();
+
+        const search = $('#userSearch').val() || '';
+        const startDate = $('#userStartDate').val() || '';
+        const endDate = $('#userEndDate').val() || '';
+
+        let url = `/admin/api/statistics/users?page=${page}&size=10&keyword=${currentUserSort}&sorting=${currentUserSorting}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        if (startDate) url += `&startDate=${startDate}`;
+        if (endDate) url += `&endDate=${endDate}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    renderUserList(data.payload);
+                }
+            })
+            .catch(error => console.error('Error:', error))
+            .finally(() => {
+                $('#userListLoading').hide();
+                $('#userListContent').show();
+            });
+    }
+
+    function clearUserDateFilter() {
+        $('#userSearch').val('');
+        $('#userStartDate').val('');
+        $('#userEndDate').val('');
+        loadUserList(1);
+    }
+
+    function renderUserList(data) {
+        const users = data.dashboard_users || [];
+        const pageInfo = data.page_info || {};
+
+        // Total count display
+        $('#userTotalCount').text(`총 ${pageInfo.total_elements || 0}명`);
+
+        let tbody = '';
+        if (users.length === 0) {
+            tbody = '<tr><td colspan="6" class="text-center text-muted py-4">No users</td></tr>';
+        } else {
+            users.forEach(user => {
+                const providerClass = {
+                    'google': 'text-danger',
+                    'kakao': 'text-warning',
+                    'naver': 'text-success'
+                }[user.provider?.toLowerCase()] || 'text-secondary';
+
+                tbody += `
+                    <tr>
+                        <td>${user.name || '-'}</td>
+                        <td>${user.email || '-'}</td>
+                        <td class="text-center"><span class="${providerClass} font-weight-bold">${user.provider || '-'}</span></td>
+                        <td class="text-center">${user.language || '-'}</td>
+                        <td class="text-center">${user.participant_count || 0}개</td>
+                        <td class="text-center text-muted">${user.created_date || '-'}</td>
+                    </tr>
+                `;
+            });
+        }
+        $('#userListBody').html(tbody);
+        renderUserPagination(pageInfo);
+    }
+
+    function renderUserPagination(pageInfo) {
+        const totalPages = pageInfo.total_pages || 1;
+        const currentPage = pageInfo.current_page || 1;
+
+        let pagination = '';
+
+        // Calculate page group (10 pages per group)
+        const pageGroup = Math.floor((currentPage - 1) / 10);
+        const startPage = pageGroup * 10 + 1;
+        const endPage = Math.min(startPage + 9, totalPages);
+
+        // First & Previous
+        pagination += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="loadUserList(1); return false;">«</a>
+        </li>`;
+        pagination += `<li class="page-item ${startPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="loadUserList(${startPage - 1}); return false;">‹</a>
+        </li>`;
+
+        // Page numbers (10 at a time)
+        for (let i = startPage; i <= endPage; i++) {
+            pagination += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="loadUserList(${i}); return false;">${i}</a>
+            </li>`;
+        }
+
+        // Next & Last
+        pagination += `<li class="page-item ${endPage >= totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="loadUserList(${endPage + 1}); return false;">›</a>
+        </li>`;
+        pagination += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="loadUserList(${totalPages}); return false;">»</a>
+        </li>`;
+
+        $('#userPagination').html(pagination);
+    }
+
+    // Sort change handler
+    $('#userSort').on('change', function() {
+        const [sort, sorting] = $(this).val().split(':');
+        currentUserSort = sort;
+        currentUserSorting = sorting;
+        loadUserList(1);
+    });
+
+    // Search on Enter key
+    $('#userSearch').on('keypress', function(e) {
+        if (e.which === 13) {
+            loadUserList(1);
+        }
+    });
+
+    // Date filter change handler
+    $('#userStartDate, #userEndDate').on('change', function() {
+        loadUserList(1);
+    });
+
+    // Initialize Bootstrap tooltips
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+        loadUserList(1);
+    });
+</script>
+</th:block>
+</body>
+</html>
