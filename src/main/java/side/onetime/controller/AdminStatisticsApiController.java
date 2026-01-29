@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import side.onetime.dto.admin.statistics.response.CohortRetentionResponse;
+import side.onetime.dto.admin.statistics.response.EventEngagementResponse;
 import side.onetime.dto.admin.statistics.response.FunnelAnalysisResponse;
 import side.onetime.dto.admin.statistics.response.MarketingTargetDetailResponse;
 import side.onetime.dto.admin.statistics.response.StickinessResponse;
@@ -196,6 +197,22 @@ public class AdminStatisticsApiController {
             @RequestParam(defaultValue = "12") int months) {
         StickinessResponse response = statisticsService.getStickiness(months);
         return ApiResponse.onSuccess(SuccessStatus._GET_STICKINESS, response);
+    }
+
+    // ==================== Event Engagement ====================
+
+    /**
+     * 이벤트 참여 통계
+     * - 이벤트 완료율, 참여자 응답률, 평균 응답 시간
+     * - 멤버 수 분포, 익명 vs 회원 비율, 이벤트 삭제율
+     */
+    @GetMapping("/engagement")
+    public ResponseEntity<ApiResponse<EventEngagementResponse>> getEventEngagement(
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
+        LocalDate[] dates = DateUtil.resolveDateRange(startDate, endDate);
+        EventEngagementResponse response = statisticsService.getEventEngagement(dates[0], dates[1]);
+        return ApiResponse.onSuccess(SuccessStatus._GET_EVENT_ENGAGEMENT, response);
     }
 
     // ==================== Marketing Targets ====================

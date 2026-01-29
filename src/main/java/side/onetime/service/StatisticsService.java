@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import side.onetime.dto.admin.statistics.response.CohortRetentionResponse;
+import side.onetime.dto.admin.statistics.response.EventEngagementResponse;
 import side.onetime.dto.admin.statistics.response.FunnelAnalysisResponse;
 import side.onetime.dto.admin.statistics.response.StickinessResponse;
 import side.onetime.dto.admin.statistics.response.TimeWeekdayHeatmapResponse;
@@ -916,5 +917,94 @@ public class StatisticsService {
         }
 
         return StickinessResponse.of(currentStickiness, currentWau, currentMau, trend);
+    }
+
+    // ==================== 이벤트 참여 통계 ====================
+
+    /**
+     * 이벤트 참여 통계 조회
+     * - 이벤트 완료율, 참여자 응답률, 평균 응답 시간
+     * - 멤버 수 분포, 익명 vs 회원 비율, 이벤트 삭제율
+     */
+    @Transactional(readOnly = true)
+    public EventEngagementResponse getEventEngagement(LocalDate startDate, LocalDate endDate) {
+        DateTimeRange range = DateTimeRange.of(startDate, endDate);
+
+        // 1. 이벤트 완료율
+        long totalEvents = nullToZero(statisticsRepository.countAllEventsIncludingDeleted(range.start(), range.end()));
+        Object[] eventStats = getFirstRow(statisticsRepository.getEventStatsByDateRange(range.start(), range.end()));
+        long activeEvents = extractLong(eventStats, 0);
+        long eventsWithResponse = nullToZero(statisticsRepository.countEventsWithResponse(range.start(), range.end()));
+        double completionRate = calculateRate(eventsWithResponse, activeEvents);
+
+        // 2. 참여자 응답률
+        long totalMembers = nullToZero(statisticsRepository.countTotalMembers(range.start(), range.end()));
+        long membersWithSelection = nullToZero(statisticsRepository.countMembersWithSelection(range.start(), range.end()));
+        double responseRate = calculateRate(membersWithSelection, totalMembers);
+
+        // 3. 평균 응답 시간
+        List<Integer> responseTimes = statisticsRepository.findResponseTimeHours(range.start(), range.end());
+        double avgResponseTime = 0;
+        double medianResponseTime = 0;
+        if (!responseTimes.isEmpty()) {
+            avgResponseTime = Math.round(responseTimes.stream().mapToInt(Integer::intValue).average().orElse(0) * 10.0) / 10.0;
+            medianResponseTime = responseTimes.get(responseTimes.size() / 2);
+        }
+
+        // 4. 멤버 수 분포
+        List<EventEngagementResponse.MemberCountBucket> memberDistribution = buildMemberCountDistribution(range.start(), range.end());
+
+        // 5. 익명 vs 회원 비율
+        long anonymousParticipants = nullToZero(statisticsRepository.countAnonymousParticipants(range.start(), range.end()));
+        long registeredParticipants = nullToZero(statisticsRepository.countRegisteredParticipants(range.start(), range.end()));
+        long totalParticipants = anonymousParticipants + registeredParticipants;
+        double anonymousRate = calculateRate(anonymousParticipants, totalParticipants);
+
+        // 6. 이벤트 삭제율
+        long deletedEvents = nullToZero(statisticsRepository.countDeletedEvents(range.start(), range.end()));
+        double deletionRate = calculateRate(deletedEvents, totalEvents);
+
+        return EventEngagementResponse.of(
+                activeEvents, eventsWithResponse, completionRate,
+                totalMembers, membersWithSelection, responseRate,
+                avgResponseTime, medianResponseTime,
+                memberDistribution,
+                anonymousParticipants, registeredParticipants, anonymousRate,
+                deletedEvents, deletionRate
+        );
+    }
+
+    /**
+     * 멤버 수 분포 버킷 생성
+     */
+    private List<EventEngagementResponse.MemberCountBucket> buildMemberCountDistribution(
+            LocalDateTime startDate, LocalDateTime endDate) {
+        List<Object[]> memberCounts = statisticsRepository.findMemberCountPerEvent(startDate, endDate);
+
+        // 버킷 정의: 0명, 1명, 2-3명, 4-5명, 6-10명, 11명+
+        int[][] bucketRanges = {
+                {0, 0}, {1, 1}, {2, 3}, {4, 5}, {6, 10}, {11, Integer.MAX_VALUE}
+        };
+        String[] labels = {"0명", "1명", "2-3명", "4-5명", "6-10명", "11명+"};
+
+        long total = memberCounts.size();
+        List<EventEngagementResponse.MemberCountBucket> buckets = new ArrayList<>();
+
+        for (int i = 0; i < bucketRanges.length; i++) {
+            int min = bucketRanges[i][0];
+            int max = bucketRanges[i][1];
+            String label = labels[i];
+
+            long count = memberCounts.stream()
+                    .mapToInt(row -> ((Number) row[1]).intValue())
+                    .filter(c -> c >= min && c <= max)
+                    .count();
+
+            double percentage = total > 0 ? Math.round((double) count / total * 1000.0) / 10.0 : 0;
+            buckets.add(EventEngagementResponse.MemberCountBucket.of(
+                    label, min, max == Integer.MAX_VALUE ? -1 : max, count, percentage));
+        }
+
+        return buckets;
     }
 }

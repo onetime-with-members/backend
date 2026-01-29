@@ -45,6 +45,14 @@
         </a>
     </li>
 
+    <!-- Engagement -->
+    <li class="nav-item" th:classappend="${currentPage == 'engagement'} ? 'active'">
+        <a class="nav-link" th:href="@{/admin/statistics/engagement}">
+            <i class="fas fa-fw fa-handshake"></i>
+            <span th:text="#{nav.engagement}">Engagement</span>
+        </a>
+    </li>
+
     <hr class="sidebar-divider">
     <div class="sidebar-heading" th:text="#{nav.marketing}">Marketing</div>
 

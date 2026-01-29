@@ -1011,4 +1011,146 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
+
+    // ==================== 이벤트 참여 통계 ====================
+
+    /**
+     * 전체 이벤트 수 (삭제된 것 포함)
+     */
+    @Query(value = """
+        SELECT COUNT(*) FROM events
+        WHERE created_date >= :startDate AND created_date < :endDate
+        """, nativeQuery = true)
+    Long countAllEventsIncludingDeleted(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * 삭제된 이벤트 수
+     */
+    @Query(value = """
+        SELECT COUNT(*) FROM events
+        WHERE status = 'DELETED'
+          AND created_date >= :startDate AND created_date < :endDate
+        """, nativeQuery = true)
+    Long countDeletedEvents(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * 응답받은 이벤트 수 (1명 이상 Selection 있는 이벤트)
+     */
+    @Query(value = """
+        SELECT COUNT(DISTINCT e.events_id)
+        FROM events e
+        JOIN schedules s ON e.events_id = s.events_id
+        JOIN selections sel ON s.schedules_id = sel.schedules_id
+        WHERE e.status = 'ACTIVE'
+          AND e.created_date >= :startDate AND e.created_date < :endDate
+        """, nativeQuery = true)
+    Long countEventsWithResponse(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * 전체 멤버 수 (익명 참여자)
+     */
+    @Query(value = """
+        SELECT COUNT(*)
+        FROM members m
+        JOIN events e ON m.events_id = e.events_id
+        WHERE e.created_date >= :startDate AND e.created_date < :endDate
+        """, nativeQuery = true)
+    Long countTotalMembers(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * Selection 생성한 멤버 수
+     */
+    @Query(value = """
+        SELECT COUNT(DISTINCT sel.members_id)
+        FROM selections sel
+        JOIN members m ON sel.members_id = m.members_id
+        JOIN events e ON m.events_id = e.events_id
+        WHERE sel.members_id IS NOT NULL
+          AND e.created_date >= :startDate AND e.created_date < :endDate
+        """, nativeQuery = true)
+    Long countMembersWithSelection(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * 이벤트별 첫 응답까지 걸린 시간 (시간 단위)
+     * 반환: List of hours
+     */
+    @Query(value = """
+        SELECT TIMESTAMPDIFF(HOUR, e.created_date, MIN(sel.created_date)) AS response_hours
+        FROM events e
+        JOIN schedules s ON e.events_id = s.events_id
+        JOIN selections sel ON s.schedules_id = sel.schedules_id
+        WHERE e.status = 'ACTIVE'
+          AND e.created_date >= :startDate AND e.created_date < :endDate
+        GROUP BY e.events_id
+        HAVING response_hours IS NOT NULL AND response_hours >= 0
+        ORDER BY response_hours
+        """, nativeQuery = true)
+    List<Integer> findResponseTimeHours(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * 이벤트별 멤버 수 분포
+     * 반환: [events_id, member_count]
+     */
+    @Query(value = """
+        SELECT e.events_id, COUNT(m.members_id) AS member_count
+        FROM events e
+        LEFT JOIN members m ON e.events_id = m.events_id
+        WHERE e.status = 'ACTIVE'
+          AND e.created_date >= :startDate AND e.created_date < :endDate
+        GROUP BY e.events_id
+        """, nativeQuery = true)
+    List<Object[]> findMemberCountPerEvent(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * 익명 참여자 수 (Member 기반 Selection)
+     */
+    @Query(value = """
+        SELECT COUNT(DISTINCT sel.members_id)
+        FROM selections sel
+        JOIN members m ON sel.members_id = m.members_id
+        JOIN events e ON m.events_id = e.events_id
+        WHERE sel.members_id IS NOT NULL
+          AND e.created_date >= :startDate AND e.created_date < :endDate
+        """, nativeQuery = true)
+    Long countAnonymousParticipants(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * 회원 참여자 수 (User 기반 Selection)
+     */
+    @Query(value = """
+        SELECT COUNT(DISTINCT sel.users_id)
+        FROM selections sel
+        JOIN schedules s ON sel.schedules_id = s.schedules_id
+        JOIN events e ON s.events_id = e.events_id
+        WHERE sel.users_id IS NOT NULL
+          AND e.created_date >= :startDate AND e.created_date < :endDate
+        """, nativeQuery = true)
+    Long countRegisteredParticipants(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
 }
