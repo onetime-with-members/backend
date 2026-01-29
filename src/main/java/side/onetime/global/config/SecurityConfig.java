@@ -1,6 +1,7 @@
 package side.onetime.global.config;
 
-import lombok.RequiredArgsConstructor;
+import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -12,13 +13,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import lombok.RequiredArgsConstructor;
 import side.onetime.auth.exception.CustomAccessDeniedHandler;
 import side.onetime.auth.exception.CustomAuthenticationEntryPoint;
 import side.onetime.auth.handler.OAuthLoginFailureHandler;
 import side.onetime.auth.handler.OAuthLoginSuccessHandler;
 import side.onetime.global.filter.JwtFilter;
-
-import java.util.Arrays;
 
 @RequiredArgsConstructor
 @Configuration
@@ -37,6 +38,8 @@ public class SecurityConfig {
 
 	private static final String[] PUBLIC_URLS = {
 		"/",
+		"/error",
+		"/favicon.ico",
 		"/login/**",
 		"/api/v1/events/**",
 		"/api/v1/schedules/**",
@@ -51,7 +54,12 @@ public class SecurityConfig {
 		"/api/v1/bar-banners/activated/all",
 		"/api/v1/banners/*/clicks",
 		"/api/v1/test/**",
-		"/actuator/health"
+		"/actuator/health",
+		// Admin page static resources
+		"/admin/login",
+		"/admin/css/**",
+		"/admin/js/**",
+		"/admin/vendor/**"
 	};
 
 	private static final String[] AUTHENTICATED_USER_URLS = {
@@ -63,6 +71,14 @@ public class SecurityConfig {
 		"/api/v1/admin/**",
 		"/api/v1/banners/**",
 		"/api/v1/bar-banners/**",
+	};
+
+	private static final String[] ADMIN_PAGE_URLS = {
+		"/admin/dashboard",
+		"/admin/statistics/**",
+		"/admin/api/**",
+		"/admin/email",
+		"/admin/logout"
 	};
 
 	private static final String[] ALLOWED_ORIGINS = {
@@ -124,6 +140,7 @@ public class SecurityConfig {
 				.requestMatchers(PUBLIC_URLS).permitAll()
 				.requestMatchers(AUTHENTICATED_USER_URLS).hasRole("USER")
 				.requestMatchers(AUTHENTICATED_ADMIN_URLS).hasRole("ADMIN")
+				.requestMatchers(ADMIN_PAGE_URLS).hasRole("ADMIN")
 				.anyRequest().authenticated()
 			)
 			.oauth2Login(oauth -> oauth

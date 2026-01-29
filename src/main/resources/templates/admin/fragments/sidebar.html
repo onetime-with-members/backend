@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<ul th:fragment="sidebar" class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+    <!-- Brand -->
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" th:href="@{/admin/dashboard}">
+        <div class="sidebar-brand-icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="sidebar-brand-text mx-3" th:text="#{admin.title}">OneTime Admin</div>
+    </a>
+    <hr class="sidebar-divider my-0">
+
+    <!-- Dashboard -->
+    <li class="nav-item" th:classappend="${currentPage == 'dashboard'} ? 'active'">
+        <a class="nav-link" th:href="@{/admin/dashboard}">
+            <i class="fas fa-fw fa-tachometer-alt"></i>
+            <span th:text="#{nav.dashboard}">Dashboard</span>
+        </a>
+    </li>
+
+    <hr class="sidebar-divider">
+    <div class="sidebar-heading" th:text="#{nav.statistics}">Statistics</div>
+
+    <!-- Users -->
+    <li class="nav-item" th:classappend="${currentPage == 'users'} ? 'active'">
+        <a class="nav-link" th:href="@{/admin/statistics/users}">
+            <i class="fas fa-fw fa-users"></i>
+            <span th:text="#{nav.users}">Users</span>
+        </a>
+    </li>
+
+    <!-- Events -->
+    <li class="nav-item" th:classappend="${currentPage == 'events'} ? 'active'">
+        <a class="nav-link" th:href="@{/admin/statistics/events}">
+            <i class="fas fa-fw fa-calendar-alt"></i>
+            <span th:text="#{nav.events}">Events</span>
+        </a>
+    </li>
+
+    <!-- Retention -->
+    <li class="nav-item" th:classappend="${currentPage == 'retention'} ? 'active'">
+        <a class="nav-link" th:href="@{/admin/statistics/retention}">
+            <i class="fas fa-fw fa-chart-line"></i>
+            <span th:text="#{nav.retention}">Retention</span>
+        </a>
+    </li>
+
+    <hr class="sidebar-divider">
+    <div class="sidebar-heading" th:text="#{nav.marketing}">Marketing</div>
+
+    <!-- Marketing Target -->
+    <li class="nav-item" th:classappend="${currentPage == 'marketing'} ? 'active'">
+        <a class="nav-link" th:href="@{/admin/statistics/marketing}">
+            <i class="fas fa-fw fa-bullhorn"></i>
+            <span th:text="#{nav.marketingTarget}">Marketing Target</span>
+        </a>
+    </li>
+
+    <hr class="sidebar-divider">
+    <div class="sidebar-heading" th:text="#{nav.email}">Email</div>
+
+    <!-- Email -->
+    <li class="nav-item" th:classappend="${currentPage == 'email'} ? 'active'">
+        <a class="nav-link" th:href="@{/admin/email}">
+            <i class="fas fa-fw fa-envelope"></i>
+            <span th:text="#{nav.sendEmail}">Send Email</span>
+        </a>
+    </li>
+
+    <hr class="sidebar-divider d-none d-md-block">
+    <!-- Sidebar Toggler -->
+    <div class="text-center d-none d-md-inline">
+        <button class="rounded-circle border-0" id="sidebarToggle"></button>
+    </div>
+</ul>
+</html>

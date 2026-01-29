@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<nav th:fragment="topbar" class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+    <!-- Sidebar Toggle (Topbar) -->
+    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+        <i class="fa fa-bars"></i>
+    </button>
+
+    <!-- Page Title -->
+    <th:block th:with="defaultTitle=#{nav.dashboard}">
+        <h1 class="h5 mb-0 text-gray-800" th:text="${pageTitle != null ? pageTitle : defaultTitle}">Dashboard</h1>
+    </th:block>
+
+    <!-- Topbar Navbar -->
+    <ul class="navbar-nav ml-auto">
+        <!-- Date Display -->
+        <li class="nav-item dropdown no-arrow mx-1">
+            <span class="nav-link text-gray-600" th:text="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+                2026-01-26
+            </span>
+        </li>
+
+        <div class="topbar-divider d-none d-sm-block"></div>
+
+        <!-- Auto Refresh Toggle -->
+        <li class="nav-item dropdown no-arrow mx-1">
+            <a class="nav-link dropdown-toggle" href="#" id="refreshDropdown" role="button"
+               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+               th:title="#{admin.autoRefresh}">
+                <i class="fas fa-sync-alt fa-fw" id="refreshIcon"></i>
+                <span class="d-none d-lg-inline text-gray-600 small" id="refreshLabel">OFF</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
+                <h6 class="dropdown-header" th:text="#{admin.autoRefresh}">Auto Refresh</h6>
+                <a class="dropdown-item refresh-option" href="#" data-interval="0">
+                    <i class="fas fa-times fa-sm fa-fw mr-2 text-gray-400"></i> OFF
+                </a>
+                <a class="dropdown-item refresh-option" href="#" data-interval="30000">
+                    <i class="fas fa-clock fa-sm fa-fw mr-2 text-gray-400"></i> 30s
+                </a>
+                <a class="dropdown-item refresh-option" href="#" data-interval="60000">
+                    <i class="fas fa-clock fa-sm fa-fw mr-2 text-gray-400"></i> 1m
+                </a>
+                <a class="dropdown-item refresh-option" href="#" data-interval="300000">
+                    <i class="fas fa-clock fa-sm fa-fw mr-2 text-gray-400"></i> 5m
+                </a>
+            </div>
+        </li>
+
+        <!-- Dark Mode Toggle -->
+        <li class="nav-item no-arrow mx-1">
+            <a class="nav-link dark-mode-toggle" href="#" id="darkModeToggle" title="Toggle Dark Mode">
+                <i class="fas fa-moon fa-fw" id="darkModeIcon"></i>
+            </a>
+        </li>
+
+        <!-- Language Selector -->
+        <li class="nav-item dropdown no-arrow mx-1">
+            <a class="nav-link dropdown-toggle" href="#" id="langDropdown" role="button"
+               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fas fa-globe fa-fw"></i>
+                <span class="d-none d-lg-inline text-gray-600 small"
+                      th:text="${#locale.language == 'ko' ? '한국어' : 'English'}">Language</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
+                <a class="dropdown-item" th:href="@{?(lang=ko)}"
+                   th:classappend="${#locale.language == 'ko' ? 'active' : ''}">
+                    <i class="fas fa-check fa-sm fa-fw mr-2" th:if="${#locale.language == 'ko'}"></i>
+                    <span th:unless="${#locale.language == 'ko'}" class="mr-4"></span>
+                    한국어
+                </a>
+                <a class="dropdown-item" th:href="@{?(lang=en)}"
+                   th:classappend="${#locale.language == 'en' ? 'active' : ''}">
+                    <i class="fas fa-check fa-sm fa-fw mr-2" th:if="${#locale.language == 'en'}"></i>
+                    <span th:unless="${#locale.language == 'en'}" class="mr-4"></span>
+                    English
+                </a>
+            </div>
+        </li>
+
+        <div class="topbar-divider d-none d-sm-block"></div>
+
+        <!-- User Dropdown -->
+        <li class="nav-item dropdown no-arrow">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="mr-2 d-none d-lg-inline text-gray-600 small" th:text="${adminName ?: 'Admin'}">Admin</span>
+                <i class="fas fa-user-circle fa-fw"></i>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
+                <a class="dropdown-item" th:href="@{/admin/logout}">
+                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                    <span th:text="#{admin.logout}">Logout</span>
+                </a>
+            </div>
+        </li>
+    </ul>
+</nav>
+</html>

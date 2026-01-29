@@ -1,15 +1,16 @@
 package side.onetime.auth.exception;
 
+import java.io.IOException;
+
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.stereotype.Component;
 import side.onetime.global.common.status.ErrorStatus;
-
-import java.io.IOException;
 
 @Slf4j
 @Component
@@ -27,6 +28,15 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
         log.error("❌ 인증되지 않은 접근 - 요청 URI: {}, 메서드: {}", request.getRequestURI(), request.getMethod());
 
+        String requestUri = request.getRequestURI();
+
+        // Admin page requests -> redirect to login page
+        if (requestUri.startsWith("/admin")) {
+            response.sendRedirect("/admin/login");
+            return;
+        }
+
+        // API requests -> return JSON error response
         ErrorStatus status = ErrorStatus._UNAUTHORIZED;
 
         response.setStatus(status.getHttpStatus().value());

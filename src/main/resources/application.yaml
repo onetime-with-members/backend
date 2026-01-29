@@ -39,6 +39,9 @@ spring:
         static: ap-northeast-2
       s3:
         bucket: ${S3_BUCKET_NAME}
+      ses:
+        region: ${AWS_SES_REGION:ap-northeast-2}
+        from-email: ${AWS_SES_FROM_EMAIL:noreply@onetime.com}
 
 jwt:
   secret: ${JWT_SECRET}

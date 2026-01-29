@@ -1,0 +1,225 @@
+/* OneTime Admin Custom Styles */
+
+/* Card styling */
+.card {
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    background-color: transparent;
+}
+
+/* Chart containers */
+.chart-area {
+    position: relative;
+    height: 300px;
+}
+
+.chart-pie {
+    position: relative;
+    height: 250px;
+}
+
+.chart-bar {
+    position: relative;
+    height: 300px;
+}
+
+/* Table styling */
+.table-responsive {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Summary cards */
+.summary-card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.summary-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Sidebar branding */
+.sidebar-brand-icon {
+    font-size: 1.5rem;
+}
+
+/* Loading state */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Stats number formatting */
+.stats-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+/* Badge styling */
+.badge-stat {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+}
+
+/* ==================== Dark Mode ==================== */
+body.dark-mode {
+    background-color: #1a1a2e !important;
+}
+
+body.dark-mode #wrapper {
+    background-color: #1a1a2e;
+}
+
+body.dark-mode #content-wrapper {
+    background-color: #1a1a2e;
+}
+
+body.dark-mode #content {
+    background-color: #1a1a2e;
+}
+
+body.dark-mode .topbar {
+    background-color: #16213e !important;
+}
+
+body.dark-mode .sidebar {
+    background: linear-gradient(180deg, #0f3460 10%, #16213e 100%) !important;
+}
+
+body.dark-mode .card {
+    background-color: #16213e;
+    border-color: #0f3460;
+}
+
+body.dark-mode .card-header {
+    background-color: #0f3460;
+    border-bottom-color: #1a1a2e;
+}
+
+body.dark-mode .table {
+    color: #e4e4e4;
+}
+
+body.dark-mode .table-bordered {
+    border-color: #0f3460;
+}
+
+body.dark-mode .table-bordered th,
+body.dark-mode .table-bordered td {
+    border-color: #0f3460;
+}
+
+body.dark-mode .table thead th {
+    background-color: #0f3460;
+    color: #e4e4e4;
+}
+
+body.dark-mode .text-gray-800 {
+    color: #e4e4e4 !important;
+}
+
+body.dark-mode .text-gray-600 {
+    color: #b4b4b4 !important;
+}
+
+body.dark-mode .text-gray-400 {
+    color: #888 !important;
+}
+
+body.dark-mode .bg-white {
+    background-color: #16213e !important;
+}
+
+body.dark-mode .bg-light {
+    background-color: #0f3460 !important;
+}
+
+body.dark-mode .dropdown-menu {
+    background-color: #16213e;
+    border-color: #0f3460;
+}
+
+body.dark-mode .dropdown-item {
+    color: #e4e4e4;
+}
+
+body.dark-mode .dropdown-item:hover {
+    background-color: #0f3460;
+}
+
+body.dark-mode .alert-info {
+    background-color: #0f3460;
+    border-color: #16213e;
+    color: #e4e4e4;
+}
+
+body.dark-mode .form-control {
+    background-color: #0f3460;
+    border-color: #1a1a2e;
+    color: #e4e4e4;
+}
+
+body.dark-mode .form-control:focus {
+    background-color: #16213e;
+    color: #e4e4e4;
+}
+
+body.dark-mode .modal-content {
+    background-color: #16213e;
+    color: #e4e4e4;
+}
+
+body.dark-mode .modal-header,
+body.dark-mode .modal-footer {
+    border-color: #0f3460;
+}
+
+body.dark-mode .nav-tabs .nav-link {
+    color: #b4b4b4;
+}
+
+body.dark-mode .nav-tabs .nav-link.active {
+    background-color: #16213e;
+    border-color: #0f3460;
+    color: #e4e4e4;
+}
+
+body.dark-mode .progress {
+    background-color: #0f3460;
+}
+
+body.dark-mode .footer {
+    background-color: #16213e;
+}
+
+/* Dark mode toggle button */
+.dark-mode-toggle {
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.dark-mode-toggle:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .dark-mode-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Clickable table rows */
+tr[onclick] {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+tr[onclick]:hover {
+    background-color: rgba(78, 115, 223, 0.1) !important;
+}
+
+body.dark-mode tr[onclick]:hover {
+    background-color: rgba(78, 115, 223, 0.2) !important;
+}

@@ -1,23 +1,26 @@
 package side.onetime.global.filter;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.util.Arrays;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import side.onetime.auth.service.CustomAdminDetailsService;
 import side.onetime.auth.service.CustomUserDetailsService;
 import side.onetime.exception.CustomException;
 import side.onetime.util.JwtUtil;
-
-import java.io.IOException;
 
 @Slf4j
 @Component
@@ -46,14 +49,29 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
+        String token = null;
+
+        // 1. Check Authorization header first (for API requests)
         String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = jwtUtil.getTokenFromHeader(authorizationHeader);
+        }
+
+        // 2. Check cookie for admin pages
+        if (token == null && request.getCookies() != null) {
+            token = Arrays.stream(request.getCookies())
+                    .filter(c -> "admin_token".equals(c.getName()))
+                    .findFirst()
+                    .map(Cookie::getValue)
+                    .orElse(null);
+        }
+
+        if (token == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
-            String token = jwtUtil.getTokenFromHeader(authorizationHeader);
             jwtUtil.validateToken(token);
 
             String userType = jwtUtil.getClaimFromToken(token, "userType", String.class);
@@ -102,7 +120,11 @@ public class JwtFilter extends OncePerRequestFilter {
                 path.startsWith("/v3/api-docs") ||
                 path.startsWith("/favicon.ico") ||
                 path.equals("/api/v1/tokens/action-reissue") ||
-                path.equals("/api/v1/users/logout");
+                path.equals("/api/v1/users/logout") ||
+                path.equals("/admin/login") ||
+                path.startsWith("/admin/css") ||
+                path.startsWith("/admin/js") ||
+                path.startsWith("/admin/vendor");
     }
 
     /**
