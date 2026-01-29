@@ -1,7 +1,11 @@
 package side.onetime.controller;
 
+import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,19 +13,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Hidden;
-import java.util.List;
-
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import side.onetime.dto.admin.email.response.UserSearchResult;
 import side.onetime.dto.admin.response.GetAllDashboardEventsResponse;
 import side.onetime.dto.admin.response.GetAllDashboardUsersResponse;
-import java.time.LocalDate;
-
-import org.springframework.format.annotation.DateTimeFormat;
-
 import side.onetime.dto.admin.statistics.response.CohortRetentionResponse;
+import side.onetime.dto.admin.statistics.response.EventEngagementDetailsResponse;
 import side.onetime.dto.admin.statistics.response.EventEngagementResponse;
 import side.onetime.dto.admin.statistics.response.FunnelAnalysisResponse;
 import side.onetime.dto.admin.statistics.response.MarketingTargetDetailResponse;
@@ -202,9 +201,8 @@ public class AdminStatisticsApiController {
     // ==================== Event Engagement ====================
 
     /**
-     * 이벤트 참여 통계
-     * - 이벤트 완료율, 참여자 응답률, 평균 응답 시간
-     * - 멤버 수 분포, 익명 vs 회원 비율, 이벤트 삭제율
+     * 이벤트 참여 기본 통계 (빠름)
+     * - 이벤트 완료율, 참여자 응답률, 익명 vs 회원 비율, 이벤트 삭제율
      */
     @GetMapping("/engagement")
     public ResponseEntity<ApiResponse<EventEngagementResponse>> getEventEngagement(
@@ -212,6 +210,19 @@ public class AdminStatisticsApiController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
         LocalDate[] dates = DateUtil.resolveDateRange(startDate, endDate);
         EventEngagementResponse response = statisticsService.getEventEngagement(dates[0], dates[1]);
+        return ApiResponse.onSuccess(SuccessStatus._GET_EVENT_ENGAGEMENT, response);
+    }
+
+    /**
+     * 이벤트 참여 상세 통계 (느림, 캐싱됨)
+     * - 평균 응답 시간, 멤버 수 분포
+     */
+    @GetMapping("/engagement/details")
+    public ResponseEntity<ApiResponse<EventEngagementDetailsResponse>> getEventEngagementDetails(
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
+        LocalDate[] dates = DateUtil.resolveDateRange(startDate, endDate);
+        EventEngagementDetailsResponse response = statisticsService.getEventEngagementDetails(dates[0], dates[1]);
         return ApiResponse.onSuccess(SuccessStatus._GET_EVENT_ENGAGEMENT, response);
     }
 

@@ -67,7 +67,7 @@
             </div>
         </div>
 
-        <!-- 평균 응답 시간 -->
+        <!-- 평균 응답 시간 (비동기 로드) -->
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-primary shadow h-100 py-2">
                 <div class="card-body">
@@ -79,10 +79,9 @@
                                    th:title="#{info.avgResponseTime}"></i>
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <span th:text="${data.avgResponseTimeHours + 'h'}">0h</span>
+                                <span id="avgResponseTime"><i class="fas fa-spinner fa-spin"></i></span>
                             </div>
-                            <small class="text-muted"
-                                   th:text="#{engagement.median} + ': ' + ${data.medianResponseTimeHours} + 'h'">Median: 0h</small>
+                            <small class="text-muted" id="medianResponseTime">Loading...</small>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-clock fa-2x text-gray-300"></i>
@@ -107,7 +106,7 @@
                                 <span th:text="${data.deletionRate + '%'}">0%</span>
                             </div>
                             <small class="text-muted"
-                                   th:text="${data.deletedEvents + ' ' + #{engagement.eventsDeleted}}">0 deleted</small>
+                                   th:text="|${data.deletedEvents} #{engagement.eventsDeleted}|">0 deleted</small>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-trash-alt fa-2x text-gray-300"></i>
@@ -120,15 +119,18 @@
 
     <!-- Charts Row -->
     <div class="row">
-        <!-- 멤버 수 분포 -->
+        <!-- 멤버 수 분포 (비동기 로드) -->
         <div class="col-xl-6 col-lg-6">
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-primary" th:text="#{engagement.memberDistribution}">Member Count Distribution</h6>
                 </div>
                 <div class="card-body">
-                    <div class="chart-bar">
-                        <canvas id="memberDistributionChart"></canvas>
+                    <div class="chart-bar" id="memberDistributionContainer">
+                        <div class="text-center py-5">
+                            <i class="fas fa-spinner fa-spin fa-2x text-gray-400"></i>
+                            <p class="mt-2 text-gray-500">Loading...</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -163,7 +165,7 @@
         </div>
     </div>
 
-    <!-- Member Distribution Table -->
+    <!-- Member Distribution Table (비동기 로드) -->
     <div class="card shadow mb-4">
         <div class="card-header py-3">
             <h6 class="m-0 font-weight-bold text-primary" th:text="#{engagement.memberDistributionDetail}">Member Distribution Detail</h6>
@@ -179,18 +181,10 @@
                             <th th:text="#{engagement.bar}">Distribution</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr th:each="bucket : ${data.memberCountDistribution}">
-                            <td th:text="${bucket.label}">0명</td>
-                            <td th:text="${#numbers.formatInteger(bucket.eventCount, 0, 'COMMA')}">0</td>
-                            <td th:text="${bucket.percentage + '%'}">0%</td>
-                            <td>
-                                <div class="progress">
-                                    <div class="progress-bar bg-info" role="progressbar"
-                                         th:style="'width: ' + ${bucket.percentage} + '%'"
-                                         th:attr="aria-valuenow=${bucket.percentage}"
-                                         aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
+                    <tbody id="memberDistributionTable">
+                        <tr>
+                            <td colspan="4" class="text-center py-4">
+                                <i class="fas fa-spinner fa-spin"></i> Loading...
                             </td>
                         </tr>
                     </tbody>
@@ -203,35 +197,15 @@
 <th:block layout:fragment="scripts">
 <script th:inline="javascript">
     /*<![CDATA[*/
-    const memberDistribution = /*[[${data.memberCountDistribution}]]*/ [];
     const anonymousCount = /*[[${data.anonymousParticipants}]]*/ 0;
     const registeredCount = /*[[${data.registeredParticipants}]]*/ 0;
+    const startDate = /*[[${startDate}]]*/ '';
+    const endDate = /*[[${endDate}]]*/ '';
+    const medianLabel = /*[[#{engagement.median}]]*/ 'Median';
 
-    // Member Distribution Bar Chart
-    new Chart(document.getElementById('memberDistributionChart'), {
-        type: 'bar',
-        data: {
-            labels: memberDistribution.map(b => b.label),
-            datasets: [{
-                label: '이벤트 수',
-                data: memberDistribution.map(b => b.eventCount),
-                backgroundColor: '#4e73df',
-                borderColor: '#4e73df',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            maintainAspectRatio: false,
-            scales: {
-                y: { beginAtZero: true }
-            },
-            plugins: {
-                legend: { display: false }
-            }
-        }
-    });
+    let memberDistributionChart = null;
 
-    // Participant Type Pie Chart
+    // Participant Type Pie Chart (기본 통계 - 즉시 로드)
     new Chart(document.getElementById('participantTypeChart'), {
         type: 'doughnut',
         data: {
@@ -250,6 +224,87 @@
                 legend: { display: false }
             }
         }
+    });
+
+    // 상세 통계 비동기 로드 (캐싱됨)
+    function loadEngagementDetails() {
+        const url = `/admin/api/statistics/engagement/details?startDate=${startDate}&endDate=${endDate}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.payload) {
+                    const details = data.payload;
+
+                    // 평균 응답 시간 업데이트
+                    document.getElementById('avgResponseTime').textContent = details.avgResponseTimeHours + 'h';
+                    document.getElementById('medianResponseTime').textContent = medianLabel + ': ' + details.medianResponseTimeHours + 'h';
+
+                    // 멤버 분포 차트 렌더링
+                    renderMemberDistributionChart(details.memberCountDistribution);
+
+                    // 멤버 분포 테이블 렌더링
+                    renderMemberDistributionTable(details.memberCountDistribution);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to load engagement details:', error);
+                document.getElementById('avgResponseTime').textContent = '-';
+                document.getElementById('medianResponseTime').textContent = 'Error';
+            });
+    }
+
+    function renderMemberDistributionChart(distribution) {
+        const container = document.getElementById('memberDistributionContainer');
+        container.innerHTML = '<canvas id="memberDistributionChart"></canvas>';
+
+        memberDistributionChart = new Chart(document.getElementById('memberDistributionChart'), {
+            type: 'bar',
+            data: {
+                labels: distribution.map(b => b.label),
+                datasets: [{
+                    label: '이벤트 수',
+                    data: distribution.map(b => b.eventCount),
+                    backgroundColor: '#4e73df',
+                    borderColor: '#4e73df',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+
+    function renderMemberDistributionTable(distribution) {
+        const tbody = document.getElementById('memberDistributionTable');
+        tbody.innerHTML = distribution.map(bucket => `
+            <tr>
+                <td>${bucket.label}</td>
+                <td>${bucket.eventCount.toLocaleString()}</td>
+                <td>${bucket.percentage}%</td>
+                <td>
+                    <div class="progress">
+                        <div class="progress-bar bg-info" role="progressbar"
+                             style="width: ${bucket.percentage}%"
+                             aria-valuenow="${bucket.percentage}"
+                             aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // 페이지 로드 후 상세 통계 비동기 로드 + tooltip 초기화
+    $(function() {
+        $('[data-toggle="tooltip"]').tooltip();
+        loadEngagementDetails();
     });
     /*]]>*/
 </script>

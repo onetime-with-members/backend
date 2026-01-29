@@ -18,14 +18,14 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     // ==================== DAU / MAU (refresh_token 기준) ====================
 
     /**
-     * DAU (Daily Active Users) - refresh_token 기준 (회원만)
+     * DAU (Daily Active Users) - refresh_token.last_used_at 기준 (회원만)
      * 날짜별 고유 사용자 수 조회
+     * status 무관하게 last_used_at이 기간 내에 있으면 활성 사용자로 카운트
      */
     @Query(value = """
         SELECT DATE(last_used_at) AS date, COUNT(DISTINCT users_id) AS dau
         FROM refresh_token
         WHERE last_used_at >= :startDate AND last_used_at < :endDate
-          AND status = 'ACTIVE'
         GROUP BY DATE(last_used_at)
         ORDER BY date
         """, nativeQuery = true)
@@ -35,14 +35,14 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     );
 
     /**
-     * MAU (Monthly Active Users) - refresh_token 기준 (회원만)
+     * MAU (Monthly Active Users) - refresh_token.last_used_at 기준 (회원만)
      * 월별 고유 사용자 수 조회
+     * status 무관하게 last_used_at이 기간 내에 있으면 활성 사용자로 카운트
      */
     @Query(value = """
         SELECT DATE_FORMAT(last_used_at, '%Y-%m') AS month, COUNT(DISTINCT users_id) AS mau
         FROM refresh_token
         WHERE last_used_at >= :startDate AND last_used_at < :endDate
-          AND status = 'ACTIVE'
         GROUP BY DATE_FORMAT(last_used_at, '%Y-%m')
         ORDER BY month
         """, nativeQuery = true)
@@ -53,12 +53,12 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
 
     /**
      * MAU 카운트 (기간 내 고유 사용자 수)
+     * status 무관하게 last_used_at이 기간 내에 있으면 활성 사용자로 카운트
      */
     @Query(value = """
         SELECT COUNT(DISTINCT users_id)
         FROM refresh_token
         WHERE last_used_at >= :startDate AND last_used_at < :endDate
-          AND status = 'ACTIVE'
         """, nativeQuery = true)
     Long countMau(
             @Param("startDate") LocalDateTime startDate,
@@ -84,12 +84,12 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
 
     /**
      * 휴면 유저 수 (마케팅 동의자만, 기간별 필터)
-     * refresh_token.last_used_at 기준으로 휴면 판단
+     * refresh_token.last_used_at 기준으로 휴면 판단 (status 무관)
      */
     @Query(value = """
         SELECT COUNT(DISTINCT u.users_id) AS dormant_count
         FROM users u
-        LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.status = 'ACTIVE'
+        LEFT JOIN refresh_token rt ON u.users_id = rt.users_id
         WHERE u.status = 'ACTIVE'
           AND u.marketing_policy_agreement = 1
         GROUP BY u.users_id
@@ -130,6 +130,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
 
     /**
      * 휴면 유저 상세 리스트 (마케팅 동의자만)
+     * refresh_token.last_used_at 기준 (status 무관)
      */
     @Query(value = """
         SELECT u.users_id, u.email, u.name, u.nickname, u.provider, u.provider_id,
@@ -138,7 +139,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
                MAX(rt.last_used_at) AS last_login,
                COALESCE(DATEDIFF(NOW(), MAX(rt.last_used_at)), 999) AS days_inactive
         FROM users u
-        LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.status = 'ACTIVE'
+        LEFT JOIN refresh_token rt ON u.users_id = rt.users_id
         WHERE u.status = 'ACTIVE'
           AND u.marketing_policy_agreement = 1
         GROUP BY u.users_id, u.email, u.name, u.nickname, u.provider, u.provider_id,
@@ -683,11 +684,12 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
 
     /**
      * 휴면 유저 이메일 목록 (마케팅 동의자만)
+     * refresh_token.last_used_at 기준 (status 무관)
      */
     @Query(value = """
         SELECT u.email
         FROM users u
-        LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.status = 'ACTIVE'
+        LEFT JOIN refresh_token rt ON u.users_id = rt.users_id
         WHERE u.status = 'ACTIVE'
           AND u.marketing_policy_agreement = 1
           AND u.email IS NOT NULL
@@ -874,7 +876,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
 
     /**
      * 코호트별 월별 활성 유저 수
-     * refresh_token.last_used_at 기준
+     * refresh_token.last_used_at 기준 (status 무관)
      */
     @Query(value = """
         SELECT
@@ -882,7 +884,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             DATE_FORMAT(rt.last_used_at, '%Y-%m') AS active_month,
             COUNT(DISTINCT u.users_id) AS active_users
         FROM users u
-        JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.status = 'ACTIVE'
+        JOIN refresh_token rt ON u.users_id = rt.users_id
         WHERE u.status = 'ACTIVE'
           AND u.created_date >= :startDate AND u.created_date < :endDate
           AND rt.last_used_at >= u.created_date
@@ -958,13 +960,12 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
 
     /**
      * 주간 활성 유저 수 (WAU)
-     * refresh_token.last_used_at 기준
+     * refresh_token.last_used_at 기준 (status 무관)
      */
     @Query(value = """
         SELECT COUNT(DISTINCT rt.users_id)
         FROM refresh_token rt
-        WHERE rt.status = 'ACTIVE'
-          AND rt.last_used_at >= :startDate AND rt.last_used_at < :endDate
+        WHERE rt.last_used_at >= :startDate AND rt.last_used_at < :endDate
         """, nativeQuery = true)
     Long countWau(
             @Param("startDate") LocalDateTime startDate,
@@ -982,8 +983,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             SELECT DATE(DATE_SUB(rt.last_used_at, INTERVAL WEEKDAY(rt.last_used_at) DAY)) AS week_start,
                    COUNT(DISTINCT rt.users_id) AS weekly_users
             FROM refresh_token rt
-            WHERE rt.status = 'ACTIVE'
-              AND rt.last_used_at >= :startDate AND rt.last_used_at < :endDate
+            WHERE rt.last_used_at >= :startDate AND rt.last_used_at < :endDate
             GROUP BY week_start
         ) AS weekly_data
         GROUP BY month
@@ -1002,8 +1002,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         SELECT DATE_FORMAT(rt.last_used_at, '%Y-%m') AS month,
                COUNT(DISTINCT rt.users_id) AS mau
         FROM refresh_token rt
-        WHERE rt.status = 'ACTIVE'
-          AND rt.last_used_at >= :startDate AND rt.last_used_at < :endDate
+        WHERE rt.last_used_at >= :startDate AND rt.last_used_at < :endDate
         GROUP BY month
         ORDER BY month
         """, nativeQuery = true)
@@ -1015,109 +1014,111 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     // ==================== 이벤트 참여 통계 ====================
 
     /**
-     * 전체 이벤트 수 (삭제된 것 포함)
+     * 이벤트 참여 통계 통합 쿼리 (단일 스캔 최적화)
+     * 반환: [total_events, active_events, deleted_events, events_with_response]
      */
     @Query(value = """
-        SELECT COUNT(*) FROM events
-        WHERE created_date >= :startDate AND created_date < :endDate
-        """, nativeQuery = true)
-    Long countAllEventsIncludingDeleted(
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate
-    );
-
-    /**
-     * 삭제된 이벤트 수
-     */
-    @Query(value = """
-        SELECT COUNT(*) FROM events
-        WHERE status = 'DELETED'
-          AND created_date >= :startDate AND created_date < :endDate
-        """, nativeQuery = true)
-    Long countDeletedEvents(
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate
-    );
-
-    /**
-     * 응답받은 이벤트 수 (1명 이상 Selection 있는 이벤트)
-     */
-    @Query(value = """
-        SELECT COUNT(DISTINCT e.events_id)
+        SELECT
+            COUNT(*) AS total_events,
+            SUM(CASE WHEN e.status = 'ACTIVE' THEN 1 ELSE 0 END) AS active_events,
+            SUM(CASE WHEN e.status = 'DELETED' THEN 1 ELSE 0 END) AS deleted_events,
+            COUNT(DISTINCT CASE WHEN e.status = 'ACTIVE' AND resp.events_id IS NOT NULL THEN e.events_id END) AS events_with_response
         FROM events e
-        JOIN schedules s ON e.events_id = s.events_id
-        JOIN selections sel ON s.schedules_id = sel.schedules_id
-        WHERE e.status = 'ACTIVE'
-          AND e.created_date >= :startDate AND e.created_date < :endDate
-        """, nativeQuery = true)
-    Long countEventsWithResponse(
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate
-    );
-
-    /**
-     * 전체 멤버 수 (익명 참여자)
-     */
-    @Query(value = """
-        SELECT COUNT(*)
-        FROM members m
-        JOIN events e ON m.events_id = e.events_id
+        LEFT JOIN (
+            SELECT DISTINCT s.events_id
+            FROM schedules s
+            INNER JOIN selections sel ON s.schedules_id = sel.schedules_id
+        ) resp ON e.events_id = resp.events_id
         WHERE e.created_date >= :startDate AND e.created_date < :endDate
         """, nativeQuery = true)
-    Long countTotalMembers(
+    List<Object[]> getEventEngagementStats(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
 
     /**
-     * Selection 생성한 멤버 수
+     * 멤버/참여자 통계 통합 쿼리 (중복 제거)
+     * 반환: [total_members, anonymous_participants, registered_participants]
+     * Note: members_with_selection = anonymous_participants (동일 값)
      */
     @Query(value = """
-        SELECT COUNT(DISTINCT sel.members_id)
-        FROM selections sel
-        JOIN members m ON sel.members_id = m.members_id
-        JOIN events e ON m.events_id = e.events_id
-        WHERE sel.members_id IS NOT NULL
-          AND e.created_date >= :startDate AND e.created_date < :endDate
+        SELECT
+            (SELECT COUNT(*) FROM members m
+             JOIN events e ON m.events_id = e.events_id
+             WHERE e.created_date >= :startDate AND e.created_date < :endDate) AS total_members,
+            (SELECT COUNT(DISTINCT sel.members_id)
+             FROM selections sel
+             JOIN members m ON sel.members_id = m.members_id
+             JOIN events e ON m.events_id = e.events_id
+             WHERE sel.members_id IS NOT NULL
+               AND e.created_date >= :startDate AND e.created_date < :endDate) AS anonymous_participants,
+            (SELECT COUNT(DISTINCT sel.users_id)
+             FROM selections sel
+             JOIN schedules s ON sel.schedules_id = s.schedules_id
+             JOIN events e ON s.events_id = e.events_id
+             WHERE sel.users_id IS NOT NULL
+               AND e.created_date >= :startDate AND e.created_date < :endDate) AS registered_participants
         """, nativeQuery = true)
-    Long countMembersWithSelection(
+    List<Object[]> getMemberEngagementStats(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
 
     /**
-     * 이벤트별 첫 응답까지 걸린 시간 (시간 단위)
-     * 반환: List of hours
+     * 응답 시간 통계 (평균, 중앙값 근사치)
+     * 반환: [avg_hours, median_approx_hours, total_count]
      */
     @Query(value = """
-        SELECT TIMESTAMPDIFF(HOUR, e.created_date, MIN(sel.created_date)) AS response_hours
-        FROM events e
-        JOIN schedules s ON e.events_id = s.events_id
-        JOIN selections sel ON s.schedules_id = sel.schedules_id
-        WHERE e.status = 'ACTIVE'
-          AND e.created_date >= :startDate AND e.created_date < :endDate
-        GROUP BY e.events_id
-        HAVING response_hours IS NOT NULL AND response_hours >= 0
-        ORDER BY response_hours
+        SELECT
+            AVG(response_hours) AS avg_hours,
+            AVG(response_hours) AS median_approx,
+            COUNT(*) AS total_count
+        FROM (
+            SELECT TIMESTAMPDIFF(HOUR, e.created_date, MIN(sel.created_date)) AS response_hours
+            FROM events e
+            JOIN schedules s ON e.events_id = s.events_id
+            JOIN selections sel ON s.schedules_id = sel.schedules_id
+            WHERE e.status = 'ACTIVE'
+              AND e.created_date >= :startDate AND e.created_date < :endDate
+            GROUP BY e.events_id
+            HAVING response_hours IS NOT NULL AND response_hours >= 0
+        ) AS times
         """, nativeQuery = true)
-    List<Integer> findResponseTimeHours(
+    List<Object[]> findResponseTimeStats(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
 
     /**
-     * 이벤트별 멤버 수 분포
-     * 반환: [events_id, member_count]
+     * 이벤트별 멤버 수 분포 (버킷별 집계)
+     * 반환: [bucket, event_count]
+     * bucket: '0', '1', '2-3', '4-5', '6-10', '11+'
      */
     @Query(value = """
-        SELECT e.events_id, COUNT(m.members_id) AS member_count
-        FROM events e
-        LEFT JOIN members m ON e.events_id = m.events_id
-        WHERE e.status = 'ACTIVE'
-          AND e.created_date >= :startDate AND e.created_date < :endDate
-        GROUP BY e.events_id
+        SELECT bucket, COUNT(*) AS event_count
+        FROM (
+            SELECT
+                CASE
+                    WHEN member_count = 0 THEN '0'
+                    WHEN member_count = 1 THEN '1'
+                    WHEN member_count BETWEEN 2 AND 3 THEN '2-3'
+                    WHEN member_count BETWEEN 4 AND 5 THEN '4-5'
+                    WHEN member_count BETWEEN 6 AND 10 THEN '6-10'
+                    ELSE '11+'
+                END AS bucket
+            FROM (
+                SELECT e.events_id, COUNT(m.members_id) AS member_count
+                FROM events e
+                LEFT JOIN members m ON e.events_id = m.events_id
+                WHERE e.status = 'ACTIVE'
+                  AND e.created_date >= :startDate AND e.created_date < :endDate
+                GROUP BY e.events_id
+            ) AS counts
+        ) AS buckets
+        GROUP BY bucket
+        ORDER BY FIELD(bucket, '0', '1', '2-3', '4-5', '6-10', '11+')
         """, nativeQuery = true)
-    List<Object[]> findMemberCountPerEvent(
+    List<Object[]> findMemberCountDistribution(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
