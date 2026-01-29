@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout/default}">
+<head>
+    <title th:text="#{email.pageTitle} + ' - ' + #{admin.title}">Send Email - OneTime Admin</title>
+    <style>
+        .selected-user-chip {
+            display: inline-flex;
+            align-items: center;
+            background-color: #e3e6f0;
+            border-radius: 16px;
+            padding: 4px 12px;
+            margin: 2px 4px;
+            font-size: 0.8rem;
+        }
+        .selected-user-chip .remove-btn {
+            margin-left: 6px;
+            cursor: pointer;
+            color: #e74a3b;
+            font-weight: bold;
+        }
+        .search-result-table {
+            font-size: 0.85rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .search-result-table td, .search-result-table th {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800" th:text="#{email.pageTitle}">Send Email</h1>
+    </div>
+
+    <!-- Info -->
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="fas fa-info-circle mr-2"></i>
+        <span th:text="#{email.awsNote}">Emails are sent via AWS SES</span>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" id="emailTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="group-tab" data-toggle="tab" href="#groupSend" role="tab">
+                <i class="fas fa-users mr-1"></i>
+                <span th:text="#{email.tabGroup}">Group Send</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="individual-tab" data-toggle="tab" href="#individualSend" role="tab">
+                <i class="fas fa-user mr-1"></i>
+                <span th:text="#{email.tabIndividual}">Individual Send</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="emailTabContent">
+
+        <!-- Tab 1: Group Send -->
+        <div class="tab-pane fade show active" id="groupSend" role="tabpanel">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-users mr-2"></i>
+                        <span th:text="#{email.tabGroup}">Group Send</span>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="groupTargetGroup" th:text="#{email.targetGroup}">Target Group</label>
+                                <select id="groupTargetGroup" class="form-control">
+                                    <option value="">-- Select --</option>
+                                    <option value="agreed" th:text="#{marketing.agreedUsers}">Marketing Agreed</option>
+                                    <option value="dormant" th:text="#{marketing.dormantUsers}">Dormant Users</option>
+                                    <option value="noEvent" th:text="#{marketing.noEventUsers}">No Event Users</option>
+                                    <option value="oneTime" th:text="#{marketing.oneTimeUsers}">One-time Users</option>
+                                    <option value="vip" th:text="#{marketing.vipUsers}">VIP Users</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="groupLimit" th:text="#{email.limit}">Max Recipients</label>
+                                <input type="number" id="groupLimit" class="form-control" value="100" min="1" max="1000">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="groupSubject" th:text="#{email.subject}">Subject</label>
+                                <input type="text" id="groupSubject" class="form-control" placeholder="Email subject...">
+                            </div>
+                            <div class="form-group">
+                                <label for="groupContentType" th:text="#{email.contentType}">Content Type</label>
+                                <select id="groupContentType" class="form-control">
+                                    <option value="TEXT">TEXT</option>
+                                    <option value="HTML">HTML</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label th:text="#{email.content}">Content</label>
+                        <div class="mb-2">
+                            <small class="text-muted">Templates: </small>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadTemplate('welcome')">Welcome</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadTemplate('dormant')">Re-engagement</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadTemplate('vip')">VIP Thanks</button>
+                        </div>
+                        <textarea id="groupContent" class="form-control" rows="6" placeholder="Email content..."></textarea>
+                    </div>
+                    <div class="text-right">
+                        <button type="button" class="btn btn-primary" id="btnGroupSend">
+                            <i class="fas fa-paper-plane mr-1"></i>
+                            <span th:text="#{email.send}">Send Email</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Individual Send -->
+        <div class="tab-pane fade" id="individualSend" role="tabpanel">
+            <div class="row">
+                <!-- Left: User Search -->
+                <div class="col-lg-5">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-search mr-2"></i>
+                                <span th:text="#{email.searchUser}">Search User</span>
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="input-group mb-3">
+                                <input type="text" id="userSearchInput" class="form-control"
+                                       th:placeholder="#{email.searchPlaceholder}" placeholder="Name or email...">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-primary" type="button" id="btnSearchUser">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="searchLoading" class="text-center py-3" style="display: none;">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                            <div class="search-result-table">
+                                <table class="table table-bordered table-hover" style="font-size: 0.85rem;">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 30px;"></th>
+                                            <th th:text="#{table.name}">Name</th>
+                                            <th th:text="#{table.email}">Email</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="searchResultBody">
+                                        <tr>
+                                            <td colspan="3" class="text-center text-muted"
+                                                th:text="#{email.searchGuide}">Search for users above</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Email Compose -->
+                <div class="col-lg-7">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-envelope mr-2"></i>
+                                <span th:text="#{email.compose}">Compose</span>
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <!-- Selected Users -->
+                            <div class="form-group">
+                                <label th:text="#{email.selectedUsers}">Selected Users</label>
+                                <div id="selectedUsersArea" class="border rounded p-2" style="min-height: 40px;">
+                                    <span class="text-muted small" id="noSelectedText"
+                                          th:text="#{email.noSelected}">No users selected</span>
+                                </div>
+                                <small class="text-muted">
+                                    <span th:text="#{email.selectedCount}">Selected</span>:
+                                    <strong id="selectedCount">0</strong>
+                                </small>
+                            </div>
+                            <div class="form-group">
+                                <label for="indSubject" th:text="#{email.subject}">Subject</label>
+                                <input type="text" id="indSubject" class="form-control" placeholder="Email subject...">
+                            </div>
+                            <div class="form-group">
+                                <label for="indContentType" th:text="#{email.contentType}">Content Type</label>
+                                <select id="indContentType" class="form-control">
+                                    <option value="TEXT">TEXT</option>
+                                    <option value="HTML">HTML</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label th:text="#{email.content}">Content</label>
+                                <div class="mb-2">
+                                    <small class="text-muted">Templates: </small>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadTemplate('welcome')">Welcome</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadTemplate('dormant')">Re-engagement</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadTemplate('vip')">VIP Thanks</button>
+                                </div>
+                                <textarea id="indContent" class="form-control" rows="6" placeholder="Email content..."></textarea>
+                            </div>
+                            <div class="text-right">
+                                <button type="button" class="btn btn-primary" id="btnIndividualSend">
+                                    <i class="fas fa-paper-plane mr-1"></i>
+                                    <span th:text="#{email.send}">Send Email</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script th:inline="javascript">
+    // ==================== Selected Users State ====================
+    const selectedUsers = new Map(); // email -> {name, email}
+
+    function updateSelectedUI() {
+        const area = $('#selectedUsersArea');
+        const count = selectedUsers.size;
+        $('#selectedCount').text(count);
+
+        if (count === 0) {
+            area.html('<span class="text-muted small" id="noSelectedText">' +
+                /*[[#{email.noSelected}]]*/ 'No users selected' + '</span>');
+        } else {
+            let chips = '';
+            selectedUsers.forEach((user, email) => {
+                chips += `<span class="selected-user-chip">
+                    ${user.name || email}
+                    <span class="remove-btn" onclick="removeUser('${email}')">&times;</span>
+                </span>`;
+            });
+            area.html(chips);
+        }
+
+        // Update checkboxes
+        $('input.user-checkbox').each(function() {
+            $(this).prop('checked', selectedUsers.has($(this).data('email')));
+        });
+    }
+
+    function addUser(email, name) {
+        selectedUsers.set(email, { name: name, email: email });
+        updateSelectedUI();
+    }
+
+    function removeUser(email) {
+        selectedUsers.delete(email);
+        updateSelectedUI();
+    }
+
+    function toggleUser(email, name) {
+        if (selectedUsers.has(email)) {
+            removeUser(email);
+        } else {
+            addUser(email, name);
+        }
+    }
+
+    // ==================== User Search ====================
+    let searchTimeout = null;
+
+    function searchUsers(query) {
+        if (!query || query.trim().length < 1) return;
+
+        $('#searchLoading').show();
+
+        fetch(`/admin/api/statistics/users/search?query=${encodeURIComponent(query.trim())}&limit=20`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    renderSearchResults(data.payload);
+                }
+            })
+            .catch(error => console.error('Error:', error))
+            .finally(() => $('#searchLoading').hide());
+    }
+
+    function renderSearchResults(users) {
+        let tbody = '';
+        if (!users || users.length === 0) {
+            tbody = '<tr><td colspan="3" class="text-center text-muted">' +
+                /*[[#{email.noResults}]]*/ 'No results found' + '</td></tr>';
+        } else {
+            users.forEach(user => {
+                const checked = selectedUsers.has(user.email) ? 'checked' : '';
+                tbody += `
+                    <tr style="cursor: pointer;" onclick="toggleUser('${user.email}', '${user.name || ''}')">
+                        <td class="text-center">
+                            <input type="checkbox" class="user-checkbox"
+                                   data-email="${user.email}" ${checked}
+                                   onclick="event.stopPropagation(); toggleUser('${user.email}', '${user.name || ''}')">
+                        </td>
+                        <td>${user.name || '-'}</td>
+                        <td>${user.email || '-'}</td>
+                    </tr>
+                `;
+            });
+        }
+        $('#searchResultBody').html(tbody);
+    }
+
+    // Search on Enter or button click
+    $('#userSearchInput').on('keyup', function(e) {
+        clearTimeout(searchTimeout);
+        if (e.key === 'Enter') {
+            searchUsers($(this).val());
+        } else {
+            searchTimeout = setTimeout(() => searchUsers($(this).val()), 500);
+        }
+    });
+
+    $('#btnSearchUser').on('click', function() {
+        searchUsers($('#userSearchInput').val());
+    });
+
+    // ==================== Group Send ====================
+    $('#btnGroupSend').on('click', function() {
+        const targetGroup = $('#groupTargetGroup').val();
+        const subject = $('#groupSubject').val().trim();
+        const content = $('#groupContent').val().trim();
+        const contentType = $('#groupContentType').val();
+        const limit = parseInt($('#groupLimit').val()) || 100;
+
+        if (!targetGroup) { alert('Please select a target group'); return; }
+        if (!subject) { alert('Please enter a subject'); return; }
+        if (!content) { alert('Please enter content'); return; }
+
+        if (!confirm(`Send email to "${targetGroup}" group (max ${limit} recipients)?`)) return;
+
+        const btn = $(this);
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Sending...');
+
+        fetch('/admin/api/email/send-to-group', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ targetGroup, subject, content, contentType, limit })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.is_success && data.payload) {
+                const r = data.payload;
+                alert(`Success: ${r.sentCount}\nFailed: ${r.failedCount}`);
+            } else {
+                alert('Failed: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => { console.error(error); alert('Failed to send email'); })
+        .finally(() => {
+            btn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> ' +
+                /*[[#{email.send}]]*/ 'Send Email');
+        });
+    });
+
+    // ==================== Individual Send ====================
+    $('#btnIndividualSend').on('click', function() {
+        if (selectedUsers.size === 0) { alert('Please select users'); return; }
+
+        const subject = $('#indSubject').val().trim();
+        const content = $('#indContent').val().trim();
+        const contentType = $('#indContentType').val();
+
+        if (!subject) { alert('Please enter a subject'); return; }
+        if (!content) { alert('Please enter content'); return; }
+
+        const emails = Array.from(selectedUsers.keys());
+        if (!confirm(`Send email to ${emails.length} user(s)?`)) return;
+
+        const btn = $(this);
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Sending...');
+
+        fetch('/admin/api/email/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ to: emails, subject, content, contentType })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.is_success && data.payload) {
+                const r = data.payload;
+                alert(`Success: ${r.sentCount}\nFailed: ${r.failedCount}`);
+                if (r.success) {
+                    selectedUsers.clear();
+                    updateSelectedUI();
+                }
+            } else {
+                alert('Failed: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => { console.error(error); alert('Failed to send email'); })
+        .finally(() => {
+            btn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> ' +
+                /*[[#{email.send}]]*/ 'Send Email');
+        });
+    });
+
+    // ==================== Email Templates ====================
+    const emailTemplates = {
+        welcome: {
+            subject: '[OneTime] 회원 가입을 환영합니다!',
+            content: `안녕하세요!
+
+OneTime에 가입해 주셔서 감사합니다.
+
+OneTime과 함께 일정 조율을 더 쉽게 해보세요!
+
+이벤트를 만들고 친구들과 공유하면, 모두가 가능한 시간을 쉽게 찾을 수 있어요.
+
+지금 바로 첫 이벤트를 만들어 보세요!
+
+감사합니다.
+OneTime 팀`
+        },
+        dormant: {
+            subject: '[OneTime] 오랜만이에요! 다시 만나요 👋',
+            content: `안녕하세요!
+
+최근 OneTime을 방문하지 않으셨네요.
+저희는 항상 여러분을 기다리고 있어요!
+
+새로운 기능들이 많이 추가되었답니다:
+- 더 빠른 일정 조율
+- 개선된 UI/UX
+- 새로운 알림 기능
+
+지금 돌아와서 확인해 보세요!
+
+감사합니다.
+OneTime 팀`
+        },
+        vip: {
+            subject: '[OneTime] VIP 고객님께 감사 인사드립니다 🌟',
+            content: `안녕하세요, 소중한 고객님!
+
+OneTime을 꾸준히 이용해 주셔서 진심으로 감사드립니다.
+
+고객님 같은 분들 덕분에 저희 서비스가 성장할 수 있었어요.
+
+앞으로도 더 좋은 서비스로 보답하겠습니다.
+
+항상 감사드립니다.
+OneTime 팀`
+        }
+    };
+
+    function loadTemplate(templateName) {
+        const template = emailTemplates[templateName];
+        if (template) {
+            // Check which tab is active
+            if ($('#groupSend').hasClass('active')) {
+                $('#groupSubject').val(template.subject);
+                $('#groupContent').val(template.content);
+            } else {
+                $('#indSubject').val(template.subject);
+                $('#indContent').val(template.content);
+            }
+        }
+    }
+
+    // Initialize
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+</script>
+</th:block>
+</body>
+</html>
