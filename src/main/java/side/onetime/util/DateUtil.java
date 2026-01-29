@@ -186,4 +186,34 @@ public class  DateUtil {
 
         return updatedTime.toString().equals("00:00") ? "24:00" : updatedTime.toString();
     }
+
+    /**
+     * 날짜 범위 기본값 처리 메서드.
+     *
+     * startDate, endDate가 null인 경우 기본값을 반환합니다.
+     * 기본값: startDate = 1년 전, endDate = 오늘
+     *
+     * @param startDate 시작일 (nullable)
+     * @param endDate 종료일 (nullable)
+     * @return [startDate, endDate] 배열
+     */
+    public static LocalDate[] resolveDateRange(LocalDate startDate, LocalDate endDate) {
+        if (startDate == null) {
+            startDate = LocalDate.now().minusYears(1);
+        }
+        if (endDate == null) {
+            endDate = LocalDate.now();
+        }
+        return new LocalDate[]{startDate, endDate};
+    }
+
+    /**
+     * 날짜를 yyyy-MM-dd 형식 문자열로 변환
+     *
+     * @param date 변환할 날짜
+     * @return yyyy-MM-dd 형식 문자열
+     */
+    public static String formatToIsoDate(LocalDate date) {
+        return date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
 }
