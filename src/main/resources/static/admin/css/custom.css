@@ -1,5 +1,15 @@
 /* OneTime Admin Custom Styles */
 
+/* Page transition - fade in */
+body {
+    animation: fadeIn 0.15s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 /* Card styling */
 .card {
     border-radius: 0.5rem;

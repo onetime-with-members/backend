@@ -173,11 +173,11 @@
                             <div class="d-flex align-items-center">
                                 <span class="mr-1" style="width: 20px; height: 15px; background-color: #f8f9fa; border: 1px solid #ddd; display: inline-block;"></span>
                                 <small class="mr-3">0</small>
-                                <span class="mr-1" style="width: 20px; height: 15px; background-color: rgba(78, 115, 223, 0.3); display: inline-block;"></span>
+                                <span class="mr-1" style="width: 20px; height: 15px; background-color: rgba(29, 233, 182, 0.3); display: inline-block;"></span>
                                 <small class="mr-3">Low</small>
-                                <span class="mr-1" style="width: 20px; height: 15px; background-color: rgba(78, 115, 223, 0.6); display: inline-block;"></span>
+                                <span class="mr-1" style="width: 20px; height: 15px; background-color: rgba(29, 233, 182, 0.6); display: inline-block;"></span>
                                 <small class="mr-3">Medium</small>
-                                <span class="mr-1" style="width: 20px; height: 15px; background-color: rgba(78, 115, 223, 1); display: inline-block;"></span>
+                                <span class="mr-1" style="width: 20px; height: 15px; background-color: rgba(29, 233, 182, 1); display: inline-block;"></span>
                                 <small>High</small>
                             </div>
                         </div>
@@ -479,7 +479,7 @@
             for (let dIdx = 0; dIdx < weekdays.length; dIdx++) {
                 const count = data[hIdx] ? (data[hIdx][dIdx] || 0) : 0;
                 const intensity = maxValue > 0 ? count / maxValue : 0;
-                const bgColor = count === 0 ? '#f8f9fa' : `rgba(78, 115, 223, ${0.2 + intensity * 0.8})`;
+                const bgColor = count === 0 ? '#f8f9fa' : `rgba(29, 233, 182, ${0.2 + intensity * 0.8})`;
                 const textColor = intensity > 0.5 ? '#fff' : '#333';
                 bodyHtml += `<td class="text-center" style="background-color: ${bgColor}; color: ${textColor};">${count > 0 ? count : ''}</td>`;
             }
