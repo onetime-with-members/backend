@@ -96,6 +96,8 @@ public enum SuccessStatus implements BaseCode {
     _GET_STICKINESS(HttpStatus.OK, "200", "점착도 조회에 성공했습니다."),
     // Email
     _SEND_EMAIL(HttpStatus.OK, "200", "이메일 발송에 성공했습니다."),
+    _GET_EMAIL_LOGS(HttpStatus.OK, "200", "이메일 로그 조회에 성공했습니다."),
+    _GET_EMAIL_STATS(HttpStatus.OK, "200", "이메일 통계 조회에 성공했습니다."),
     ;
 
     private final HttpStatus httpStatus;

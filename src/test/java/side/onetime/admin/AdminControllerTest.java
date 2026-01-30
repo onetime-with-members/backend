@@ -302,7 +302,7 @@ public class AdminControllerTest extends AdminControllerTestConfig {
                 new DashboardEvent(
                         100L, "1", "이벤트 제목", "10:00", "12:00",
                         Category.DATE, 10, "2025-03-01 12:00:00",
-                        List.of("2025.04.01")
+                        List.of("2025.04.01"), "2025.04.01", "10:00 - 12:00"
                 )
         );
 
@@ -322,10 +322,10 @@ public class AdminControllerTest extends AdminControllerTestConfig {
                 .andExpect(jsonPath("$.is_success").value(true))
                 .andExpect(jsonPath("$.code").value("200"))
                 .andExpect(jsonPath("$.message").value("관리자 이벤트 대시보드 정보 조회에 성공했습니다."))
-                .andExpect(jsonPath("$.payload.events[0].id").value(100L))
-                .andExpect(jsonPath("$.payload.events[0].event_id").value("1"))
-                .andExpect(jsonPath("$.payload.events[0].title").value("이벤트 제목"))
-                .andExpect(jsonPath("$.payload.events[0].participant_count").value(10))
+                .andExpect(jsonPath("$.payload.dashboard_events[0].id").value(100L))
+                .andExpect(jsonPath("$.payload.dashboard_events[0].event_id").value("1"))
+                .andExpect(jsonPath("$.payload.dashboard_events[0].title").value("이벤트 제목"))
+                .andExpect(jsonPath("$.payload.dashboard_events[0].participant_count").value(10))
                 .andExpect(jsonPath("$.payload.page_info.page").value(1))
                 .andExpect(jsonPath("$.payload.page_info.size").value(20))
                 .andExpect(jsonPath("$.payload.page_info.total_elements").value(1))
@@ -347,16 +347,18 @@ public class AdminControllerTest extends AdminControllerTestConfig {
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
                                                 fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
                                                 fieldWithPath("payload").type(JsonFieldType.OBJECT).description("페이로드 객체"),
-                                                fieldWithPath("payload.events").type(JsonFieldType.ARRAY).description("이벤트 리스트"),
-                                                fieldWithPath("payload.events[].id").type(JsonFieldType.NUMBER).description("이벤트 내부 ID"),
-                                                fieldWithPath("payload.events[].event_id").type(JsonFieldType.STRING).description("이벤트 외부 식별자 (UUID)"),
-                                                fieldWithPath("payload.events[].title").type(JsonFieldType.STRING).description("이벤트 제목"),
-                                                fieldWithPath("payload.events[].start_time").type(JsonFieldType.STRING).description("시작 시간"),
-                                                fieldWithPath("payload.events[].end_time").type(JsonFieldType.STRING).description("종료 시간"),
-                                                fieldWithPath("payload.events[].category").type(JsonFieldType.STRING).description("카테고리 (DATE 또는 DAY)"),
-                                                fieldWithPath("payload.events[].participant_count").type(JsonFieldType.NUMBER).description("참여 인원 수"),
-                                                fieldWithPath("payload.events[].created_date").type(JsonFieldType.STRING).description("생성일자"),
-                                                fieldWithPath("payload.events[].ranges").type(JsonFieldType.ARRAY).description("이벤트 날짜 또는 요일 범위"),
+                                                fieldWithPath("payload.dashboard_events").type(JsonFieldType.ARRAY).description("이벤트 리스트"),
+                                                fieldWithPath("payload.dashboard_events[].id").type(JsonFieldType.NUMBER).description("이벤트 내부 ID"),
+                                                fieldWithPath("payload.dashboard_events[].event_id").type(JsonFieldType.STRING).description("이벤트 외부 식별자 (UUID)"),
+                                                fieldWithPath("payload.dashboard_events[].title").type(JsonFieldType.STRING).description("이벤트 제목"),
+                                                fieldWithPath("payload.dashboard_events[].start_time").type(JsonFieldType.STRING).description("시작 시간"),
+                                                fieldWithPath("payload.dashboard_events[].end_time").type(JsonFieldType.STRING).description("종료 시간"),
+                                                fieldWithPath("payload.dashboard_events[].category").type(JsonFieldType.STRING).description("카테고리 (DATE 또는 DAY)"),
+                                                fieldWithPath("payload.dashboard_events[].participant_count").type(JsonFieldType.NUMBER).description("참여 인원 수"),
+                                                fieldWithPath("payload.dashboard_events[].created_date").type(JsonFieldType.STRING).description("생성일자"),
+                                                fieldWithPath("payload.dashboard_events[].ranges").type(JsonFieldType.ARRAY).description("이벤트 날짜 또는 요일 범위"),
+                                                fieldWithPath("payload.dashboard_events[].date_range").type(JsonFieldType.STRING).description("날짜 범위"),
+                                                fieldWithPath("payload.dashboard_events[].time_range").type(JsonFieldType.STRING).description("시간 범위"),
                                                 fieldWithPath("payload.page_info.page").type(JsonFieldType.NUMBER).description("현재 페이지 번호"),
                                                 fieldWithPath("payload.page_info.size").type(JsonFieldType.NUMBER).description("페이지당 항목 수"),
                                                 fieldWithPath("payload.page_info.total_elements").type(JsonFieldType.NUMBER).description("전체 항목 수"),
@@ -407,8 +409,8 @@ public class AdminControllerTest extends AdminControllerTestConfig {
                 .andExpect(jsonPath("$.is_success").value(true))
                 .andExpect(jsonPath("$.code").value("200"))
                 .andExpect(jsonPath("$.message").value("관리자 유저 대시보드 정보 조회에 성공했습니다."))
-                .andExpect(jsonPath("$.payload.users[0].name").value("홍길동"))
-                .andExpect(jsonPath("$.payload.users[0].participation_count").value(3))
+                .andExpect(jsonPath("$.payload.dashboard_users[0].name").value("홍길동"))
+                .andExpect(jsonPath("$.payload.dashboard_users[0].participant_count").value(3))
                 .andExpect(jsonPath("$.payload.page_info.page").value(1))
                 .andExpect(jsonPath("$.payload.page_info.size").value(20))
                 .andExpect(jsonPath("$.payload.page_info.total_elements").value(1))
@@ -430,21 +432,21 @@ public class AdminControllerTest extends AdminControllerTestConfig {
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
                                                 fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
                                                 fieldWithPath("payload").type(JsonFieldType.OBJECT).description("페이로드 객체"),
-                                                fieldWithPath("payload.users").type(JsonFieldType.ARRAY).description("사용자 리스트"),
-                                                fieldWithPath("payload.users[].id").type(JsonFieldType.NUMBER).description("사용자 ID"),
-                                                fieldWithPath("payload.users[].name").type(JsonFieldType.STRING).description("이름"),
-                                                fieldWithPath("payload.users[].email").type(JsonFieldType.STRING).description("이메일"),
-                                                fieldWithPath("payload.users[].nickname").type(JsonFieldType.STRING).description("닉네임"),
-                                                fieldWithPath("payload.users[].provider").type(JsonFieldType.STRING).description("소셜 로그인 제공자"),
-                                                fieldWithPath("payload.users[].provider_id").type(JsonFieldType.STRING).description("소셜 로그인 식별자"),
-                                                fieldWithPath("payload.users[].service_policy_agreement").type(JsonFieldType.BOOLEAN).description("서비스 정책 동의 여부"),
-                                                fieldWithPath("payload.users[].privacy_policy_agreement").type(JsonFieldType.BOOLEAN).description("개인정보 정책 동의 여부"),
-                                                fieldWithPath("payload.users[].marketing_policy_agreement").type(JsonFieldType.BOOLEAN).description("마케팅 정책 동의 여부"),
-                                                fieldWithPath("payload.users[].sleep_start_time").type(JsonFieldType.STRING).description("수면 시작 시간"),
-                                                fieldWithPath("payload.users[].sleep_end_time").type(JsonFieldType.STRING).description("수면 종료 시간"),
-                                                fieldWithPath("payload.users[].language").type(JsonFieldType.STRING).description("선호 언어"),
-                                                fieldWithPath("payload.users[].participation_count").type(JsonFieldType.NUMBER).description("참여한 이벤트 수"),
-                                                fieldWithPath("payload.users[].created_date").type(JsonFieldType.STRING).description("생성일자"),
+                                                fieldWithPath("payload.dashboard_users").type(JsonFieldType.ARRAY).description("사용자 리스트"),
+                                                fieldWithPath("payload.dashboard_users[].id").type(JsonFieldType.NUMBER).description("사용자 ID"),
+                                                fieldWithPath("payload.dashboard_users[].name").type(JsonFieldType.STRING).description("이름"),
+                                                fieldWithPath("payload.dashboard_users[].email").type(JsonFieldType.STRING).description("이메일"),
+                                                fieldWithPath("payload.dashboard_users[].nickname").type(JsonFieldType.STRING).description("닉네임"),
+                                                fieldWithPath("payload.dashboard_users[].provider").type(JsonFieldType.STRING).description("소셜 로그인 제공자"),
+                                                fieldWithPath("payload.dashboard_users[].provider_id").type(JsonFieldType.STRING).description("소셜 로그인 식별자"),
+                                                fieldWithPath("payload.dashboard_users[].service_policy_agreement").type(JsonFieldType.BOOLEAN).description("서비스 정책 동의 여부"),
+                                                fieldWithPath("payload.dashboard_users[].privacy_policy_agreement").type(JsonFieldType.BOOLEAN).description("개인정보 정책 동의 여부"),
+                                                fieldWithPath("payload.dashboard_users[].marketing_policy_agreement").type(JsonFieldType.BOOLEAN).description("마케팅 정책 동의 여부"),
+                                                fieldWithPath("payload.dashboard_users[].sleep_start_time").type(JsonFieldType.STRING).description("수면 시작 시간"),
+                                                fieldWithPath("payload.dashboard_users[].sleep_end_time").type(JsonFieldType.STRING).description("수면 종료 시간"),
+                                                fieldWithPath("payload.dashboard_users[].language").type(JsonFieldType.STRING).description("선호 언어"),
+                                                fieldWithPath("payload.dashboard_users[].participant_count").type(JsonFieldType.NUMBER).description("참여한 이벤트 수"),
+                                                fieldWithPath("payload.dashboard_users[].created_date").type(JsonFieldType.STRING).description("생성일자"),
                                                 fieldWithPath("payload.page_info.page").type(JsonFieldType.NUMBER).description("현재 페이지 번호"),
                                                 fieldWithPath("payload.page_info.size").type(JsonFieldType.NUMBER).description("페이지당 항목 수"),
                                                 fieldWithPath("payload.page_info.total_elements").type(JsonFieldType.NUMBER).description("전체 항목 수"),

@@ -28,6 +28,25 @@
         .search-result-table td, .search-result-table th {
             white-space: nowrap;
         }
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        .status-sent { background-color: #1cc88a; color: white; }
+        .status-failed { background-color: #e74a3b; color: white; }
+        .status-delivered { background-color: #36b9cc; color: white; }
+        .status-bounced { background-color: #f6c23e; color: #333; }
+        .log-table { font-size: 0.85rem; }
+        .log-table td { vertical-align: middle; }
+        .stats-card {
+            border-left: 4px solid;
+            padding: 15px;
+        }
+        .stats-card.primary { border-left-color: #4e73df; }
+        .stats-card.success { border-left-color: #1cc88a; }
+        .stats-card.danger { border-left-color: #e74a3b; }
+        .stats-card.info { border-left-color: #36b9cc; }
     </style>
 </head>
 <body>
@@ -58,6 +77,12 @@
             <a class="nav-link" id="individual-tab" data-toggle="tab" href="#individualSend" role="tab">
                 <i class="fas fa-user mr-1"></i>
                 <span th:text="#{email.tabIndividual}">Individual Send</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="logs-tab" data-toggle="tab" href="#emailLogs" role="tab">
+                <i class="fas fa-history mr-1"></i>
+                <span th:text="#{email.tabLogs}">Sending Logs</span>
             </a>
         </li>
     </ul>
@@ -228,6 +253,104 @@
                 </div>
             </div>
         </div>
+
+        <!-- Tab 3: Email Logs -->
+        <div class="tab-pane fade" id="emailLogs" role="tabpanel">
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card stats-card primary h-100">
+                        <div class="card-body py-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1"
+                                 th:text="#{email.totalSent}">Total Sent</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="statsTotalSent">-</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card stats-card success h-100">
+                        <div class="card-body py-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1"
+                                 th:text="#{email.sentToday}">Sent Today</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="statsSentToday">-</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card stats-card danger h-100">
+                        <div class="card-body py-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1"
+                                 th:text="#{email.failedToday}">Failed Today</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="statsFailedToday">-</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card stats-card info h-100">
+                        <div class="card-body py-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1"
+                                 th:text="#{email.successRate}">Success Rate</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="statsSuccessRate">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logs Table -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-history mr-2"></i>
+                        <span th:text="#{email.logs}">Sending Logs</span>
+                    </h6>
+                    <div class="d-flex align-items-center">
+                        <!-- Status Filter -->
+                        <select id="logStatusFilter" class="form-control form-control-sm mr-2" style="width: auto;">
+                            <option value="" th:text="#{email.filterAll}">All</option>
+                            <option value="SENT" th:text="#{email.filterSent}">Sent</option>
+                            <option value="FAILED" th:text="#{email.filterFailed}">Failed</option>
+                        </select>
+                        <!-- Search -->
+                        <div class="input-group input-group-sm" style="width: 200px;">
+                            <input type="text" id="logSearchInput" class="form-control"
+                                   th:placeholder="#{email.searchPlaceholder}" placeholder="Search recipient...">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary" type="button" id="btnSearchLogs">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered log-table" id="logsTable">
+                            <thead>
+                                <tr>
+                                    <th th:text="#{email.recipient}">Recipient</th>
+                                    <th th:text="#{email.subject}">Subject</th>
+                                    <th th:text="#{email.group}">Group</th>
+                                    <th th:text="#{email.status}">Status</th>
+                                    <th th:text="#{email.sentAt}">Sent At</th>
+                                    <th th:text="#{email.error}">Error</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logsTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4"
+                                        th:text="#{email.noLogs}">No sending logs</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Pagination -->
+                    <nav id="logsPagination" class="d-flex justify-content-center mt-3" style="display: none !important;">
+                        <ul class="pagination pagination-sm mb-0">
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -287,7 +410,7 @@
 
         $('#searchLoading').show();
 
-        fetch(`/admin/api/statistics/users/search?query=${encodeURIComponent(query.trim())}&limit=20`)
+        fetch(`/api/v1/admin/statistics/users/search?query=${encodeURIComponent(query.trim())}&limit=20`)
             .then(response => response.json())
             .then(data => {
                 if (data.is_success && data.payload) {
@@ -353,7 +476,7 @@
         const btn = $(this);
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Sending...');
 
-        fetch('/admin/api/email/send-to-group', {
+        fetch('/api/v1/admin/email/send-to-group', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ targetGroup, subject, content, contentType, limit })
@@ -363,6 +486,8 @@
             if (data.is_success && data.payload) {
                 const r = data.payload;
                 alert(`Success: ${r.sentCount}\nFailed: ${r.failedCount}`);
+                loadEmailLogs(); // Refresh logs
+                loadEmailStats();
             } else {
                 alert('Failed: ' + (data.message || 'Unknown error'));
             }
@@ -391,7 +516,7 @@
         const btn = $(this);
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Sending...');
 
-        fetch('/admin/api/email/send', {
+        fetch('/api/v1/admin/email/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ to: emails, subject, content, contentType })
@@ -401,9 +526,11 @@
             if (data.is_success && data.payload) {
                 const r = data.payload;
                 alert(`Success: ${r.sentCount}\nFailed: ${r.failedCount}`);
-                if (r.success) {
+                if (r.sentCount > 0) {
                     selectedUsers.clear();
                     updateSelectedUI();
+                    loadEmailLogs(); // Refresh logs
+                    loadEmailStats();
                 }
             } else {
                 alert('Failed: ' + (data.message || 'Unknown error'));
@@ -478,6 +605,143 @@ OneTime 팀`
             }
         }
     }
+
+    // ==================== Email Logs ====================
+    let currentPage = 0;
+    const pageSize = 20;
+
+    function loadEmailLogs(page = 0) {
+        currentPage = page;
+        const status = $('#logStatusFilter').val();
+        const search = $('#logSearchInput').val().trim();
+
+        let url = `/api/v1/admin/email/logs?page=${page}&size=${pageSize}`;
+        if (status) url += `&status=${status}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    renderEmailLogs(data.payload);
+                }
+            })
+            .catch(error => console.error('Error loading logs:', error));
+    }
+
+    function renderEmailLogs(data) {
+        const logs = data.logs || [];
+        let tbody = '';
+
+        if (logs.length === 0) {
+            tbody = `<tr><td colspan="6" class="text-center text-muted py-4">` +
+                /*[[#{email.noLogs}]]*/ 'No sending logs' + `</td></tr>`;
+        } else {
+            logs.forEach(log => {
+                const statusClass = log.status === 'SENT' ? 'status-sent' :
+                                   log.status === 'FAILED' ? 'status-failed' :
+                                   log.status === 'DELIVERED' ? 'status-delivered' :
+                                   log.status === 'BOUNCED' ? 'status-bounced' : '';
+                const sentAt = new Date(log.sentAt).toLocaleString('ko-KR');
+                const errorMsg = log.errorMessage ?
+                    `<span class="text-danger small" title="${log.errorMessage}">${log.errorMessage.substring(0, 30)}...</span>` : '-';
+
+                tbody += `
+                    <tr>
+                        <td>${log.recipient}</td>
+                        <td>${log.subject.length > 30 ? log.subject.substring(0, 30) + '...' : log.subject}</td>
+                        <td>${log.targetGroup || '-'}</td>
+                        <td><span class="status-badge ${statusClass}">${log.status}</span></td>
+                        <td>${sentAt}</td>
+                        <td>${errorMsg}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        $('#logsTableBody').html(tbody);
+        renderPagination(data);
+    }
+
+    function renderPagination(data) {
+        const pagination = $('#logsPagination ul');
+        pagination.empty();
+
+        if (data.totalPages <= 1) {
+            $('#logsPagination').hide();
+            return;
+        }
+
+        $('#logsPagination').show();
+
+        // Previous
+        pagination.append(`
+            <li class="page-item ${!data.hasPrevious ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="loadEmailLogs(${currentPage - 1}); return false;">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+        `);
+
+        // Page numbers
+        const startPage = Math.max(0, currentPage - 2);
+        const endPage = Math.min(data.totalPages - 1, currentPage + 2);
+
+        for (let i = startPage; i <= endPage; i++) {
+            pagination.append(`
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="loadEmailLogs(${i}); return false;">${i + 1}</a>
+                </li>
+            `);
+        }
+
+        // Next
+        pagination.append(`
+            <li class="page-item ${!data.hasNext ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="loadEmailLogs(${currentPage + 1}); return false;">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+        `);
+    }
+
+    function loadEmailStats() {
+        fetch('/api/v1/admin/email/stats')
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    const stats = data.payload;
+                    $('#statsTotalSent').text(stats.totalSent.toLocaleString());
+                    $('#statsSentToday').text(stats.sentToday.toLocaleString());
+                    $('#statsFailedToday').text(stats.failedToday.toLocaleString());
+                    $('#statsSuccessRate').text(stats.successRate + '%');
+                }
+            })
+            .catch(error => console.error('Error loading stats:', error));
+    }
+
+    // Filter and search handlers
+    $('#logStatusFilter').on('change', function() {
+        loadEmailLogs(0);
+    });
+
+    $('#logSearchInput').on('keyup', function(e) {
+        if (e.key === 'Enter') {
+            loadEmailLogs(0);
+        }
+    });
+
+    $('#btnSearchLogs').on('click', function() {
+        loadEmailLogs(0);
+    });
+
+    // Load logs when tab is shown
+    $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+        if ($(e.target).attr('href') === '#emailLogs') {
+            loadEmailLogs();
+            loadEmailStats();
+        }
+    });
 
     // Initialize
     $(function () {
