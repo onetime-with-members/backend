@@ -43,7 +43,7 @@ import side.onetime.util.DateUtil;
  */
 @Hidden
 @RestController
-@RequestMapping("/admin/api/statistics")
+@RequestMapping("/api/v1/admin/statistics")
 @RequiredArgsConstructor
 public class AdminStatisticsApiController {
 

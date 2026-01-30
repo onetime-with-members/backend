@@ -233,32 +233,32 @@
     const typeConfig = {
         agreed: {
             title: /*[[#{marketing.agreedUsers}]]*/ 'Marketing Agreed',
-            endpoint: '/admin/api/statistics/marketing/agreed',
+            endpoint: '/api/v1/admin/statistics/marketing/agreed',
             isEvent: false
         },
         dormant: {
             title: /*[[#{marketing.dormantUsers}]]*/ 'Dormant Users',
-            endpoint: '/admin/api/statistics/marketing/dormant',
+            endpoint: '/api/v1/admin/statistics/marketing/dormant',
             isEvent: false
         },
         noEvent: {
             title: /*[[#{marketing.noEventUsers}]]*/ 'No Event Users',
-            endpoint: '/admin/api/statistics/marketing/no-event',
+            endpoint: '/api/v1/admin/statistics/marketing/no-event',
             isEvent: false
         },
         oneTime: {
             title: /*[[#{marketing.oneTimeUsers}]]*/ 'One-time Users',
-            endpoint: '/admin/api/statistics/marketing/one-time',
+            endpoint: '/api/v1/admin/statistics/marketing/one-time',
             isEvent: false
         },
         vip: {
             title: /*[[#{marketing.vipUsers}]]*/ 'VIP Users',
-            endpoint: '/admin/api/statistics/marketing/vip',
+            endpoint: '/api/v1/admin/statistics/marketing/vip',
             isEvent: false
         },
         zeroParticipant: {
             title: /*[[#{marketing.zeroParticipant}]]*/ 'Zero Participant Events',
-            endpoint: '/admin/api/statistics/marketing/zero-participant',
+            endpoint: '/api/v1/admin/statistics/marketing/zero-participant',
             isEvent: true
         }
     };
@@ -394,7 +394,7 @@
 
     $('#btnDownloadCsv').on('click', function() {
         if (!currentType) return;
-        window.location.href = `/admin/api/export/marketing/csv?type=${currentType}&limit=1000`;
+        window.location.href = `/api/v1/admin/export/marketing/csv?type=${currentType}&limit=1000`;
     });
 
     // Initialize Bootstrap tooltips

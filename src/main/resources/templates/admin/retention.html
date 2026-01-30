@@ -353,7 +353,7 @@
         $('#stickinessLoading').show();
         $('#stickinessContent').hide();
 
-        fetch('/admin/api/statistics/stickiness?months=12')
+        fetch('/api/v1/admin/statistics/stickiness?months=12')
             .then(response => response.json())
             .then(data => {
                 if (data.is_success && data.payload) {
@@ -467,7 +467,7 @@
         const startDate = urlParams.get('startDate') || '';
         const endDate = urlParams.get('endDate') || '';
 
-        let url = '/admin/api/statistics/ttv';
+        let url = '/api/v1/admin/statistics/ttv';
         if (startDate || endDate) {
             const params = new URLSearchParams();
             if (startDate) params.append('startDate', startDate);
@@ -564,7 +564,7 @@
         const startDate = urlParams.get('startDate') || '';
         const endDate = urlParams.get('endDate') || '';
 
-        let url = '/admin/api/statistics/funnel';
+        let url = '/api/v1/admin/statistics/funnel';
         if (startDate || endDate) {
             const params = new URLSearchParams();
             if (startDate) params.append('startDate', startDate);
@@ -645,7 +645,7 @@
         $('#cohortLoading').show();
         $('#cohortContent').hide();
 
-        fetch(`/admin/api/statistics/cohort?months=${months}`)
+        fetch(`/api/v1/admin/statistics/cohort?months=${months}`)
             .then(response => response.json())
             .then(data => {
                 if (data.is_success && data.payload) {

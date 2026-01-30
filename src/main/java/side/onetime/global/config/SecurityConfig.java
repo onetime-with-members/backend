@@ -76,7 +76,6 @@ public class SecurityConfig {
 	private static final String[] ADMIN_PAGE_URLS = {
 		"/admin/dashboard",
 		"/admin/statistics/**",
-		"/admin/api/**",
 		"/admin/email",
 		"/admin/logout"
 	};

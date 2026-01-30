@@ -309,7 +309,7 @@
         const startDate = $('#eventStartDate').val() || '';
         const endDate = $('#eventEndDate').val() || '';
 
-        let url = `/admin/api/statistics/events?page=${page}&size=10&keyword=${currentEventSort}&sorting=${currentEventSorting}`;
+        let url = `/api/v1/admin/statistics/events?page=${page}&size=10&keyword=${currentEventSort}&sorting=${currentEventSorting}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
         if (startDate) url += `&startDate=${startDate}`;
         if (endDate) url += `&endDate=${endDate}`;
@@ -433,7 +433,7 @@
         const startDate = urlParams.get('startDate') || '';
         const endDate = urlParams.get('endDate') || '';
 
-        let url = '/admin/api/statistics/heatmap';
+        let url = '/api/v1/admin/statistics/heatmap';
         if (startDate || endDate) {
             const params = new URLSearchParams();
             if (startDate) params.append('startDate', startDate);

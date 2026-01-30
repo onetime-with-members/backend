@@ -24,7 +24,7 @@ import side.onetime.service.ExportService;
  */
 @Hidden
 @RestController
-@RequestMapping("/admin/api/export")
+@RequestMapping("/api/v1/admin/export")
 @RequiredArgsConstructor
 public class AdminExportController {
 

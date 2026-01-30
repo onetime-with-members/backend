@@ -316,7 +316,7 @@
         const startDate = $('#userStartDate').val() || '';
         const endDate = $('#userEndDate').val() || '';
 
-        let url = `/admin/api/statistics/users?page=${page}&size=20&keyword=${currentUserSort}&sorting=${currentUserSorting}`;
+        let url = `/api/v1/admin/statistics/users?page=${page}&size=20&keyword=${currentUserSort}&sorting=${currentUserSorting}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
         if (startDate) url += `&startDate=${startDate}`;
         if (endDate) url += `&endDate=${endDate}`;
@@ -439,7 +439,7 @@
         $('#userDetailContent').hide();
         $('#userDetailModal').modal('show');
 
-        fetch(`/admin/api/statistics/users/${userId}/detail`)
+        fetch(`/api/v1/admin/statistics/users/${userId}/detail`)
             .then(response => response.json())
             .then(data => {
                 if (data.is_success && data.payload) {
