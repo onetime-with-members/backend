@@ -159,23 +159,6 @@ public class AdminPageController {
         return "admin/marketing";
     }
 
-    @GetMapping("/statistics/engagement")
-    public String engagementStatistics(
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
-            HttpServletRequest request,
-            Model model) {
-        LocalDate[] dates = DateUtil.resolveDateRange(startDate, endDate);
-
-        model.addAttribute("startDate", DateUtil.formatToIsoDate(dates[0]));
-        model.addAttribute("endDate", DateUtil.formatToIsoDate(dates[1]));
-        model.addAttribute("currentUri", request.getRequestURI());
-        model.addAttribute("currentPage", "engagement");
-        model.addAttribute("pageTitle", "Event Engagement");
-        model.addAttribute("data", statisticsService.getEventEngagement(dates[0], dates[1]));
-        return "admin/engagement";
-    }
-
     // ==================== Email Page ====================
 
     @GetMapping("/email")
@@ -185,4 +168,5 @@ public class AdminPageController {
         model.addAttribute("pageTitle", "Send Email");
         return "admin/email";
     }
+
 }

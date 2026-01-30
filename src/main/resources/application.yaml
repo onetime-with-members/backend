@@ -1,6 +1,9 @@
 server:
   port: ${SERVER_PORT}
   forward-headers-strategy: native
+  error:
+    whitelabel:
+      enabled: false
 
 spring:
   datasource:
@@ -64,8 +67,6 @@ scheduling:
 refresh-token:
   cleanup:
     update-expired-cron: ${REFRESH_TOKEN_UPDATE_EXPIRED_CRON:0 0 3 * * *}
-    hard-delete-cron: ${REFRESH_TOKEN_HARD_DELETE_CRON:0 30 3 * * *}
-    retention-days: ${REFRESH_TOKEN_RETENTION_DAYS:30}
 
 springdoc:
   swagger-ui:

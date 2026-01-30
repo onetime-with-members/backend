@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout/default}">
+<head>
+    <title>404 - OneTime Admin</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex flex-column justify-content-center align-items-center" style="min-height: 60vh;">
+        <div class="text-center">
+            <div class="error mx-auto" data-text="404" style="font-size: 7rem; font-weight: 700; color: #dddfeb;">404</div>
+            <p class="lead text-gray-800 mb-4">Page Not Found</p>
+            <p class="text-gray-500 mb-5">요청하신 페이지를 찾을 수 없습니다.</p>
+            <a href="/admin/dashboard" class="btn btn-primary btn-lg">
+                <i class="fas fa-home mr-2"></i>대시보드로 이동
+            </a>
+        </div>
+    </div>
+</div>
+</body>
+</html>
