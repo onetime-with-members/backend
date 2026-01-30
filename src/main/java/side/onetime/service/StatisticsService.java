@@ -22,8 +22,6 @@ import side.onetime.dto.admin.email.response.UserSearchResult;
 import side.onetime.dto.admin.statistics.response.CohortRetentionResponse;
 import side.onetime.dto.admin.statistics.response.DashboardChartsResponse;
 import side.onetime.dto.admin.statistics.response.DashboardSummaryResponse;
-import side.onetime.dto.admin.statistics.response.EventEngagementDetailsResponse;
-import side.onetime.dto.admin.statistics.response.EventEngagementResponse;
 import side.onetime.dto.admin.statistics.response.EventStatisticsResponse;
 import side.onetime.dto.admin.statistics.response.FunnelAnalysisResponse;
 import side.onetime.dto.admin.statistics.response.MarketingTargetDetailResponse;
@@ -32,6 +30,7 @@ import side.onetime.dto.admin.statistics.response.RetentionStatisticsResponse;
 import side.onetime.dto.admin.statistics.response.StickinessResponse;
 import side.onetime.dto.admin.statistics.response.TimeWeekdayHeatmapResponse;
 import side.onetime.dto.admin.statistics.response.TtvDistributionResponse;
+import side.onetime.dto.admin.statistics.response.UserDetailResponse;
 import side.onetime.dto.admin.statistics.response.UserStatisticsResponse;
 import side.onetime.repository.StatisticsRepository;
 import side.onetime.repository.UserRepository;
@@ -155,9 +154,9 @@ public class StatisticsService {
         }
 
         // Dormant rate (기간 내 가입 유저 중 60일+ 미접속 비율)
-        Object[] dormantData = statisticsRepository.countDormantRateByDateRange(range.start(), range.end());
-        long dormantUsers = dormantData != null && dormantData[0] != null ? ((Number) dormantData[0]).longValue() : 0;
-        long totalUsersInRange = dormantData != null && dormantData[1] != null ? ((Number) dormantData[1]).longValue() : 0;
+        Object[] dormantData = getFirstRow(statisticsRepository.countDormantRateByDateRange(range.start(), range.end()));
+        long dormantUsers = extractLong(dormantData, 0);
+        long totalUsersInRange = extractLong(dormantData, 1);
         double dormantRate = totalUsersInRange > 0 ? (double) dormantUsers / totalUsersInRange * 100 : 0;
 
         return DashboardSummaryResponse.of(
@@ -204,12 +203,9 @@ public class StatisticsService {
         long totalUsers = extractLong(userStats, 0);
         long marketingAgreed = extractLong(userStats, 1);
 
-        // DAU 기반 active users
-        List<Object[]> dauData = statisticsRepository.findDailyActiveUsers(range.start(), range.end());
-        long activeUsers = dauData.stream()
-                .mapToLong(row -> extractLong(row, 1))
-                .max()
-                .orElse(0L);
+        // 활성 유저 = 선택 기간 내 고유 로그인 유저 수 (refresh_token.last_used_at 기준)
+        Long activeUsersResult = statisticsRepository.countMau(range.start(), range.end());
+        long activeUsers = activeUsersResult != null ? activeUsersResult : 0L;
 
         long deletedUsers = 0; // Soft deleted users are not returned
 
@@ -917,143 +913,74 @@ public class StatisticsService {
         return StickinessResponse.of(currentStickiness, currentWau, currentMau, trend);
     }
 
-    // ==================== 이벤트 참여 통계 ====================
+    // ==================== 유저 상세 정보 ====================
 
     /**
-     * 이벤트 참여 기본 통계 조회 (빠른 쿼리만)
-     * - 이벤트 완료율, 참여자 응답률, 익명 vs 회원 비율, 삭제율
+     * 유저 상세 정보 조회
      */
     @Transactional(readOnly = true)
-    public EventEngagementResponse getEventEngagement(LocalDate startDate, LocalDate endDate) {
-        DateTimeRange range = DateTimeRange.of(startDate, endDate);
-
-        // 1. 이벤트 통계 (통합 쿼리 1회)
-        Object[] eventStats = getFirstRow(statisticsRepository.getEventEngagementStats(range.start(), range.end()));
-        long totalEvents = extractLong(eventStats, 0);
-        long activeEvents = extractLong(eventStats, 1);
-        long deletedEvents = extractLong(eventStats, 2);
-        long eventsWithResponse = extractLong(eventStats, 3);
-        double completionRate = calculateRate(eventsWithResponse, activeEvents);
-        double deletionRate = calculateRate(deletedEvents, totalEvents);
-
-        // 2. 멤버/참여자 통계 (통합 쿼리 1회)
-        Object[] memberStats = getFirstRow(statisticsRepository.getMemberEngagementStats(range.start(), range.end()));
-        long totalMembers = extractLong(memberStats, 0);
-        long anonymousParticipants = extractLong(memberStats, 1);
-        long registeredParticipants = extractLong(memberStats, 2);
-        long membersWithSelection = anonymousParticipants;
-        double responseRate = calculateRate(membersWithSelection, totalMembers);
-        long totalParticipants = anonymousParticipants + registeredParticipants;
-        double anonymousRate = calculateRate(anonymousParticipants, totalParticipants);
-
-        // 상세 통계는 별도 API로 비동기 로드 (기본값 반환)
-        return EventEngagementResponse.of(
-                activeEvents, eventsWithResponse, completionRate,
-                totalMembers, membersWithSelection, responseRate,
-                0, 0, List.of(),  // 상세 통계는 별도 API
-                anonymousParticipants, registeredParticipants, anonymousRate,
-                deletedEvents, deletionRate
-        );
-    }
-
-    /**
-     * 이벤트 참여 상세 통계 조회 (느린 쿼리, 캐싱 적용)
-     * - 평균 응답 시간, 멤버 수 분포
-     */
-    @Transactional(readOnly = true)
-    @org.springframework.cache.annotation.Cacheable(
-            value = "engagementDetails",
-            key = "#startDate.toString() + '_' + #endDate.toString()")
-    public EventEngagementDetailsResponse getEventEngagementDetails(LocalDate startDate, LocalDate endDate) {
-        DateTimeRange range = DateTimeRange.of(startDate, endDate);
-
-        // 1. 평균 응답 시간
-        Object[] responseStats = getFirstRow(statisticsRepository.findResponseTimeStats(range.start(), range.end()));
-        double avgResponseTime = Math.round(extractDouble(responseStats, 0) * 10.0) / 10.0;
-        double medianResponseTime = Math.round(extractDouble(responseStats, 1) * 10.0) / 10.0;
-
-        // 2. 멤버 수 분포
-        List<EventEngagementDetailsResponse.MemberCountBucket> memberDistribution = buildMemberCountDistributionForDetails(range.start(), range.end());
-
-        return EventEngagementDetailsResponse.of(avgResponseTime, medianResponseTime, memberDistribution);
-    }
-
-    /**
-     * 멤버 수 분포 버킷 생성 (상세 통계용)
-     */
-    private List<EventEngagementDetailsResponse.MemberCountBucket> buildMemberCountDistributionForDetails(
-            LocalDateTime startDate, LocalDateTime endDate) {
-        List<Object[]> bucketData = statisticsRepository.findMemberCountDistribution(startDate, endDate);
-
-        Map<String, int[]> bucketRanges = Map.of(
-                "0", new int[]{0, 0}, "1", new int[]{1, 1}, "2-3", new int[]{2, 3},
-                "4-5", new int[]{4, 5}, "6-10", new int[]{6, 10}, "11+", new int[]{11, -1}
-        );
-        Map<String, String> bucketLabels = Map.of(
-                "0", "0명", "1", "1명", "2-3", "2-3명",
-                "4-5", "4-5명", "6-10", "6-10명", "11+", "11명+"
-        );
-
-        Map<String, Long> counts = bucketData.stream()
-                .collect(Collectors.toMap(row -> (String) row[0], row -> ((Number) row[1]).longValue()));
-
-        long total = counts.values().stream().mapToLong(Long::longValue).sum();
-        String[] orderedBuckets = {"0", "1", "2-3", "4-5", "6-10", "11+"};
-        List<EventEngagementDetailsResponse.MemberCountBucket> buckets = new ArrayList<>();
-
-        for (String bucket : orderedBuckets) {
-            long count = counts.getOrDefault(bucket, 0L);
-            int[] range = bucketRanges.get(bucket);
-            String label = bucketLabels.get(bucket);
-            double percentage = total > 0 ? Math.round((double) count / total * 1000.0) / 10.0 : 0;
-            buckets.add(EventEngagementDetailsResponse.MemberCountBucket.of(label, range[0], range[1], count, percentage));
+    public UserDetailResponse getUserDetail(Long userId) {
+        // 기본 정보
+        List<Object[]> basicInfoList = statisticsRepository.findUserBasicInfo(userId);
+        if (basicInfoList.isEmpty()) {
+            return null;
         }
-        return buckets;
-    }
+        Object[] basicInfo = basicInfoList.get(0);
 
-    /**
-     * 멤버 수 분포 버킷 생성 (DB에서 직접 집계)
-     */
-    private List<EventEngagementResponse.MemberCountBucket> buildMemberCountDistribution(
-            LocalDateTime startDate, LocalDateTime endDate) {
-        List<Object[]> bucketData = statisticsRepository.findMemberCountDistribution(startDate, endDate);
-
-        // 버킷 정의
-        Map<String, int[]> bucketRanges = Map.of(
-                "0", new int[]{0, 0},
-                "1", new int[]{1, 1},
-                "2-3", new int[]{2, 3},
-                "4-5", new int[]{4, 5},
-                "6-10", new int[]{6, 10},
-                "11+", new int[]{11, -1}
-        );
-        Map<String, String> bucketLabels = Map.of(
-                "0", "0명", "1", "1명", "2-3", "2-3명",
-                "4-5", "4-5명", "6-10", "6-10명", "11+", "11명+"
-        );
-
-        // DB 결과를 Map으로 변환
-        Map<String, Long> counts = bucketData.stream()
-                .collect(Collectors.toMap(
-                        row -> (String) row[0],
-                        row -> ((Number) row[1]).longValue()
-                ));
-
-        long total = counts.values().stream().mapToLong(Long::longValue).sum();
-
-        // 정렬된 순서로 버킷 생성
-        String[] orderedBuckets = {"0", "1", "2-3", "4-5", "6-10", "11+"};
-        List<EventEngagementResponse.MemberCountBucket> buckets = new ArrayList<>();
-
-        for (String bucket : orderedBuckets) {
-            long count = counts.getOrDefault(bucket, 0L);
-            int[] range = bucketRanges.get(bucket);
-            String label = bucketLabels.get(bucket);
-            double percentage = total > 0 ? Math.round((double) count / total * 1000.0) / 10.0 : 0;
-
-            buckets.add(EventEngagementResponse.MemberCountBucket.of(label, range[0], range[1], count, percentage));
+        String name = (String) basicInfo[0];
+        String nickname = (String) basicInfo[1];
+        String email = (String) basicInfo[2];
+        String provider = (String) basicInfo[3];
+        String language = basicInfo[4] != null ? basicInfo[4].toString() : null;
+        LocalDateTime createdDate = basicInfo[5] != null ? ((java.sql.Timestamp) basicInfo[5]).toLocalDateTime() : null;
+        boolean marketingAgreement = false;
+        if (basicInfo[6] != null) {
+            if (basicInfo[6] instanceof Boolean) {
+                marketingAgreement = (Boolean) basicInfo[6];
+            } else if (basicInfo[6] instanceof Number) {
+                marketingAgreement = ((Number) basicInfo[6]).intValue() == 1;
+            }
         }
 
-        return buckets;
+        // 토큰 정보
+        List<Object[]> tokenInfoList = statisticsRepository.findUserTokenInfo(userId);
+        Object[] tokenInfo = tokenInfoList.isEmpty() ? null : tokenInfoList.get(0);
+
+        LocalDateTime lastUsedAt = null;
+        String lastUsedIp = null;
+        int activeSessionCount = 0;
+
+        if (tokenInfo != null) {
+            lastUsedAt = tokenInfo[0] != null ? ((java.sql.Timestamp) tokenInfo[0]).toLocalDateTime() : null;
+            lastUsedIp = (String) tokenInfo[1];
+            activeSessionCount = tokenInfo[2] != null ? ((Number) tokenInfo[2]).intValue() : 0;
+        }
+
+        int inactiveDays = lastUsedAt != null
+                ? (int) ChronoUnit.DAYS.between(lastUsedAt.toLocalDate(), LocalDate.now())
+                : -1;
+
+        // 이벤트 수
+        Long createdCount = statisticsRepository.countUserCreatedEvents(userId);
+        Long participatedCount = statisticsRepository.countUserParticipatedEvents(userId);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        return UserDetailResponse.of(
+                userId,
+                name,
+                nickname,
+                email,
+                provider,
+                language,
+                createdDate != null ? createdDate.format(formatter) : null,
+                marketingAgreement,
+                lastUsedAt != null ? lastUsedAt.format(formatter) : null,
+                lastUsedIp,
+                activeSessionCount,
+                inactiveDays,
+                createdCount != null ? createdCount.intValue() : 0,
+                participatedCount != null ? participatedCount.intValue() : 0
+        );
     }
 }

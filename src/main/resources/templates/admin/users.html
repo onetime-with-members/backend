@@ -222,6 +222,59 @@
             </nav>
         </div>
     </div>
+
+    <!-- User Detail Modal -->
+    <div class="modal fade" id="userDetailModal" tabindex="-1" role="dialog" aria-labelledby="userDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userDetailModalLabel">유저 상세 정보</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="userDetailLoading" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <div id="userDetailContent" style="display: none;">
+                        <div class="row">
+                            <!-- Basic Info -->
+                            <div class="col-md-6">
+                                <h6 class="font-weight-bold text-primary mb-3">기본 정보</h6>
+                                <table class="table table-sm">
+                                    <tr><th style="width: 40%;">이름</th><td id="detail-name">-</td></tr>
+                                    <tr><th>닉네임</th><td id="detail-nickname">-</td></tr>
+                                    <tr><th>이메일</th><td id="detail-email">-</td></tr>
+                                    <tr><th>가입 제공자</th><td id="detail-provider">-</td></tr>
+                                    <tr><th>언어</th><td id="detail-language">-</td></tr>
+                                    <tr><th>가입일</th><td id="detail-created-date">-</td></tr>
+                                    <tr><th>마케팅 수신</th><td id="detail-marketing">-</td></tr>
+                                </table>
+                            </div>
+                            <!-- Activity Info -->
+                            <div class="col-md-6">
+                                <h6 class="font-weight-bold text-success mb-3">활동 정보</h6>
+                                <table class="table table-sm">
+                                    <tr><th style="width: 40%;">마지막 접속일</th><td id="detail-last-used">-</td></tr>
+                                    <tr><th>마지막 접속 IP</th><td id="detail-last-ip">-</td></tr>
+                                    <tr><th>활성 세션 수</th><td id="detail-sessions">-</td></tr>
+                                    <tr><th>비활성 일수</th><td id="detail-inactive-days">-</td></tr>
+                                    <tr><th>생성 이벤트 수</th><td id="detail-created-events">-</td></tr>
+                                    <tr><th>참여 이벤트 수</th><td id="detail-participated-events">-</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <th:block layout:fragment="scripts">
@@ -263,7 +316,7 @@
         const startDate = $('#userStartDate').val() || '';
         const endDate = $('#userEndDate').val() || '';
 
-        let url = `/admin/api/statistics/users?page=${page}&size=10&keyword=${currentUserSort}&sorting=${currentUserSorting}`;
+        let url = `/admin/api/statistics/users?page=${page}&size=20&keyword=${currentUserSort}&sorting=${currentUserSorting}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
         if (startDate) url += `&startDate=${startDate}`;
         if (endDate) url += `&endDate=${endDate}`;
@@ -308,7 +361,7 @@
                 }[user.provider?.toLowerCase()] || 'text-secondary';
 
                 tbody += `
-                    <tr>
+                    <tr style="cursor: pointer;" onclick="showUserDetail(${user.id})">
                         <td>${user.name || '-'}</td>
                         <td>${user.email || '-'}</td>
                         <td class="text-center"><span class="${providerClass} font-weight-bold">${user.provider || '-'}</span></td>
@@ -325,7 +378,7 @@
 
     function renderUserPagination(pageInfo) {
         const totalPages = pageInfo.total_pages || 1;
-        const currentPage = pageInfo.current_page || 1;
+        const currentPage = pageInfo.page || 1;
 
         let pagination = '';
 
@@ -379,6 +432,76 @@
     $('#userStartDate, #userEndDate').on('change', function() {
         loadUserList(1);
     });
+
+    // User Detail Modal
+    function showUserDetail(userId) {
+        $('#userDetailLoading').show();
+        $('#userDetailContent').hide();
+        $('#userDetailModal').modal('show');
+
+        fetch(`/admin/api/statistics/users/${userId}/detail`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    renderUserDetail(data.payload);
+                } else {
+                    alert('유저 정보를 불러올 수 없습니다.');
+                    $('#userDetailModal').modal('hide');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('유저 정보를 불러올 수 없습니다.');
+                $('#userDetailModal').modal('hide');
+            })
+            .finally(() => {
+                $('#userDetailLoading').hide();
+                $('#userDetailContent').show();
+            });
+    }
+
+    function renderUserDetail(user) {
+        // Basic Info
+        $('#detail-name').text(user.name || '-');
+        $('#detail-nickname').text(user.nickname || '-');
+        $('#detail-email').text(user.email || '-');
+        $('#detail-provider').html(getProviderBadge(user.provider));
+        $('#detail-language').text(user.language || '-');
+        $('#detail-created-date').text(user.created_date || '-');
+        $('#detail-marketing').html(user.marketing_agreement
+            ? '<span class="badge badge-success">동의</span>'
+            : '<span class="badge badge-secondary">미동의</span>');
+
+        // Activity Info
+        $('#detail-last-used').text(user.last_used_at || '기록 없음');
+        $('#detail-last-ip').text(user.last_used_ip || '-');
+        $('#detail-sessions').text(user.active_session_count + '개');
+        $('#detail-inactive-days').html(getInactiveDaysBadge(user.inactive_days));
+        $('#detail-created-events').text(user.created_event_count + '개');
+        $('#detail-participated-events').text(user.participated_event_count + '개');
+    }
+
+    function getProviderBadge(provider) {
+        const colors = {
+            'GOOGLE': 'danger',
+            'KAKAO': 'warning',
+            'NAVER': 'success'
+        };
+        const color = colors[provider?.toUpperCase()] || 'secondary';
+        return `<span class="badge badge-${color}">${provider || '-'}</span>`;
+    }
+
+    function getInactiveDaysBadge(days) {
+        if (days === 0) {
+            return '<span class="badge badge-success">활성</span>';
+        } else if (days < 30) {
+            return `<span class="badge badge-info">${days}일</span>`;
+        } else if (days < 60) {
+            return `<span class="badge badge-warning">${days}일</span>`;
+        } else {
+            return `<span class="badge badge-danger">${days}일 (휴면)</span>`;
+        }
+    }
 
     // Initialize Bootstrap tooltips
     $(function () {

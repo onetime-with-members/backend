@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,13 +21,12 @@ import side.onetime.dto.admin.email.response.UserSearchResult;
 import side.onetime.dto.admin.response.GetAllDashboardEventsResponse;
 import side.onetime.dto.admin.response.GetAllDashboardUsersResponse;
 import side.onetime.dto.admin.statistics.response.CohortRetentionResponse;
-import side.onetime.dto.admin.statistics.response.EventEngagementDetailsResponse;
-import side.onetime.dto.admin.statistics.response.EventEngagementResponse;
 import side.onetime.dto.admin.statistics.response.FunnelAnalysisResponse;
 import side.onetime.dto.admin.statistics.response.MarketingTargetDetailResponse;
 import side.onetime.dto.admin.statistics.response.StickinessResponse;
 import side.onetime.dto.admin.statistics.response.TimeWeekdayHeatmapResponse;
 import side.onetime.dto.admin.statistics.response.TtvDistributionResponse;
+import side.onetime.dto.admin.statistics.response.UserDetailResponse;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.AdminService;
@@ -116,6 +116,15 @@ public class AdminStatisticsApiController {
         return ApiResponse.onSuccess(SuccessStatus._OK, results);
     }
 
+    /**
+     * 유저 상세 정보 조회
+     */
+    @GetMapping("/users/{userId}/detail")
+    public ResponseEntity<ApiResponse<UserDetailResponse>> getUserDetail(@PathVariable Long userId) {
+        UserDetailResponse response = statisticsService.getUserDetail(userId);
+        return ApiResponse.onSuccess(SuccessStatus._OK, response);
+    }
+
     // ==================== Funnel Analysis ====================
 
     /**
@@ -196,34 +205,6 @@ public class AdminStatisticsApiController {
             @RequestParam(defaultValue = "12") int months) {
         StickinessResponse response = statisticsService.getStickiness(months);
         return ApiResponse.onSuccess(SuccessStatus._GET_STICKINESS, response);
-    }
-
-    // ==================== Event Engagement ====================
-
-    /**
-     * 이벤트 참여 기본 통계 (빠름)
-     * - 이벤트 완료율, 참여자 응답률, 익명 vs 회원 비율, 이벤트 삭제율
-     */
-    @GetMapping("/engagement")
-    public ResponseEntity<ApiResponse<EventEngagementResponse>> getEventEngagement(
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
-        LocalDate[] dates = DateUtil.resolveDateRange(startDate, endDate);
-        EventEngagementResponse response = statisticsService.getEventEngagement(dates[0], dates[1]);
-        return ApiResponse.onSuccess(SuccessStatus._GET_EVENT_ENGAGEMENT, response);
-    }
-
-    /**
-     * 이벤트 참여 상세 통계 (느림, 캐싱됨)
-     * - 평균 응답 시간, 멤버 수 분포
-     */
-    @GetMapping("/engagement/details")
-    public ResponseEntity<ApiResponse<EventEngagementDetailsResponse>> getEventEngagementDetails(
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
-        LocalDate[] dates = DateUtil.resolveDateRange(startDate, endDate);
-        EventEngagementDetailsResponse response = statisticsService.getEventEngagementDetails(dates[0], dates[1]);
-        return ApiResponse.onSuccess(SuccessStatus._GET_EVENT_ENGAGEMENT, response);
     }
 
     // ==================== Marketing Targets ====================

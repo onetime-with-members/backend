@@ -94,7 +94,6 @@ public enum SuccessStatus implements BaseCode {
     _GET_TTV_DISTRIBUTION(HttpStatus.OK, "200", "TTV 분포 조회에 성공했습니다."),
     _GET_TIME_WEEKDAY_HEATMAP(HttpStatus.OK, "200", "시간대×요일 히트맵 조회에 성공했습니다."),
     _GET_STICKINESS(HttpStatus.OK, "200", "점착도 조회에 성공했습니다."),
-    _GET_EVENT_ENGAGEMENT(HttpStatus.OK, "200", "이벤트 참여 통계 조회에 성공했습니다."),
     // Email
     _SEND_EMAIL(HttpStatus.OK, "200", "이메일 발송에 성공했습니다."),
     ;
