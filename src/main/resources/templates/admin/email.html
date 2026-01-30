@@ -56,15 +56,6 @@
         <h1 class="h3 mb-0 text-gray-800" th:text="#{email.pageTitle}">Send Email</h1>
     </div>
 
-    <!-- Info -->
-    <div class="alert alert-info alert-dismissible fade show" role="alert">
-        <i class="fas fa-info-circle mr-2"></i>
-        <span th:text="#{email.awsNote}">Emails are sent via AWS SES</span>
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-
     <!-- Tabs -->
     <ul class="nav nav-tabs mb-4" id="emailTab" role="tablist">
         <li class="nav-item">
@@ -83,6 +74,12 @@
             <a class="nav-link" id="logs-tab" data-toggle="tab" href="#emailLogs" role="tab">
                 <i class="fas fa-history mr-1"></i>
                 <span th:text="#{email.tabLogs}">Sending Logs</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="templates-tab" data-toggle="tab" href="#emailTemplates" role="tab">
+                <i class="fas fa-file-alt mr-1"></i>
+                <span th:text="#{email.tabTemplates}">Templates</span>
             </a>
         </li>
     </ul>
@@ -132,13 +129,13 @@
                         </div>
                     </div>
                     <div class="form-group">
+                        <label th:text="#{email.templateSelect}">Select Template</label>
+                        <select id="groupTemplateSelect" class="form-control" onchange="applyTemplate(this.value, 'group')">
+                            <option value="" th:text="#{email.templateSelectPlaceholder}">Choose a template</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label th:text="#{email.content}">Content</label>
-                        <div class="mb-2">
-                            <small class="text-muted">Templates: </small>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadTemplate('welcome')">Welcome</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadTemplate('dormant')">Re-engagement</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadTemplate('vip')">VIP Thanks</button>
-                        </div>
                         <textarea id="groupContent" class="form-control" rows="6" placeholder="Email content..."></textarea>
                     </div>
                     <div class="text-right">
@@ -233,13 +230,13 @@
                                 </select>
                             </div>
                             <div class="form-group">
+                                <label th:text="#{email.templateSelect}">Select Template</label>
+                                <select id="indTemplateSelect" class="form-control" onchange="applyTemplate(this.value, 'ind')">
+                                    <option value="" th:text="#{email.templateSelectPlaceholder}">Choose a template</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <label th:text="#{email.content}">Content</label>
-                                <div class="mb-2">
-                                    <small class="text-muted">Templates: </small>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadTemplate('welcome')">Welcome</button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadTemplate('dormant')">Re-engagement</button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadTemplate('vip')">VIP Thanks</button>
-                                </div>
                                 <textarea id="indContent" class="form-control" rows="6" placeholder="Email content..."></textarea>
                             </div>
                             <div class="text-right">
@@ -351,6 +348,83 @@
                 </div>
             </div>
         </div>
+
+        <!-- Tab 4: Templates Management -->
+        <div class="tab-pane fade" id="emailTemplates" role="tabpanel">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-file-alt mr-2"></i>
+                        <span th:text="#{email.templates}">Templates</span>
+                    </h6>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="showTemplateModal()">
+                        <i class="fas fa-plus mr-1"></i>
+                        <span th:text="#{email.templateCreate}">New Template</span>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="templatesTable">
+                            <thead>
+                                <tr>
+                                    <th th:text="#{email.templateName}">Name</th>
+                                    <th th:text="#{email.subject}">Subject</th>
+                                    <th th:text="#{email.contentType}">Type</th>
+                                    <th th:text="#{email.templateUpdatedAt}">Updated</th>
+                                    <th th:text="#{email.templateActions}">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="templatesTableBody">
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4"
+                                        th:text="#{email.noTemplates}">No templates</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Modal -->
+    <div class="modal fade" id="templateModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="templateModalTitle" th:text="#{email.templateCreate}">New Template</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="templateId">
+                <div class="form-group">
+                    <label for="templateName" th:text="#{email.templateName}">Template Name</label>
+                    <input type="text" id="templateName" class="form-control" placeholder="Template name...">
+                </div>
+                <div class="form-group">
+                    <label for="templateSubject" th:text="#{email.subject}">Subject</label>
+                    <input type="text" id="templateSubject" class="form-control" placeholder="Email subject...">
+                </div>
+                <div class="form-group">
+                    <label for="templateContentType" th:text="#{email.contentType}">Content Type</label>
+                    <select id="templateContentType" class="form-control">
+                        <option value="TEXT">TEXT</option>
+                        <option value="HTML">HTML</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="templateContent" th:text="#{email.content}">Content</label>
+                    <textarea id="templateContent" class="form-control" rows="10" placeholder="Email content..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" th:text="#{email.templateCancel}">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveTemplate()" th:text="#{email.templateSave}">Save</button>
+            </div>
+        </div>
+    </div>
     </div>
 </div>
 
@@ -485,11 +559,11 @@
         .then(data => {
             if (data.is_success && data.payload) {
                 const r = data.payload;
-                alert(`Success: ${r.sentCount}\nFailed: ${r.failedCount}`);
+                alert(`Sent: ${r.sentCount}, Failed: ${r.failedCount}`);
                 loadEmailLogs(); // Refresh logs
                 loadEmailStats();
             } else {
-                alert('Failed: ' + (data.message || 'Unknown error'));
+                alert(data.message || 'Failed to send email');
             }
         })
         .catch(error => { console.error(error); alert('Failed to send email'); })
@@ -525,7 +599,7 @@
         .then(data => {
             if (data.is_success && data.payload) {
                 const r = data.payload;
-                alert(`Success: ${r.sentCount}\nFailed: ${r.failedCount}`);
+                alert(`Sent: ${r.sentCount}, Failed: ${r.failedCount}`);
                 if (r.sentCount > 0) {
                     selectedUsers.clear();
                     updateSelectedUI();
@@ -533,7 +607,7 @@
                     loadEmailStats();
                 }
             } else {
-                alert('Failed: ' + (data.message || 'Unknown error'));
+                alert(data.message || 'Failed to send email');
             }
         })
         .catch(error => { console.error(error); alert('Failed to send email'); })
@@ -544,66 +618,143 @@
     });
 
     // ==================== Email Templates ====================
-    const emailTemplates = {
-        welcome: {
-            subject: '[OneTime] 회원 가입을 환영합니다!',
-            content: `안녕하세요!
+    let templatesCache = [];
 
-OneTime에 가입해 주셔서 감사합니다.
+    function loadTemplates() {
+        fetch('/api/v1/admin/email/templates')
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    templatesCache = data.payload;
+                    renderTemplatesTable(data.payload);
+                    updateTemplateDropdowns(data.payload);
+                }
+            })
+            .catch(error => console.error('Error loading templates:', error));
+    }
 
-OneTime과 함께 일정 조율을 더 쉽게 해보세요!
-
-이벤트를 만들고 친구들과 공유하면, 모두가 가능한 시간을 쉽게 찾을 수 있어요.
-
-지금 바로 첫 이벤트를 만들어 보세요!
-
-감사합니다.
-OneTime 팀`
-        },
-        dormant: {
-            subject: '[OneTime] 오랜만이에요! 다시 만나요 👋',
-            content: `안녕하세요!
-
-최근 OneTime을 방문하지 않으셨네요.
-저희는 항상 여러분을 기다리고 있어요!
-
-새로운 기능들이 많이 추가되었답니다:
-- 더 빠른 일정 조율
-- 개선된 UI/UX
-- 새로운 알림 기능
-
-지금 돌아와서 확인해 보세요!
-
-감사합니다.
-OneTime 팀`
-        },
-        vip: {
-            subject: '[OneTime] VIP 고객님께 감사 인사드립니다 🌟',
-            content: `안녕하세요, 소중한 고객님!
-
-OneTime을 꾸준히 이용해 주셔서 진심으로 감사드립니다.
-
-고객님 같은 분들 덕분에 저희 서비스가 성장할 수 있었어요.
-
-앞으로도 더 좋은 서비스로 보답하겠습니다.
-
-항상 감사드립니다.
-OneTime 팀`
+    function renderTemplatesTable(templates) {
+        let tbody = '';
+        if (!templates || templates.length === 0) {
+            tbody = `<tr><td colspan="5" class="text-center text-muted py-4">` +
+                /*[[#{email.noTemplates}]]*/ 'No templates' + `</td></tr>`;
+        } else {
+            templates.forEach(t => {
+                const updatedAt = new Date(t.updatedAt).toLocaleString('ko-KR');
+                tbody += `
+                    <tr>
+                        <td><strong>${t.name}</strong></td>
+                        <td>${t.subject.length > 40 ? t.subject.substring(0, 40) + '...' : t.subject}</td>
+                        <td><span class="badge badge-${t.contentType === 'HTML' ? 'info' : 'secondary'}">${t.contentType}</span></td>
+                        <td>${updatedAt}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary mr-1" onclick="editTemplate(${t.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteTemplate(${t.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
-    };
+        $('#templatesTableBody').html(tbody);
+    }
 
-    function loadTemplate(templateName) {
-        const template = emailTemplates[templateName];
+    function updateTemplateDropdowns(templates) {
+        const options = templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+        const placeholder = /*[[#{email.templateSelectPlaceholder}]]*/ 'Choose a template';
+        const html = `<option value="">${placeholder}</option>${options}`;
+        $('#groupTemplateSelect').html(html);
+        $('#indTemplateSelect').html(html);
+    }
+
+    function applyTemplate(templateId, prefix) {
+        if (!templateId) return;
+        const template = templatesCache.find(t => t.id == templateId);
         if (template) {
-            // Check which tab is active
-            if ($('#groupSend').hasClass('active')) {
-                $('#groupSubject').val(template.subject);
-                $('#groupContent').val(template.content);
-            } else {
-                $('#indSubject').val(template.subject);
-                $('#indContent').val(template.content);
+            $(`#${prefix}Subject`).val(template.subject);
+            $(`#${prefix}Content`).val(template.content);
+            $(`#${prefix}ContentType`).val(template.contentType);
+        }
+    }
+
+    function showTemplateModal(id = null) {
+        $('#templateId').val('');
+        $('#templateName').val('');
+        $('#templateSubject').val('');
+        $('#templateContent').val('');
+        $('#templateContentType').val('TEXT');
+        $('#templateModalTitle').text(/*[[#{email.templateCreate}]]*/ 'New Template');
+
+        if (id) {
+            const template = templatesCache.find(t => t.id == id);
+            if (template) {
+                $('#templateId').val(template.id);
+                $('#templateName').val(template.name);
+                $('#templateSubject').val(template.subject);
+                $('#templateContent').val(template.content);
+                $('#templateContentType').val(template.contentType);
+                $('#templateModalTitle').text(/*[[#{email.templateEdit}]]*/ 'Edit Template');
             }
         }
+        $('#templateModal').modal('show');
+    }
+
+    function editTemplate(id) {
+        showTemplateModal(id);
+    }
+
+    function saveTemplate() {
+        const id = $('#templateId').val();
+        const data = {
+            name: $('#templateName').val().trim(),
+            subject: $('#templateSubject').val().trim(),
+            content: $('#templateContent').val(),
+            contentType: $('#templateContentType').val()
+        };
+
+        if (!data.name || !data.subject || !data.content) {
+            alert('Please fill in all required fields');
+            return;
+        }
+
+        const url = id ? `/api/v1/admin/email/templates/${id}` : '/api/v1/admin/email/templates';
+        const method = id ? 'PUT' : 'POST';
+
+        fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.is_success) {
+                $('#templateModal').modal('hide');
+                loadTemplates();
+                alert(id ? 'Template updated!' : 'Template created!');
+            } else {
+                alert(data.message || 'Failed to save template');
+            }
+        })
+        .catch(error => { console.error(error); alert('Failed to save template'); });
+    }
+
+    function deleteTemplate(id) {
+        if (!confirm(/*[[#{email.templateDeleteConfirm}]]*/ 'Are you sure you want to delete this template?')) return;
+
+        fetch(`/api/v1/admin/email/templates/${id}`, { method: 'DELETE' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success) {
+                    loadTemplates();
+                    alert('Template deleted!');
+                } else {
+                    alert(data.message || 'Failed to delete template');
+                }
+            })
+            .catch(error => { console.error(error); alert('Failed to delete template'); });
     }
 
     // ==================== Email Logs ====================
@@ -735,17 +886,21 @@ OneTime 팀`
         loadEmailLogs(0);
     });
 
-    // Load logs when tab is shown
+    // Load data when tab is shown
     $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
         if ($(e.target).attr('href') === '#emailLogs') {
             loadEmailLogs();
             loadEmailStats();
+        } else if ($(e.target).attr('href') === '#emailTemplates') {
+            loadTemplates();
         }
     });
 
     // Initialize
     $(function () {
         $('[data-toggle="tooltip"]').tooltip();
+        // Load templates for dropdowns
+        loadTemplates();
     });
 </script>
 </th:block>

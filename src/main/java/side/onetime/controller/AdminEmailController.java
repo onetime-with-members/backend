@@ -1,8 +1,13 @@
 package side.onetime.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -11,10 +16,13 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import side.onetime.dto.admin.email.request.CreateEmailTemplateRequest;
 import side.onetime.dto.admin.email.request.SendEmailRequest;
 import side.onetime.dto.admin.email.request.SendToGroupRequest;
+import side.onetime.dto.admin.email.request.UpdateEmailTemplateRequest;
 import side.onetime.dto.admin.email.response.EmailLogPageResponse;
 import side.onetime.dto.admin.email.response.EmailLogStatsResponse;
+import side.onetime.dto.admin.email.response.EmailTemplateResponse;
 import side.onetime.dto.admin.email.response.SendEmailResponse;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
@@ -85,5 +93,55 @@ public class AdminEmailController {
     public ResponseEntity<ApiResponse<EmailLogStatsResponse>> getEmailStats() {
         EmailLogStatsResponse response = emailService.getEmailStats();
         return ApiResponse.onSuccess(SuccessStatus._GET_EMAIL_STATS, response);
+    }
+
+    // ==================== Template CRUD ====================
+
+    /**
+     * 템플릿 목록 조회
+     */
+    @GetMapping("/templates")
+    public ResponseEntity<ApiResponse<List<EmailTemplateResponse>>> getTemplates() {
+        List<EmailTemplateResponse> response = emailService.getTemplates();
+        return ApiResponse.onSuccess(SuccessStatus._GET_EMAIL_TEMPLATES, response);
+    }
+
+    /**
+     * 템플릿 단건 조회
+     */
+    @GetMapping("/templates/{id}")
+    public ResponseEntity<ApiResponse<EmailTemplateResponse>> getTemplate(@PathVariable Long id) {
+        EmailTemplateResponse response = emailService.getTemplate(id);
+        return ApiResponse.onSuccess(SuccessStatus._GET_EMAIL_TEMPLATE, response);
+    }
+
+    /**
+     * 템플릿 생성
+     */
+    @PostMapping("/templates")
+    public ResponseEntity<ApiResponse<EmailTemplateResponse>> createTemplate(
+            @Valid @RequestBody CreateEmailTemplateRequest request) {
+        EmailTemplateResponse response = emailService.createTemplate(request);
+        return ApiResponse.onSuccess(SuccessStatus._CREATE_EMAIL_TEMPLATE, response);
+    }
+
+    /**
+     * 템플릿 수정
+     */
+    @PutMapping("/templates/{id}")
+    public ResponseEntity<ApiResponse<EmailTemplateResponse>> updateTemplate(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateEmailTemplateRequest request) {
+        EmailTemplateResponse response = emailService.updateTemplate(id, request);
+        return ApiResponse.onSuccess(SuccessStatus._UPDATE_EMAIL_TEMPLATE, response);
+    }
+
+    /**
+     * 템플릿 삭제
+     */
+    @DeleteMapping("/templates/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteTemplate(@PathVariable Long id) {
+        emailService.deleteTemplate(id);
+        return ApiResponse.onSuccess(SuccessStatus._DELETE_EMAIL_TEMPLATE, null);
     }
 }

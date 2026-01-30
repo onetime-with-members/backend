@@ -54,7 +54,7 @@ public class AdminPageController {
 
             Cookie cookie = new Cookie(ADMIN_TOKEN_COOKIE, result.accessToken());
             cookie.setHttpOnly(true);
-            cookie.setPath("/admin");
+            cookie.setPath("/");
             cookie.setMaxAge(COOKIE_MAX_AGE);
             response.addCookie(cookie);
 
@@ -70,7 +70,7 @@ public class AdminPageController {
     public String logout(HttpServletResponse response) {
         Cookie cookie = new Cookie(ADMIN_TOKEN_COOKIE, null);
         cookie.setHttpOnly(true);
-        cookie.setPath("/admin");
+        cookie.setPath("/");
         cookie.setMaxAge(0);
         response.addCookie(cookie);
 

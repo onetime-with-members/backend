@@ -16,13 +16,20 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import side.onetime.domain.EmailLog;
+import side.onetime.domain.EmailTemplate;
 import side.onetime.domain.enums.EmailLogStatus;
+import side.onetime.dto.admin.email.request.CreateEmailTemplateRequest;
 import side.onetime.dto.admin.email.request.SendEmailRequest;
 import side.onetime.dto.admin.email.request.SendToGroupRequest;
+import side.onetime.dto.admin.email.request.UpdateEmailTemplateRequest;
 import side.onetime.dto.admin.email.response.EmailLogPageResponse;
 import side.onetime.dto.admin.email.response.EmailLogStatsResponse;
+import side.onetime.dto.admin.email.response.EmailTemplateResponse;
 import side.onetime.dto.admin.email.response.SendEmailResponse;
+import side.onetime.exception.CustomException;
+import side.onetime.exception.status.EmailErrorStatus;
 import side.onetime.repository.EmailLogRepository;
+import side.onetime.repository.EmailTemplateRepository;
 import side.onetime.repository.StatisticsRepository;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.Body;
@@ -42,6 +49,7 @@ public class EmailService {
     private final SesClient sesClient;
     private final StatisticsRepository statisticsRepository;
     private final EmailLogRepository emailLogRepository;
+    private final EmailTemplateRepository emailTemplateRepository;
 
     @Value("${spring.cloud.aws.ses.from-email:noreply@onetime.com}")
     private String fromEmail;
@@ -223,5 +231,74 @@ public class EmailService {
         }
 
         return EmailLogStatsResponse.of(totalSent, sentTodayCount, failedTodayCount);
+    }
+
+    // ==================== 템플릿 CRUD ====================
+
+    /**
+     * 템플릿 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public List<EmailTemplateResponse> getTemplates() {
+        return emailTemplateRepository.findAllByOrderByUpdatedAtDesc()
+                .stream()
+                .map(EmailTemplateResponse::from)
+                .toList();
+    }
+
+    /**
+     * 템플릿 단건 조회
+     */
+    @Transactional(readOnly = true)
+    public EmailTemplateResponse getTemplate(Long id) {
+        EmailTemplate template = emailTemplateRepository.findById(id)
+                .orElseThrow(() -> new CustomException(EmailErrorStatus._EMAIL_TEMPLATE_NOT_FOUND));
+        return EmailTemplateResponse.from(template);
+    }
+
+    /**
+     * 템플릿 생성
+     */
+    @Transactional
+    public EmailTemplateResponse createTemplate(CreateEmailTemplateRequest request) {
+        if (emailTemplateRepository.existsByName(request.name())) {
+            throw new CustomException(EmailErrorStatus._EMAIL_TEMPLATE_NAME_DUPLICATED);
+        }
+
+        EmailTemplate template = request.toEntity();
+        emailTemplateRepository.save(template);
+
+        log.info("Email template created: {}", template.getName());
+        return EmailTemplateResponse.from(template);
+    }
+
+    /**
+     * 템플릿 수정
+     */
+    @Transactional
+    public EmailTemplateResponse updateTemplate(Long id, UpdateEmailTemplateRequest request) {
+        EmailTemplate template = emailTemplateRepository.findById(id)
+                .orElseThrow(() -> new CustomException(EmailErrorStatus._EMAIL_TEMPLATE_NOT_FOUND));
+
+        if (emailTemplateRepository.existsByNameAndIdNot(request.name(), id)) {
+            throw new CustomException(EmailErrorStatus._EMAIL_TEMPLATE_NAME_DUPLICATED);
+        }
+
+        template.update(request.name(), request.subject(), request.content(), request.contentType());
+
+        log.info("Email template updated: {}", template.getName());
+        return EmailTemplateResponse.from(template);
+    }
+
+    /**
+     * 템플릿 삭제
+     */
+    @Transactional
+    public void deleteTemplate(Long id) {
+        EmailTemplate template = emailTemplateRepository.findById(id)
+                .orElseThrow(() -> new CustomException(EmailErrorStatus._EMAIL_TEMPLATE_NOT_FOUND));
+
+        emailTemplateRepository.delete(template);
+        log.info("Email template deleted: {}", template.getName());
     }
 }
