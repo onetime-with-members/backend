@@ -1,5 +1,6 @@
 package side.onetime.global.common.status;
 
+import org.json.HTTP;
 import org.springframework.http.HttpStatus;
 
 import lombok.AllArgsConstructor;
@@ -84,6 +85,9 @@ public enum SuccessStatus implements BaseCode {
     _DELETE_BANNER(HttpStatus.OK, "200", "배너 삭제에 성공했습니다."),
     _DELETE_BAR_BANNER(HttpStatus.OK, "200", "띠배너 삭제에 성공했습니다."),
     _INCREASE_BANNER_CLICK_COUNT(HttpStatus.OK, "200", "배너 클릭 수 증가에 성공했습니다."),
+    _EXPORT_BANNERS(HttpStatus.OK, "200", "배너 내보내기에 성공했습니다."),
+    _IMPORT_BANNERS(HttpStatus.OK, "200", "배너 불러오기에 성공했습니다."),
+    _SAVE_BANNER_STAGING(HttpStatus.OK, "200", "배너 스테이징 저장에 성공했습니다."),
     // Test
     _TEST_LOGIN(HttpStatus.OK, "200", "테스트 로그인에 성공했습니다."),
     _TEST_EXPIRED_TOKEN(HttpStatus.OK, "200", "만료된 테스트 토큰이 발급되었습니다."),

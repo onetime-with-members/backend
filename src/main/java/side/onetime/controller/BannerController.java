@@ -9,14 +9,13 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import side.onetime.dto.banner.request.RegisterBannerRequest;
-import side.onetime.dto.banner.request.RegisterBarBannerRequest;
-import side.onetime.dto.banner.request.UpdateBannerRequest;
-import side.onetime.dto.banner.request.UpdateBarBannerRequest;
+import side.onetime.dto.banner.request.*;
 import side.onetime.dto.banner.response.*;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.BannerService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -226,5 +225,49 @@ public class BannerController {
     public ResponseEntity<ApiResponse<SuccessStatus>> increaseBannerClickCount(@PathVariable Long id) {
         bannerService.increaseBannerClickCount(id);
         return ApiResponse.onSuccess(SuccessStatus._INCREASE_BANNER_CLICK_COUNT);
+    }
+
+    /**
+     * 배너 내보내기 API.
+     *
+     * 테스트 서버 전용 API로, 삭제되지 않은 모든 배너 데이터를 운영 서버의 스테이징 영역으로 전송합니다.
+     *
+     * @return 성공 응답 메시지
+     */
+    @PostMapping("/banners/export")
+    public ResponseEntity<ApiResponse<SuccessStatus>> exportBanners() {
+        bannerService.exportBanners();
+        return ApiResponse.onSuccess(SuccessStatus._EXPORT_BANNERS);
+    }
+
+    /**
+     * 배너 불러오기 API.
+     *
+     * 운영 서버 전용 API로, 스테이징 영역에 저장된 데이터를 실제 운영 환경의 배너 테이블에 동기화합니다.
+     *
+     * @return 성공 응답 메시지
+     */
+    @PostMapping("/banners/import")
+    public ResponseEntity<ApiResponse<SuccessStatus>> importBanners() {
+        bannerService.importBanners();
+        return ApiResponse.onSuccess(SuccessStatus._IMPORT_BANNERS);
+    }
+
+    /**
+     * 배너 스테이징 저장 API.
+     *
+     * 테스트 서버로부터 전송받은 배너 리스트를 스테이징 테이블에 저장합니다.
+     * 기존 스테이징 데이터는 모두 삭제된 후 새로운 데이터로 교체됩니다.
+     *
+     * @param requests 테스트 서버에서 전송한 배너 리스트
+     * @return 성공 응답 메시지
+     */
+    @PostMapping("/banners/staging")
+    public ResponseEntity<ApiResponse<SuccessStatus>> saveBannerStaging(
+            @RequestHeader(name = "X-API-KEY") String apiKey,
+            @RequestBody List<ExportBannerRequest> requests
+    ) {
+        bannerService.saveBannerStaging(apiKey, requests);
+        return ApiResponse.onSuccess(SuccessStatus._SAVE_BANNER_STAGING);
     }
 }

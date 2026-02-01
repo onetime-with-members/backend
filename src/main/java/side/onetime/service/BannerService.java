@@ -2,22 +2,25 @@ package side.onetime.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 import side.onetime.domain.Banner;
+import side.onetime.domain.BannerStaging;
 import side.onetime.domain.BarBanner;
 import side.onetime.dto.admin.response.PageInfo;
-import side.onetime.dto.banner.request.RegisterBannerRequest;
-import side.onetime.dto.banner.request.RegisterBarBannerRequest;
-import side.onetime.dto.banner.request.UpdateBannerRequest;
-import side.onetime.dto.banner.request.UpdateBarBannerRequest;
+import side.onetime.dto.banner.request.*;
 import side.onetime.dto.banner.response.*;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.AdminErrorStatus;
+import side.onetime.global.common.status.ErrorStatus;
 import side.onetime.repository.AdminRepository;
 import side.onetime.repository.BannerRepository;
+import side.onetime.repository.BannerStagingRepository;
 import side.onetime.repository.BarBannerRepository;
 import side.onetime.util.AdminAuthorizationUtil;
 import side.onetime.util.S3Util;
@@ -29,9 +32,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BannerService {
 
+    @Value("${app.url}")
+    private String serverUrl;
+
+    @Value("${auth.api-key")
+    private String apiKey;
+
     private final BannerRepository bannerRepository;
     private final BarBannerRepository barBannerRepository;
     private final AdminRepository adminRepository;
+    private final BannerStagingRepository bannerStagingRepository;
     private final S3Util s3Util;
 
     /**
@@ -299,6 +309,111 @@ public class BannerService {
     @Transactional
     public void increaseBannerClickCount(Long id) {
         bannerRepository.increaseClickCount(id);
+    }
+
+    /**
+     * 배너 내보내기 메서드.
+     *
+     * 삭제되지 않은 모든 배너를 조회하여 요청 객체(DTO)로 변환합니다.
+     * 운영 서버의 스테이징 저장 API(/api/v1/banners/staging)를 호출하여 데이터를 전달합니다.
+     * 전달된 데이터는 운영 서버의 스테이징 영역에 보관됩니다.
+     */
+    @Transactional
+    public void exportBanners() {
+        adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
+                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
+
+        List<Banner> banners = bannerRepository.findAllByIsDeletedFalse();
+        List<ExportBannerRequest> exportBannerRequests = banners.stream()
+                .map(ExportBannerRequest::from)
+                .toList();
+
+        try {
+            RestClient.create()
+                    .post()
+                    .uri(serverUrl + "/api/v1/banners/staging")
+                    .header("X-API-KEY", apiKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(exportBannerRequests)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (Exception e) {
+            log.error("❌ 배너 내보내기 중 서버 통신 오류 발생: {}", e.getMessage());
+            throw new CustomException(AdminErrorStatus._FAILED_EXPORT_TRANSMISSION);
+        }
+    }
+
+    /**
+     * 배너 불러오기 메서드.
+     *
+     * 1. 스테이징 테이블에 없는 기존 배너들을 조회하여 삭제합니다. (삭제 대상: 운영에서 직접 추가, 테스트 서버에서 삭제된 배너)
+     * 2. 스테이징 데이터를 운영 테이블과 비교하여 반영합니다.
+     *    - 이미 존재하는 배너(bannerStagingId 기준): 기존 클릭 수 및 활성 상태를 유지하며 정보를 업데이트합니다.
+     *    - 새로운 배너: 신규 레코드로 생성하여 운영 테이블에 추가합니다.
+     */
+    @Transactional
+    public void importBanners() {
+        adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
+                .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
+
+        List<BannerStaging> bannerStagings = bannerStagingRepository.findAll();
+        List<Long> bannerStagingIds = bannerStagings.stream()
+                .map(BannerStaging::getBannerId)
+                .toList();
+
+        bannerRepository.findAllByIsDeletedFalse().stream()
+                .filter(banner -> banner.getBannerStagingId() == null || !bannerStagingIds.contains(banner.getBannerStagingId()))
+                .forEach(Banner::markAsDeleted);
+
+        for (BannerStaging bannerStaging : bannerStagings) {
+            bannerRepository.findByBannerStagingIdAndIsDeletedFalse(bannerStaging.getBannerId())
+                    .ifPresentOrElse(
+                            existingBanner -> {
+                                existingBanner.updateOrganization(bannerStaging.getOrganization());
+                                existingBanner.updateTitle(bannerStaging.getTitle());
+                                existingBanner.updateSubTitle(bannerStaging.getSubTitle());
+                                existingBanner.updateButtonText(bannerStaging.getButtonText());
+                                existingBanner.updateColorCode(bannerStaging.getColorCode());
+                                existingBanner.updateImageUrl(bannerStaging.getImageUrl());
+                                existingBanner.updateLinkUrl(bannerStaging.getLinkUrl());
+                            },
+                            () -> bannerRepository.save(
+                                    Banner.builder()
+                                            .bannerStagingId(bannerStaging.getBannerId())
+                                            .organization(bannerStaging.getOrganization())
+                                            .title(bannerStaging.getTitle())
+                                            .subTitle(bannerStaging.getSubTitle())
+                                            .buttonText(bannerStaging.getButtonText())
+                                            .colorCode(bannerStaging.getColorCode())
+                                            .imageUrl(bannerStaging.getImageUrl())
+                                            .linkUrl(bannerStaging.getLinkUrl())
+                                            .build()
+                            )
+                    );
+        }
+    }
+
+    /**
+     * 배너 스테이징 저장 메서드.
+     *
+     * 기존에 저장되어 있던 모든 스테이징 데이터를 일괄 삭제 후, 새로운 데이터로 교체하여 최신화합니다.
+     *
+     * @param apiKey API 인증키
+     * @param requests 테스트 서버로부터 전송된 배너 리스트
+     */
+    @Transactional
+    public void saveBannerStaging(String apiKey, List<ExportBannerRequest> requests) {
+        if (!this.apiKey.equals(apiKey)) {
+            throw new CustomException(ErrorStatus._INVALID_API_KEY);
+        }
+
+        bannerStagingRepository.deleteAllInBatch();
+
+        List<BannerStaging> bannerStagings = requests.stream()
+                .map(ExportBannerRequest::toEntity)
+                .toList();
+
+        bannerStagingRepository.saveAll(bannerStagings);
     }
 
     /**
