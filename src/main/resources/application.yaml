@@ -44,7 +44,7 @@ spring:
         bucket: ${S3_BUCKET_NAME}
       ses:
         region: ${AWS_SES_REGION:ap-northeast-2}
-        from-email: ${AWS_SES_FROM_EMAIL:noreply@onetime.com}
+        from-email: ${AWS_SES_FROM_EMAIL:no-reply@onetime-with-members.com}
 
 jwt:
   secret: ${JWT_SECRET}
