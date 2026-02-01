@@ -17,19 +17,19 @@ import org.springframework.web.multipart.MultipartFile;
 import side.onetime.configuration.AdminControllerTestConfig;
 import side.onetime.controller.BannerController;
 import side.onetime.dto.admin.response.PageInfo;
-import side.onetime.dto.banner.request.RegisterBannerRequest;
-import side.onetime.dto.banner.request.RegisterBarBannerRequest;
-import side.onetime.dto.banner.request.UpdateBannerRequest;
-import side.onetime.dto.banner.request.UpdateBarBannerRequest;
+import side.onetime.dto.banner.request.*;
 import side.onetime.dto.banner.response.*;
+import side.onetime.exception.CustomException;
+import side.onetime.exception.status.AdminErrorStatus;
+import side.onetime.global.common.status.ErrorStatus;
 import side.onetime.service.BannerService;
 
 import java.util.List;
 
 import static com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document;
+import static com.epages.restdocs.apispec.ResourceDocumentation.headerWithName;
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
@@ -663,6 +663,221 @@ public class BannerControllerTest extends AdminControllerTestConfig {
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
                                                 fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                        )
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("배너를 내보낸다.")
+    public void exportBanners() throws Exception {
+        // given
+        Mockito.doNothing().when(bannerService).exportBanners();
+
+        // then
+        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/banners/export"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.is_success").value(true))
+                .andExpect(jsonPath("$.code").value("200"))
+                .andExpect(jsonPath("$.message").value("배너 내보내기에 성공했습니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("banner/banner-export",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Banner API")
+                                        .description("배너를 내보낸다.")
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                        )
+                                        .responseSchema(Schema.schema("CommonSuccessResponse"))
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("배너를 불러온다.")
+    public void importBanners() throws Exception {
+        // given
+        Mockito.doNothing().when(bannerService).importBanners();
+
+        // then
+        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/banners/import"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.is_success").value(true))
+                .andExpect(jsonPath("$.code").value("200"))
+                .andExpect(jsonPath("$.message").value("배너 불러오기에 성공했습니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("banner/banner-import",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Banner API")
+                                        .description("배너를 불러온다.")
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                        )
+                                        .responseSchema(Schema.schema("CommonSuccessResponse"))
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("배너를 스테이징에 저장한다.")
+    public void saveBannerStaging() throws Exception {
+        // given
+        String apiKey = "api-key-0123456789";
+        List<ExportBannerRequest> requests = List.of(
+                new ExportBannerRequest(
+                        1L,
+                        "OneTime",
+                        "OneTime's Title",
+                        "OneTime's Sub Title",
+                        "OneTime's Button Text",
+                        "#FFFFFF",
+                        "https://www.image.com",
+                        "https://www.link.com"
+                ),
+                new ExportBannerRequest(
+                        2L,
+                        "OneTime2",
+                        "OneTime's Title2",
+                        "OneTime's Sub Title2",
+                        "OneTime's Button Text2",
+                        "#000000",
+                        "https://www.image2.com",
+                        "https://www.link2.com"
+                )
+        );
+        String requestContent = objectMapper.writeValueAsString(requests);
+
+        // when
+        Mockito.doNothing().when(bannerService).saveBannerStaging(eq(apiKey), anyList());
+
+        // then
+        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/banners/staging")
+                        .header("X-API-KEY", apiKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestContent))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.is_success").value(true))
+                .andExpect(jsonPath("$.code").value("200"))
+                .andExpect(jsonPath("$.message").value("배너 스테이징 저장에 성공했습니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("banner/banner-staging-save",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Banner API")
+                                        .description("배너를 스테이징에 저장한다.")
+                                        .requestHeaders(
+                                                headerWithName("X-API-KEY").description("서버 간 인증을 위한 API Key")
+                                        )
+                                        .requestFields(
+                                                fieldWithPath("[].bannerId").type(JsonFieldType.NUMBER).description("배너 ID"),
+                                                fieldWithPath("[].organization").type(JsonFieldType.STRING).description("조직명"),
+                                                fieldWithPath("[].title").type(JsonFieldType.STRING).description("제목"),
+                                                fieldWithPath("[].subTitle").type(JsonFieldType.STRING).description("부제목"),
+                                                fieldWithPath("[].buttonText").type(JsonFieldType.STRING).description("버튼 텍스트"),
+                                                fieldWithPath("[].colorCode").type(JsonFieldType.STRING).description("색상 코드"),
+                                                fieldWithPath("[].imageUrl").type(JsonFieldType.STRING).description("이미지 URL"),
+                                                fieldWithPath("[].linkUrl").type(JsonFieldType.STRING).description("링크 URL")
+                                        )
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                        )
+                                        .requestSchema(Schema.schema("ExportBannerRequestList"))
+                                        .responseSchema(Schema.schema("CommonSuccessResponse"))
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("[FAILED] 배너 내보내기 중 연결에 실패한다.")
+    public void exportBanners_Fail_Connection() throws Exception {
+        // when
+        Mockito.doThrow(new CustomException(AdminErrorStatus._FAILED_EXPORT_TRANSMISSION))
+                .when(bannerService).exportBanners();
+
+        // then
+        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/banners/export"))
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.is_success").value(false))
+                .andExpect(jsonPath("$.code").value("ADMIN-USER-011"))
+                .andExpect(jsonPath("$.message").value("운영 서버로 배너 데이터 전송 중 오류가 발생했습니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("banner/banner-export-fail-connection",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Banner API")
+                                        .description("배너 내보내기 중 연결에 실패한다.")
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("에러 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지")
+                                        )
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("[FAILED] 유효하지 않은 API 키로 배너 스테이징 저장에 실패한다.")
+    public void saveBannerStaging_Fail_InvalidApiKey() throws Exception {
+        // given
+        String invalidApiKey = "invalid-api-key";
+        List<ExportBannerRequest> requests = List.of(
+                new ExportBannerRequest(
+                        1L,
+                        "OneTime",
+                        "OneTime's Title",
+                        "OneTime's Sub Title",
+                        "OneTime's Button Text",
+                        "#FFFFFF",
+                        "https://www.image.com",
+                        "https://www.link.com"
+                )
+        );
+        String requestContent = objectMapper.writeValueAsString(requests);
+
+        // when
+        Mockito.doThrow(new CustomException(ErrorStatus._INVALID_API_KEY))
+                .when(bannerService).saveBannerStaging(eq(invalidApiKey), anyList());
+
+        // then
+        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/banners/staging")
+                        .header("X-API-KEY", invalidApiKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestContent))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.is_success").value(false))
+                .andExpect(jsonPath("$.code").value("E_INVALID_API_KEY"))
+                .andExpect(jsonPath("$.message").value("유효하지 않은 서버 인증 키입니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("banner/banner-staging-save-fail-reason",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Banner API")
+                                        .description("유효하지 않은 API 키로 배너 스테이징 저장에 실패한다.")
+                                        .requestHeaders(
+                                                headerWithName("X-API-KEY").description("서버 간 인증을 위한 API Key")
+                                        )
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("에러 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지")
                                         )
                                         .build()
                         )
