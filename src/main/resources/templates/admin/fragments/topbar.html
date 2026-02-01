@@ -54,30 +54,6 @@
             </a>
         </li>
 
-        <!-- Language Selector -->
-        <li class="nav-item dropdown no-arrow mx-1">
-            <a class="nav-link dropdown-toggle" href="#" id="langDropdown" role="button"
-               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="fas fa-globe fa-fw"></i>
-                <span class="d-none d-lg-inline text-gray-600 small"
-                      th:text="${#locale.language == 'ko' ? '한국어' : 'English'}">Language</span>
-            </a>
-            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
-                <a class="dropdown-item" th:href="@{?(lang=ko)}"
-                   th:classappend="${#locale.language == 'ko' ? 'active' : ''}">
-                    <i class="fas fa-check fa-sm fa-fw mr-2" th:if="${#locale.language == 'ko'}"></i>
-                    <span th:unless="${#locale.language == 'ko'}" class="mr-4"></span>
-                    한국어
-                </a>
-                <a class="dropdown-item" th:href="@{?(lang=en)}"
-                   th:classappend="${#locale.language == 'en' ? 'active' : ''}">
-                    <i class="fas fa-check fa-sm fa-fw mr-2" th:if="${#locale.language == 'en'}"></i>
-                    <span th:unless="${#locale.language == 'en'}" class="mr-4"></span>
-                    English
-                </a>
-            </div>
-        </li>
-
         <div class="topbar-divider d-none d-sm-block"></div>
 
         <!-- User Dropdown -->
