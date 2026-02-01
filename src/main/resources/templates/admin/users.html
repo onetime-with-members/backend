@@ -203,15 +203,15 @@
         </div>
         <div id="userListContent" style="display: none;">
             <div class="table-responsive">
-                <table class="table table-hover" style="font-size: 0.9rem;">
+                <table class="table table-hover table-compact w-100">
                     <thead class="thead-light">
                         <tr>
-                            <th style="min-width: 120px;" th:text="#{table.name}">Name</th>
-                            <th style="min-width: 200px;" th:text="#{table.email}">Email</th>
-                            <th style="width: 100px;" class="text-center" th:text="#{table.provider}">Provider</th>
-                            <th style="width: 80px;" class="text-center" th:text="#{table.language}">Language</th>
-                            <th style="width: 100px;" class="text-center" th:text="#{table.participated}">Participated</th>
-                            <th style="width: 180px;" class="text-center" th:text="#{table.createdDate}">Created Date</th>
+                            <th style="width: 12%;" th:text="#{table.name}">Name</th>
+                            <th th:text="#{table.email}">Email</th>
+                            <th style="width: 10%;" class="text-center" th:text="#{table.provider}">Provider</th>
+                            <th style="width: 8%;" class="text-center" th:text="#{table.language}">Language</th>
+                            <th style="width: 10%;" class="text-center" th:text="#{table.participated}">Participated</th>
+                            <th style="width: 15%;" class="text-center" th:text="#{table.createdDate}">Created Date</th>
                         </tr>
                     </thead>
                     <tbody id="userListBody"></tbody>

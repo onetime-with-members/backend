@@ -41,6 +41,27 @@ body {
     overflow-y: auto;
 }
 
+/* Compact list tables (user list, event list) */
+.table-compact td,
+.table-compact th {
+    padding: 0.4rem 0.5rem !important;
+    vertical-align: middle;
+    line-height: 1.2;
+}
+
+.table-compact {
+    font-size: 0.85rem;
+}
+
+.table-compact tbody tr {
+    height: 32px;
+}
+
+.table-compact td:first-child,
+.table-compact th:first-child {
+    padding-left: 1rem !important;
+}
+
 /* Summary cards */
 .summary-card {
     transition: transform 0.2s ease-in-out;

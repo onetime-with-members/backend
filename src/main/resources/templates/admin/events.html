@@ -273,15 +273,15 @@
         </div>
         <div id="eventListContent" style="display: none;">
             <div class="table-responsive">
-                <table class="table table-hover" style="font-size: 0.9rem;">
+                <table class="table table-hover table-compact w-100">
                     <thead class="thead-light">
                         <tr>
-                            <th style="width: 80px;" th:text="#{table.category}">Category</th>
-                            <th style="min-width: 250px;" th:text="#{table.name}">Name</th>
-                            <th style="width: 180px;" class="text-center" th:text="#{table.dateRange}">Date Range</th>
-                            <th style="width: 130px;" class="text-center" th:text="#{table.timeRange}">Time Range</th>
-                            <th style="width: 100px;" class="text-center" th:text="#{table.participants}">Participants</th>
-                            <th style="width: 180px;" class="text-center" th:text="#{table.createdDate}">Created Date</th>
+                            <th style="width: 8%;" th:text="#{table.category}">Category</th>
+                            <th th:text="#{table.name}">Name</th>
+                            <th style="width: 15%;" class="text-center" th:text="#{table.dateRange}">Date Range</th>
+                            <th style="width: 12%;" class="text-center" th:text="#{table.timeRange}">Time Range</th>
+                            <th style="width: 10%;" class="text-center" th:text="#{table.participants}">Participants</th>
+                            <th style="width: 15%;" class="text-center" th:text="#{table.createdDate}">Created Date</th>
                         </tr>
                     </thead>
                     <tbody id="eventListBody"></tbody>
@@ -309,7 +309,7 @@
         const startDate = $('#eventStartDate').val() || '';
         const endDate = $('#eventEndDate').val() || '';
 
-        let url = `/api/v1/admin/statistics/events?page=${page}&size=10&keyword=${currentEventSort}&sorting=${currentEventSorting}`;
+        let url = `/api/v1/admin/statistics/events?page=${page}&size=20&keyword=${currentEventSort}&sorting=${currentEventSorting}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
         if (startDate) url += `&startDate=${startDate}`;
         if (endDate) url += `&endDate=${endDate}`;
@@ -353,7 +353,7 @@
                 const eventUrl = `https://www.onetime-with-members.com/ko/events/view/${event.event_id}`;
                 tbody += `
                     <tr style="cursor: pointer;" onclick="window.open('${eventUrl}', '_blank')">
-                        <td class="text-center"><span class="${categoryClass} font-weight-bold">${categoryLabel}</span></td>
+                        <td><span class="${categoryClass} font-weight-bold">${categoryLabel}</span></td>
                         <td>${event.title || '-'}</td>
                         <td class="text-center">${event.date_range || '-'}</td>
                         <td class="text-center">${event.time_range || '-'}</td>
@@ -369,7 +369,7 @@
 
     function renderEventPagination(pageInfo) {
         const totalPages = pageInfo.total_pages || 1;
-        const currentPage = pageInfo.current_page || 1;
+        const currentPage = pageInfo.page || 1;
 
         let pagination = '';
 
