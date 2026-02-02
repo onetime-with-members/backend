@@ -99,4 +99,4 @@ test:
 app:
   sync:
     target-url: ${APP_SYNC_TARGET_URL:}
-    api-key: ${APP_SYNC_API_KEY}
+    api-key: ${APP_SYNC_API_KEY:}
