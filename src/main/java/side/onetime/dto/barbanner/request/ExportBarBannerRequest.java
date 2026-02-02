@@ -1,4 +1,4 @@
-package side.onetime.dto.banner.request;
+package side.onetime.dto.barbanner.request;
 
 import side.onetime.domain.BarBanner;
 import side.onetime.domain.BarBannerStaging;
