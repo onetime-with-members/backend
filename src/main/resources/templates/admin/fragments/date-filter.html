@@ -1,21 +1,27 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<div th:fragment="dateFilter" class="card shadow mb-4">
-    <div class="card-body py-2">
-        <form method="get" class="form-inline justify-content-end">
-            <div class="form-group mr-2">
-                <label class="mr-2 small font-weight-bold" th:text="#{filter.startDate}">Start Date</label>
-                <input type="date" name="startDate" class="form-control form-control-sm"
-                       th:value="${startDate}">
-            </div>
-            <div class="form-group mr-2">
-                <label class="mr-2 small font-weight-bold" th:text="#{filter.endDate}">End Date</label>
-                <input type="date" name="endDate" class="form-control form-control-sm"
-                       th:value="${endDate}">
-            </div>
-            <button type="submit" class="btn btn-primary btn-sm mr-2" th:text="#{filter.apply}">Apply</button>
-            <a th:href="@{${currentUri}}" class="btn btn-secondary btn-sm" th:text="#{filter.reset}">Reset</a>
-        </form>
-    </div>
+<div th:fragment="dateFilter" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 mb-6 transition-colors duration-200">
+    <form method="get" class="flex items-center justify-end gap-4">
+        <div class="flex items-center gap-2">
+            <label class="text-sm text-gray-600 dark:text-gray-400">시작일</label>
+            <input type="date" name="startDate"
+                   class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500"
+                   th:value="${startDate}">
+        </div>
+        <div class="flex items-center gap-2">
+            <label class="text-sm text-gray-600 dark:text-gray-400">종료일</label>
+            <input type="date" name="endDate"
+                   class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500"
+                   th:value="${endDate}">
+        </div>
+        <button type="submit"
+                class="px-4 py-1.5 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors">
+            적용
+        </button>
+        <a th:href="@{${currentUri}}"
+           class="px-4 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+            초기화
+        </a>
+    </form>
 </div>
 </html>

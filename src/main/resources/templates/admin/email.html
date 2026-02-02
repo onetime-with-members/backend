@@ -3,248 +3,175 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{admin/layout/default}">
 <head>
-    <title th:text="#{email.pageTitle} + ' - ' + #{admin.title}">Send Email - OneTime Admin</title>
-    <style>
-        .selected-user-chip {
-            display: inline-flex;
-            align-items: center;
-            background-color: #e3e6f0;
-            border-radius: 16px;
-            padding: 4px 12px;
-            margin: 2px 4px;
-            font-size: 0.8rem;
-        }
-        .selected-user-chip .remove-btn {
-            margin-left: 6px;
-            cursor: pointer;
-            color: #e74a3b;
-            font-weight: bold;
-        }
-        .search-result-table {
-            font-size: 0.85rem;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        .search-result-table td, .search-result-table th {
-            white-space: nowrap;
-        }
-        .status-badge {
-            font-size: 0.75rem;
-            padding: 3px 8px;
-            border-radius: 4px;
-        }
-        .status-sent { background-color: #1cc88a; color: white; }
-        .status-failed { background-color: #e74a3b; color: white; }
-        .status-delivered { background-color: #36b9cc; color: white; }
-        .status-bounced { background-color: #f6c23e; color: #333; }
-        .log-table { font-size: 0.85rem; }
-        .log-table td { vertical-align: middle; }
-        .stats-card {
-            border-left: 4px solid;
-            padding: 15px;
-        }
-        .stats-card.primary { border-left-color: #4e73df; }
-        .stats-card.success { border-left-color: #1cc88a; }
-        .stats-card.danger { border-left-color: #e74a3b; }
-        .stats-card.info { border-left-color: #36b9cc; }
-    </style>
+    <title>이메일 발송 - OneTime Admin</title>
 </head>
 <body>
 <div layout:fragment="content">
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800" th:text="#{email.pageTitle}">Send Email</h1>
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">이메일 발송</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">사용자에게 이메일을 발송합니다</p>
+        </div>
     </div>
 
     <!-- Tabs -->
-    <ul class="nav nav-tabs mb-4" id="emailTab" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link active" id="group-tab" data-toggle="tab" href="#groupSend" role="tab">
-                <i class="fas fa-users mr-1"></i>
-                <span th:text="#{email.tabGroup}">Group Send</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="individual-tab" data-toggle="tab" href="#individualSend" role="tab">
-                <i class="fas fa-user mr-1"></i>
-                <span th:text="#{email.tabIndividual}">Individual Send</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="logs-tab" data-toggle="tab" href="#emailLogs" role="tab">
-                <i class="fas fa-history mr-1"></i>
-                <span th:text="#{email.tabLogs}">Sending Logs</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="templates-tab" data-toggle="tab" href="#emailTemplates" role="tab">
-                <i class="fas fa-file-alt mr-1"></i>
-                <span th:text="#{email.tabTemplates}">Templates</span>
-            </a>
-        </li>
-    </ul>
+    <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
+        <nav class="flex gap-6">
+            <button type="button" class="tab-btn pb-3 text-sm font-medium border-b-2 border-accent-500 text-gray-900 dark:text-white" data-tab="groupSend">
+                <i data-lucide="users" class="w-4 h-4 inline mr-1"></i>
+                그룹 발송
+            </button>
+            <button type="button" class="tab-btn pb-3 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" data-tab="individualSend">
+                <i data-lucide="user" class="w-4 h-4 inline mr-1"></i>
+                개별 발송
+            </button>
+            <button type="button" class="tab-btn pb-3 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" data-tab="emailLogs">
+                <i data-lucide="history" class="w-4 h-4 inline mr-1"></i>
+                발송 로그
+            </button>
+            <button type="button" class="tab-btn pb-3 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" data-tab="emailTemplates">
+                <i data-lucide="file-text" class="w-4 h-4 inline mr-1"></i>
+                템플릿
+            </button>
+        </nav>
+    </div>
 
-    <div class="tab-content" id="emailTabContent">
-
+    <!-- Tab Contents -->
+    <div id="tabContents">
         <!-- Tab 1: Group Send -->
-        <div class="tab-pane fade show active" id="groupSend" role="tabpanel">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-users mr-2"></i>
-                        <span th:text="#{email.tabGroup}">Group Send</span>
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="groupTargetGroup" th:text="#{email.targetGroup}">Target Group</label>
-                                <select id="groupTargetGroup" class="form-control">
-                                    <option value="">-- Select --</option>
-                                    <option value="agreed" th:text="#{marketing.agreedUsers}">Marketing Agreed</option>
-                                    <option value="dormant" th:text="#{marketing.dormantUsers}">Dormant Users</option>
-                                    <option value="noEvent" th:text="#{marketing.noEventUsers}">No Event Users</option>
-                                    <option value="oneTime" th:text="#{marketing.oneTimeUsers}">One-time Users</option>
-                                    <option value="vip" th:text="#{marketing.vipUsers}">VIP Users</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="groupLimit" th:text="#{email.limit}">Max Recipients</label>
-                                <input type="number" id="groupLimit" class="form-control" value="100" min="1" max="1000">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="groupSubject" th:text="#{email.subject}">Subject</label>
-                                <input type="text" id="groupSubject" class="form-control" placeholder="Email subject...">
-                            </div>
-                            <div class="form-group">
-                                <label for="groupContentType" th:text="#{email.contentType}">Content Type</label>
-                                <select id="groupContentType" class="form-control">
-                                    <option value="TEXT">TEXT</option>
-                                    <option value="HTML">HTML</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label th:text="#{email.templateSelect}">Select Template</label>
-                        <select id="groupTemplateSelect" class="form-control" onchange="applyTemplate(this.value, 'group')">
-                            <option value="" th:text="#{email.templateSelectPlaceholder}">Choose a template</option>
+        <div id="groupSend" class="tab-content">
+            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+                <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                    그룹 발송
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">대상 그룹</label>
+                        <select id="groupTargetGroup" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
+                            <option value="">-- 선택 --</option>
+                            <option value="agreed">마케팅 동의</option>
+                            <option value="dormant">휴면 유저</option>
+                            <option value="noEvent">이벤트 미생성</option>
+                            <option value="oneTime">일회성 유저</option>
+                            <option value="vip">VIP 유저</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label th:text="#{email.content}">Content</label>
-                        <textarea id="groupContent" class="form-control" rows="6" placeholder="Email content..."></textarea>
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">최대 발송 수</label>
+                        <input type="number" id="groupLimit" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" value="100" min="1" max="1000">
                     </div>
-                    <div class="text-right">
-                        <button type="button" class="btn btn-primary" id="btnGroupSend">
-                            <i class="fas fa-paper-plane mr-1"></i>
-                            <span th:text="#{email.send}">Send Email</span>
-                        </button>
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">제목</label>
+                        <input type="text" id="groupSubject" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="이메일 제목...">
                     </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">콘텐츠 타입</label>
+                        <select id="groupContentType" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
+                            <option value="TEXT">TEXT</option>
+                            <option value="HTML">HTML</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">템플릿 선택</label>
+                    <select id="groupTemplateSelect" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
+                        <option value="">템플릿을 선택하세요</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">내용</label>
+                    <textarea id="groupContent" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" rows="6" placeholder="이메일 내용..."></textarea>
+                </div>
+                <div class="flex justify-end">
+                    <button type="button" class="px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2" id="btnGroupSend">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        발송
+                    </button>
                 </div>
             </div>
         </div>
 
         <!-- Tab 2: Individual Send -->
-        <div class="tab-pane fade" id="individualSend" role="tabpanel">
-            <div class="row">
+        <div id="individualSend" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 <!-- Left: User Search -->
-                <div class="col-lg-5">
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">
-                                <i class="fas fa-search mr-2"></i>
-                                <span th:text="#{email.searchUser}">Search User</span>
-                            </h6>
+                <div class="lg:col-span-2">
+                    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                            사용자 검색
+                        </h3>
+                        <div class="flex gap-2 mb-4">
+                            <input type="text" id="userSearchInput" class="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="이름 또는 이메일...">
+                            <button type="button" id="btnSearchUser" class="px-3 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                <i data-lucide="search" class="w-4 h-4"></i>
+                            </button>
                         </div>
-                        <div class="card-body">
-                            <div class="input-group mb-3">
-                                <input type="text" id="userSearchInput" class="form-control"
-                                       th:placeholder="#{email.searchPlaceholder}" placeholder="Name or email...">
-                                <div class="input-group-append">
-                                    <button class="btn btn-outline-primary" type="button" id="btnSearchUser">
-                                        <i class="fas fa-search"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div id="searchLoading" class="text-center py-3" style="display: none;">
-                                <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                    <span class="sr-only">Loading...</span>
-                                </div>
-                            </div>
-                            <div class="search-result-table">
-                                <table class="table table-bordered table-hover" style="font-size: 0.85rem;">
-                                    <thead>
-                                        <tr>
-                                            <th style="width: 30px;"></th>
-                                            <th th:text="#{table.name}">Name</th>
-                                            <th th:text="#{table.email}">Email</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="searchResultBody">
-                                        <tr>
-                                            <td colspan="3" class="text-center text-muted"
-                                                th:text="#{email.searchGuide}">Search for users above</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                        <div id="searchLoading" class="hidden flex justify-center py-4">
+                            <div class="animate-spin rounded-full h-5 w-5 border-2 border-gray-300 dark:border-gray-600 border-t-accent-500"></div>
+                        </div>
+                        <div class="overflow-y-auto max-h-64">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-gray-200 dark:border-gray-700">
+                                        <th class="w-8 py-2"></th>
+                                        <th class="text-left py-2 text-gray-500 dark:text-gray-400 font-medium">이름</th>
+                                        <th class="text-left py-2 text-gray-500 dark:text-gray-400 font-medium">이메일</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="searchResultBody">
+                                    <tr>
+                                        <td colspan="3" class="text-center text-gray-400 dark:text-gray-500 py-4">위에서 사용자를 검색하세요</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
 
                 <!-- Right: Email Compose -->
-                <div class="col-lg-7">
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">
-                                <i class="fas fa-envelope mr-2"></i>
-                                <span th:text="#{email.compose}">Compose</span>
-                            </h6>
+                <div class="lg:col-span-3">
+                    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                            <i data-lucide="mail" class="w-4 h-4"></i>
+                            이메일 작성
+                        </h3>
+                        <!-- Selected Users -->
+                        <div class="mb-4">
+                            <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">선택된 사용자</label>
+                            <div id="selectedUsersArea" class="border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-md p-2 min-h-10 flex flex-wrap gap-1">
+                                <span class="text-gray-400 dark:text-gray-500 text-sm" id="noSelectedText">선택된 사용자 없음</span>
+                            </div>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">선택: <strong id="selectedCount">0</strong>명</p>
                         </div>
-                        <div class="card-body">
-                            <!-- Selected Users -->
-                            <div class="form-group">
-                                <label th:text="#{email.selectedUsers}">Selected Users</label>
-                                <div id="selectedUsersArea" class="border rounded p-2" style="min-height: 40px;">
-                                    <span class="text-muted small" id="noSelectedText"
-                                          th:text="#{email.noSelected}">No users selected</span>
-                                </div>
-                                <small class="text-muted">
-                                    <span th:text="#{email.selectedCount}">Selected</span>:
-                                    <strong id="selectedCount">0</strong>
-                                </small>
-                            </div>
-                            <div class="form-group">
-                                <label for="indSubject" th:text="#{email.subject}">Subject</label>
-                                <input type="text" id="indSubject" class="form-control" placeholder="Email subject...">
-                            </div>
-                            <div class="form-group">
-                                <label for="indContentType" th:text="#{email.contentType}">Content Type</label>
-                                <select id="indContentType" class="form-control">
-                                    <option value="TEXT">TEXT</option>
-                                    <option value="HTML">HTML</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label th:text="#{email.templateSelect}">Select Template</label>
-                                <select id="indTemplateSelect" class="form-control" onchange="applyTemplate(this.value, 'ind')">
-                                    <option value="" th:text="#{email.templateSelectPlaceholder}">Choose a template</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label th:text="#{email.content}">Content</label>
-                                <textarea id="indContent" class="form-control" rows="6" placeholder="Email content..."></textarea>
-                            </div>
-                            <div class="text-right">
-                                <button type="button" class="btn btn-primary" id="btnIndividualSend">
-                                    <i class="fas fa-paper-plane mr-1"></i>
-                                    <span th:text="#{email.send}">Send Email</span>
-                                </button>
-                            </div>
+                        <div class="mb-4">
+                            <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">제목</label>
+                            <input type="text" id="indSubject" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="이메일 제목...">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">콘텐츠 타입</label>
+                            <select id="indContentType" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
+                                <option value="TEXT">TEXT</option>
+                                <option value="HTML">HTML</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">템플릿 선택</label>
+                            <select id="indTemplateSelect" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
+                                <option value="">템플릿을 선택하세요</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">내용</label>
+                            <textarea id="indContent" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" rows="6" placeholder="이메일 내용..."></textarea>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="button" class="px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2" id="btnIndividualSend">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                발송
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -252,209 +179,207 @@
         </div>
 
         <!-- Tab 3: Email Logs -->
-        <div class="tab-pane fade" id="emailLogs" role="tabpanel">
+        <div id="emailLogs" class="tab-content hidden">
             <!-- Stats Cards -->
-            <div class="row mb-4">
-                <div class="col-xl-3 col-md-6 mb-3">
-                    <div class="card stats-card primary h-100">
-                        <div class="card-body py-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1"
-                                 th:text="#{email.totalSent}">Total Sent</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="statsTotalSent">-</div>
-                        </div>
-                    </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">총 발송</p>
+                    <p class="text-xl font-semibold text-gray-900 dark:text-white" id="statsTotalSent">-</p>
                 </div>
-                <div class="col-xl-3 col-md-6 mb-3">
-                    <div class="card stats-card success h-100">
-                        <div class="card-body py-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1"
-                                 th:text="#{email.sentToday}">Sent Today</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="statsSentToday">-</div>
-                        </div>
-                    </div>
+                <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">오늘 발송</p>
+                    <p class="text-xl font-semibold text-gray-900 dark:text-white" id="statsSentToday">-</p>
                 </div>
-                <div class="col-xl-3 col-md-6 mb-3">
-                    <div class="card stats-card danger h-100">
-                        <div class="card-body py-2">
-                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1"
-                                 th:text="#{email.failedToday}">Failed Today</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="statsFailedToday">-</div>
-                        </div>
-                    </div>
+                <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">오늘 실패</p>
+                    <p class="text-xl font-semibold text-gray-900 dark:text-white" id="statsFailedToday">-</p>
                 </div>
-                <div class="col-xl-3 col-md-6 mb-3">
-                    <div class="card stats-card info h-100">
-                        <div class="card-body py-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1"
-                                 th:text="#{email.successRate}">Success Rate</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="statsSuccessRate">-</div>
-                        </div>
-                    </div>
+                <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">성공률</p>
+                    <p class="text-xl font-semibold text-gray-900 dark:text-white" id="statsSuccessRate">-</p>
                 </div>
             </div>
 
             <!-- Logs Table -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-history mr-2"></i>
-                        <span th:text="#{email.logs}">Sending Logs</span>
-                    </h6>
-                    <div class="d-flex align-items-center">
-                        <!-- Status Filter -->
-                        <select id="logStatusFilter" class="form-control form-control-sm mr-2" style="width: auto;">
-                            <option value="" th:text="#{email.filterAll}">All</option>
-                            <option value="SENT" th:text="#{email.filterSent}">Sent</option>
-                            <option value="FAILED" th:text="#{email.filterFailed}">Failed</option>
+            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors">
+                <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                        <i data-lucide="history" class="w-4 h-4"></i>
+                        발송 로그
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <select id="logStatusFilter" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
+                            <option value="">전체</option>
+                            <option value="SENT">발송됨</option>
+                            <option value="FAILED">실패</option>
                         </select>
-                        <!-- Search -->
-                        <div class="input-group input-group-sm" style="width: 200px;">
-                            <input type="text" id="logSearchInput" class="form-control"
-                                   th:placeholder="#{email.searchPlaceholder}" placeholder="Search recipient...">
-                            <div class="input-group-append">
-                                <button class="btn btn-outline-primary" type="button" id="btnSearchLogs">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </div>
+                        <div class="flex">
+                            <input type="text" id="logSearchInput" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-l-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="수신자 검색...">
+                            <button type="button" id="btnSearchLogs" class="px-3 py-1.5 border border-l-0 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-r-md hover:bg-gray-50 dark:hover:bg-gray-800">
+                                <i data-lucide="search" class="w-4 h-4"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered log-table" id="logsTable">
-                            <thead>
-                                <tr>
-                                    <th th:text="#{email.recipient}">Recipient</th>
-                                    <th th:text="#{email.subject}">Subject</th>
-                                    <th th:text="#{email.group}">Group</th>
-                                    <th th:text="#{email.status}">Status</th>
-                                    <th th:text="#{email.sentAt}">Sent At</th>
-                                    <th th:text="#{email.error}">Error</th>
-                                </tr>
-                            </thead>
-                            <tbody id="logsTableBody">
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted py-4"
-                                        th:text="#{email.noLogs}">No sending logs</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <!-- Pagination -->
-                    <nav id="logsPagination" class="d-flex justify-content-center mt-3" style="display: none !important;">
-                        <ul class="pagination pagination-sm mb-0">
-                        </ul>
-                    </nav>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-200 dark:border-gray-700">
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">수신자</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">제목</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">그룹</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">상태</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">발송일시</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">오류</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center text-gray-400 dark:text-gray-500 py-8">발송 로그가 없습니다</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
+                <!-- Pagination -->
+                <nav id="logsPagination" class="hidden flex justify-center py-4 border-t border-gray-200 dark:border-gray-700">
+                    <ul class="flex gap-1" id="paginationList"></ul>
+                </nav>
             </div>
         </div>
 
-        <!-- Tab 4: Templates Management -->
-        <div class="tab-pane fade" id="emailTemplates" role="tabpanel">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-file-alt mr-2"></i>
-                        <span th:text="#{email.templates}">Templates</span>
-                    </h6>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="showTemplateModal()">
-                        <i class="fas fa-plus mr-1"></i>
-                        <span th:text="#{email.templateCreate}">New Template</span>
+        <!-- Tab 4: Templates -->
+        <div id="emailTemplates" class="tab-content hidden">
+            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors">
+                <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                        템플릿
+                    </h3>
+                    <button type="button" class="px-3 py-1.5 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2" onclick="showTemplateModal()">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        새 템플릿
                     </button>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered" id="templatesTable">
-                            <thead>
-                                <tr>
-                                    <th th:text="#{email.templateName}">Name</th>
-                                    <th th:text="#{email.subject}">Subject</th>
-                                    <th th:text="#{email.contentType}">Type</th>
-                                    <th th:text="#{email.templateUpdatedAt}">Updated</th>
-                                    <th th:text="#{email.templateActions}">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="templatesTableBody">
-                                <tr>
-                                    <td colspan="5" class="text-center text-muted py-4"
-                                        th:text="#{email.noTemplates}">No templates</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-200 dark:border-gray-700">
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">이름</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">제목</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">타입</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">수정일</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="templatesTableBody">
+                            <tr>
+                                <td colspan="5" class="text-center text-gray-400 dark:text-gray-500 py-8">템플릿이 없습니다</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Template Modal -->
-    <div class="modal fade" id="templateModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="templateModalTitle" th:text="#{email.templateCreate}">New Template</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
+    <div id="templateModal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="templateModalTitle">새 템플릿</h3>
+                <button onclick="closeTemplateModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
-            <div class="modal-body">
+            <div class="flex-1 overflow-auto p-4">
                 <input type="hidden" id="templateId">
-                <div class="form-group">
-                    <label for="templateName" th:text="#{email.templateName}">Template Name</label>
-                    <input type="text" id="templateName" class="form-control" placeholder="Template name...">
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">템플릿 이름</label>
+                    <input type="text" id="templateName" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="템플릿 이름...">
                 </div>
-                <div class="form-group">
-                    <label for="templateSubject" th:text="#{email.subject}">Subject</label>
-                    <input type="text" id="templateSubject" class="form-control" placeholder="Email subject...">
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">제목</label>
+                    <input type="text" id="templateSubject" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="이메일 제목...">
                 </div>
-                <div class="form-group">
-                    <label for="templateContentType" th:text="#{email.contentType}">Content Type</label>
-                    <select id="templateContentType" class="form-control">
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">콘텐츠 타입</label>
+                    <select id="templateContentType" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
                         <option value="TEXT">TEXT</option>
                         <option value="HTML">HTML</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="templateContent" th:text="#{email.content}">Content</label>
-                    <textarea id="templateContent" class="form-control" rows="10" placeholder="Email content..."></textarea>
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">내용</label>
+                    <textarea id="templateContent" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" rows="10" placeholder="이메일 내용..."></textarea>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal" th:text="#{email.templateCancel}">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveTemplate()" th:text="#{email.templateSave}">Save</button>
+            <div class="flex items-center justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" onclick="closeTemplateModal()" class="px-4 py-2 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    취소
+                </button>
+                <button type="button" onclick="saveTemplate()" class="px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors">
+                    저장
+                </button>
             </div>
         </div>
-    </div>
     </div>
 </div>
 
 <th:block layout:fragment="scripts">
 <script th:inline="javascript">
+    // ==================== Tab Navigation ====================
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetTab = btn.dataset.tab;
+
+            tabBtns.forEach(b => {
+                b.classList.remove('border-accent-500', 'text-gray-900', 'dark:text-white');
+                b.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+            });
+            btn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+            btn.classList.add('border-accent-500', 'text-gray-900', 'dark:text-white');
+
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(targetTab).classList.remove('hidden');
+
+            // Load data when switching tabs
+            if (targetTab === 'emailLogs') {
+                loadEmailLogs();
+                loadEmailStats();
+            } else if (targetTab === 'emailTemplates') {
+                loadTemplates();
+            }
+        });
+    });
+
     // ==================== Selected Users State ====================
-    const selectedUsers = new Map(); // email -> {name, email}
+    const selectedUsers = new Map();
 
     function updateSelectedUI() {
-        const area = $('#selectedUsersArea');
+        const area = document.getElementById('selectedUsersArea');
         const count = selectedUsers.size;
-        $('#selectedCount').text(count);
+        document.getElementById('selectedCount').textContent = count;
 
         if (count === 0) {
-            area.html('<span class="text-muted small" id="noSelectedText">' +
-                /*[[#{email.noSelected}]]*/ 'No users selected' + '</span>');
+            area.innerHTML = '<span class="text-gray-400 dark:text-gray-500 text-sm" id="noSelectedText">선택된 사용자 없음</span>';
         } else {
             let chips = '';
             selectedUsers.forEach((user, email) => {
-                chips += `<span class="selected-user-chip">
+                chips += `<span class="inline-flex items-center px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
                     ${user.name || email}
-                    <span class="remove-btn" onclick="removeUser('${email}')">&times;</span>
+                    <button class="ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" onclick="removeUser('${email}')">&times;</button>
                 </span>`;
             });
-            area.html(chips);
+            area.innerHTML = chips;
         }
 
-        // Update checkboxes
-        $('input.user-checkbox').each(function() {
-            $(this).prop('checked', selectedUsers.has($(this).data('email')));
+        document.querySelectorAll('input.user-checkbox').forEach(cb => {
+            cb.checked = selectedUsers.has(cb.dataset.email);
         });
     }
 
@@ -482,7 +407,7 @@
     function searchUsers(query) {
         if (!query || query.trim().length < 1) return;
 
-        $('#searchLoading').show();
+        document.getElementById('searchLoading').classList.remove('hidden');
 
         fetch(`/api/v1/admin/statistics/users/search?query=${encodeURIComponent(query.trim())}&limit=20`)
             .then(response => response.json())
@@ -492,63 +417,62 @@
                 }
             })
             .catch(error => console.error('Error:', error))
-            .finally(() => $('#searchLoading').hide());
+            .finally(() => document.getElementById('searchLoading').classList.add('hidden'));
     }
 
     function renderSearchResults(users) {
         let tbody = '';
         if (!users || users.length === 0) {
-            tbody = '<tr><td colspan="3" class="text-center text-muted">' +
-                /*[[#{email.noResults}]]*/ 'No results found' + '</td></tr>';
+            tbody = '<tr><td colspan="3" class="text-center text-gray-400 dark:text-gray-500 py-4">검색 결과 없음</td></tr>';
         } else {
             users.forEach(user => {
                 const checked = selectedUsers.has(user.email) ? 'checked' : '';
                 tbody += `
-                    <tr style="cursor: pointer;" onclick="toggleUser('${user.email}', '${user.name || ''}')">
-                        <td class="text-center">
-                            <input type="checkbox" class="user-checkbox"
+                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" onclick="toggleUser('${user.email}', '${user.name || ''}')">
+                        <td class="text-center py-2">
+                            <input type="checkbox" class="user-checkbox rounded border-gray-300 dark:border-gray-600"
                                    data-email="${user.email}" ${checked}
                                    onclick="event.stopPropagation(); toggleUser('${user.email}', '${user.name || ''}')">
                         </td>
-                        <td>${user.name || '-'}</td>
-                        <td>${user.email || '-'}</td>
+                        <td class="py-2 text-gray-900 dark:text-white">${user.name || '-'}</td>
+                        <td class="py-2 text-gray-600 dark:text-gray-400">${user.email || '-'}</td>
                     </tr>
                 `;
             });
         }
-        $('#searchResultBody').html(tbody);
+        document.getElementById('searchResultBody').innerHTML = tbody;
     }
 
-    // Search on Enter or button click
-    $('#userSearchInput').on('keyup', function(e) {
+    document.getElementById('userSearchInput').addEventListener('keyup', function(e) {
         clearTimeout(searchTimeout);
         if (e.key === 'Enter') {
-            searchUsers($(this).val());
+            searchUsers(this.value);
         } else {
-            searchTimeout = setTimeout(() => searchUsers($(this).val()), 500);
+            searchTimeout = setTimeout(() => searchUsers(this.value), 500);
         }
     });
 
-    $('#btnSearchUser').on('click', function() {
-        searchUsers($('#userSearchInput').val());
+    document.getElementById('btnSearchUser').addEventListener('click', function() {
+        searchUsers(document.getElementById('userSearchInput').value);
     });
 
     // ==================== Group Send ====================
-    $('#btnGroupSend').on('click', function() {
-        const targetGroup = $('#groupTargetGroup').val();
-        const subject = $('#groupSubject').val().trim();
-        const content = $('#groupContent').val().trim();
-        const contentType = $('#groupContentType').val();
-        const limit = parseInt($('#groupLimit').val()) || 100;
+    document.getElementById('btnGroupSend').addEventListener('click', function() {
+        const targetGroup = document.getElementById('groupTargetGroup').value;
+        const subject = document.getElementById('groupSubject').value.trim();
+        const content = document.getElementById('groupContent').value.trim();
+        const contentType = document.getElementById('groupContentType').value;
+        const limit = parseInt(document.getElementById('groupLimit').value) || 100;
 
-        if (!targetGroup) { alert('Please select a target group'); return; }
-        if (!subject) { alert('Please enter a subject'); return; }
-        if (!content) { alert('Please enter content'); return; }
+        if (!targetGroup) { alert('대상 그룹을 선택해주세요'); return; }
+        if (!subject) { alert('제목을 입력해주세요'); return; }
+        if (!content) { alert('내용을 입력해주세요'); return; }
 
-        if (!confirm(`Send email to "${targetGroup}" group (max ${limit} recipients)?`)) return;
+        if (!confirm(`"${targetGroup}" 그룹에 이메일을 발송하시겠습니까? (최대 ${limit}명)`)) return;
 
-        const btn = $(this);
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Sending...');
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="animate-spin inline-block mr-1">⏳</span> 발송 중...';
 
         fetch('/api/v1/admin/email/send-to-group', {
             method: 'POST',
@@ -559,36 +483,38 @@
         .then(data => {
             if (data.is_success && data.payload) {
                 const r = data.payload;
-                alert(`Sent: ${r.sentCount}, Failed: ${r.failedCount}`);
-                loadEmailLogs(); // Refresh logs
+                alert(`발송: ${r.sentCount}, 실패: ${r.failedCount}`);
+                loadEmailLogs();
                 loadEmailStats();
             } else {
-                alert(data.message || 'Failed to send email');
+                alert(data.message || '이메일 발송 실패');
             }
         })
-        .catch(error => { console.error(error); alert('Failed to send email'); })
+        .catch(error => { console.error(error); alert('이메일 발송 실패'); })
         .finally(() => {
-            btn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> ' +
-                /*[[#{email.send}]]*/ 'Send Email');
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i> 발송';
+            lucide.createIcons();
         });
     });
 
     // ==================== Individual Send ====================
-    $('#btnIndividualSend').on('click', function() {
-        if (selectedUsers.size === 0) { alert('Please select users'); return; }
+    document.getElementById('btnIndividualSend').addEventListener('click', function() {
+        if (selectedUsers.size === 0) { alert('사용자를 선택해주세요'); return; }
 
-        const subject = $('#indSubject').val().trim();
-        const content = $('#indContent').val().trim();
-        const contentType = $('#indContentType').val();
+        const subject = document.getElementById('indSubject').value.trim();
+        const content = document.getElementById('indContent').value.trim();
+        const contentType = document.getElementById('indContentType').value;
 
-        if (!subject) { alert('Please enter a subject'); return; }
-        if (!content) { alert('Please enter content'); return; }
+        if (!subject) { alert('제목을 입력해주세요'); return; }
+        if (!content) { alert('내용을 입력해주세요'); return; }
 
         const emails = Array.from(selectedUsers.keys());
-        if (!confirm(`Send email to ${emails.length} user(s)?`)) return;
+        if (!confirm(`${emails.length}명에게 이메일을 발송하시겠습니까?`)) return;
 
-        const btn = $(this);
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Sending...');
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="animate-spin inline-block mr-1">⏳</span> 발송 중...';
 
         fetch('/api/v1/admin/email/send', {
             method: 'POST',
@@ -599,21 +525,22 @@
         .then(data => {
             if (data.is_success && data.payload) {
                 const r = data.payload;
-                alert(`Sent: ${r.sentCount}, Failed: ${r.failedCount}`);
+                alert(`발송: ${r.sentCount}, 실패: ${r.failedCount}`);
                 if (r.sentCount > 0) {
                     selectedUsers.clear();
                     updateSelectedUI();
-                    loadEmailLogs(); // Refresh logs
+                    loadEmailLogs();
                     loadEmailStats();
                 }
             } else {
-                alert(data.message || 'Failed to send email');
+                alert(data.message || '이메일 발송 실패');
             }
         })
-        .catch(error => { console.error(error); alert('Failed to send email'); })
+        .catch(error => { console.error(error); alert('이메일 발송 실패'); })
         .finally(() => {
-            btn.prop('disabled', false).html('<i class="fas fa-paper-plane mr-1"></i> ' +
-                /*[[#{email.send}]]*/ 'Send Email');
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i> 발송';
+            lucide.createIcons();
         });
     });
 
@@ -634,72 +561,85 @@
     }
 
     function renderTemplatesTable(templates) {
+        const isDark = document.documentElement.classList.contains('dark');
         let tbody = '';
         if (!templates || templates.length === 0) {
-            tbody = `<tr><td colspan="5" class="text-center text-muted py-4">` +
-                /*[[#{email.noTemplates}]]*/ 'No templates' + `</td></tr>`;
+            tbody = '<tr><td colspan="5" class="text-center text-gray-400 dark:text-gray-500 py-8">템플릿이 없습니다</td></tr>';
         } else {
             templates.forEach(t => {
                 const updatedAt = new Date(t.updatedAt).toLocaleString('ko-KR');
                 tbody += `
-                    <tr>
-                        <td><strong>${t.name}</strong></td>
-                        <td>${t.subject.length > 40 ? t.subject.substring(0, 40) + '...' : t.subject}</td>
-                        <td><span class="badge badge-${t.contentType === 'HTML' ? 'info' : 'secondary'}">${t.contentType}</span></td>
-                        <td>${updatedAt}</td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary mr-1" onclick="editTemplate(${t.id})">
-                                <i class="fas fa-edit"></i>
+                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <td class="py-3 px-4 text-gray-900 dark:text-white font-medium">${t.name}</td>
+                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400">${t.subject.length > 40 ? t.subject.substring(0, 40) + '...' : t.subject}</td>
+                        <td class="py-3 px-4"><span class="px-2 py-0.5 text-xs ${t.contentType === 'HTML' ? 'bg-accent-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} rounded">${t.contentType}</span></td>
+                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400">${updatedAt}</td>
+                        <td class="py-3 px-4">
+                            <button class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 mr-1" onclick="editTemplate(${t.id})">
+                                <i data-lucide="edit-2" class="w-4 h-4"></i>
                             </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteTemplate(${t.id})">
-                                <i class="fas fa-trash"></i>
+                            <button class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400" onclick="deleteTemplate(${t.id})">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </td>
                     </tr>
                 `;
             });
         }
-        $('#templatesTableBody').html(tbody);
+        document.getElementById('templatesTableBody').innerHTML = tbody;
+        lucide.createIcons();
     }
 
     function updateTemplateDropdowns(templates) {
         const options = templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-        const placeholder = /*[[#{email.templateSelectPlaceholder}]]*/ 'Choose a template';
-        const html = `<option value="">${placeholder}</option>${options}`;
-        $('#groupTemplateSelect').html(html);
-        $('#indTemplateSelect').html(html);
+        const html = '<option value="">템플릿을 선택하세요</option>' + options;
+        document.getElementById('groupTemplateSelect').innerHTML = html;
+        document.getElementById('indTemplateSelect').innerHTML = html;
     }
+
+    // Template dropdown change handlers
+    document.getElementById('groupTemplateSelect').addEventListener('change', function() {
+        applyTemplate(this.value, 'group');
+    });
+    document.getElementById('indTemplateSelect').addEventListener('change', function() {
+        applyTemplate(this.value, 'ind');
+    });
 
     function applyTemplate(templateId, prefix) {
         if (!templateId) return;
         const template = templatesCache.find(t => t.id == templateId);
         if (template) {
-            $(`#${prefix}Subject`).val(template.subject);
-            $(`#${prefix}Content`).val(template.content);
-            $(`#${prefix}ContentType`).val(template.contentType);
+            document.getElementById(`${prefix}Subject`).value = template.subject;
+            document.getElementById(`${prefix}Content`).value = template.content;
+            document.getElementById(`${prefix}ContentType`).value = template.contentType;
         }
     }
 
     function showTemplateModal(id = null) {
-        $('#templateId').val('');
-        $('#templateName').val('');
-        $('#templateSubject').val('');
-        $('#templateContent').val('');
-        $('#templateContentType').val('TEXT');
-        $('#templateModalTitle').text(/*[[#{email.templateCreate}]]*/ 'New Template');
+        document.getElementById('templateId').value = '';
+        document.getElementById('templateName').value = '';
+        document.getElementById('templateSubject').value = '';
+        document.getElementById('templateContent').value = '';
+        document.getElementById('templateContentType').value = 'TEXT';
+        document.getElementById('templateModalTitle').textContent = '새 템플릿';
 
         if (id) {
             const template = templatesCache.find(t => t.id == id);
             if (template) {
-                $('#templateId').val(template.id);
-                $('#templateName').val(template.name);
-                $('#templateSubject').val(template.subject);
-                $('#templateContent').val(template.content);
-                $('#templateContentType').val(template.contentType);
-                $('#templateModalTitle').text(/*[[#{email.templateEdit}]]*/ 'Edit Template');
+                document.getElementById('templateId').value = template.id;
+                document.getElementById('templateName').value = template.name;
+                document.getElementById('templateSubject').value = template.subject;
+                document.getElementById('templateContent').value = template.content;
+                document.getElementById('templateContentType').value = template.contentType;
+                document.getElementById('templateModalTitle').textContent = '템플릿 수정';
             }
         }
-        $('#templateModal').modal('show');
+        document.getElementById('templateModal').classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    function closeTemplateModal() {
+        document.getElementById('templateModal').classList.add('hidden');
     }
 
     function editTemplate(id) {
@@ -707,16 +647,16 @@
     }
 
     function saveTemplate() {
-        const id = $('#templateId').val();
+        const id = document.getElementById('templateId').value;
         const data = {
-            name: $('#templateName').val().trim(),
-            subject: $('#templateSubject').val().trim(),
-            content: $('#templateContent').val(),
-            contentType: $('#templateContentType').val()
+            name: document.getElementById('templateName').value.trim(),
+            subject: document.getElementById('templateSubject').value.trim(),
+            content: document.getElementById('templateContent').value,
+            contentType: document.getElementById('templateContentType').value
         };
 
         if (!data.name || !data.subject || !data.content) {
-            alert('Please fill in all required fields');
+            alert('모든 필드를 입력해주세요');
             return;
         }
 
@@ -731,31 +671,36 @@
         .then(response => response.json())
         .then(data => {
             if (data.is_success) {
-                $('#templateModal').modal('hide');
+                closeTemplateModal();
                 loadTemplates();
-                alert(id ? 'Template updated!' : 'Template created!');
+                alert(id ? '템플릿이 수정되었습니다' : '템플릿이 생성되었습니다');
             } else {
-                alert(data.message || 'Failed to save template');
+                alert(data.message || '템플릿 저장 실패');
             }
         })
-        .catch(error => { console.error(error); alert('Failed to save template'); });
+        .catch(error => { console.error(error); alert('템플릿 저장 실패'); });
     }
 
     function deleteTemplate(id) {
-        if (!confirm(/*[[#{email.templateDeleteConfirm}]]*/ 'Are you sure you want to delete this template?')) return;
+        if (!confirm('이 템플릿을 삭제하시겠습니까?')) return;
 
         fetch(`/api/v1/admin/email/templates/${id}`, { method: 'DELETE' })
             .then(response => response.json())
             .then(data => {
                 if (data.is_success) {
                     loadTemplates();
-                    alert('Template deleted!');
+                    alert('템플릿이 삭제되었습니다');
                 } else {
-                    alert(data.message || 'Failed to delete template');
+                    alert(data.message || '템플릿 삭제 실패');
                 }
             })
-            .catch(error => { console.error(error); alert('Failed to delete template'); });
+            .catch(error => { console.error(error); alert('템플릿 삭제 실패'); });
     }
+
+    // Modal backdrop click
+    document.getElementById('templateModal').addEventListener('click', function(e) {
+        if (e.target === this) closeTemplateModal();
+    });
 
     // ==================== Email Logs ====================
     let currentPage = 0;
@@ -763,8 +708,8 @@
 
     function loadEmailLogs(page = 0) {
         currentPage = page;
-        const status = $('#logStatusFilter').val();
-        const search = $('#logSearchInput').val().trim();
+        const status = document.getElementById('logStatusFilter').value;
+        const search = document.getElementById('logSearchInput').value.trim();
 
         let url = `/api/v1/admin/email/logs?page=${page}&size=${pageSize}`;
         if (status) url += `&status=${status}`;
@@ -785,75 +730,79 @@
         let tbody = '';
 
         if (logs.length === 0) {
-            tbody = `<tr><td colspan="6" class="text-center text-muted py-4">` +
-                /*[[#{email.noLogs}]]*/ 'No sending logs' + `</td></tr>`;
+            tbody = '<tr><td colspan="6" class="text-center text-gray-400 dark:text-gray-500 py-8">발송 로그가 없습니다</td></tr>';
         } else {
             logs.forEach(log => {
-                const statusClass = log.status === 'SENT' ? 'status-sent' :
-                                   log.status === 'FAILED' ? 'status-failed' :
-                                   log.status === 'DELIVERED' ? 'status-delivered' :
-                                   log.status === 'BOUNCED' ? 'status-bounced' : '';
+                const statusClass = log.status === 'SENT' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                                   log.status === 'FAILED' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
+                                   log.status === 'DELIVERED' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
+                                   log.status === 'BOUNCED' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
                 const sentAt = new Date(log.sentAt).toLocaleString('ko-KR');
                 const errorMsg = log.errorMessage ?
-                    `<span class="text-danger small" title="${log.errorMessage}">${log.errorMessage.substring(0, 30)}...</span>` : '-';
+                    `<span class="text-red-500 dark:text-red-400 text-xs" title="${log.errorMessage}">${log.errorMessage.substring(0, 30)}...</span>` : '-';
 
                 tbody += `
-                    <tr>
-                        <td>${log.recipient}</td>
-                        <td>${log.subject.length > 30 ? log.subject.substring(0, 30) + '...' : log.subject}</td>
-                        <td>${log.targetGroup || '-'}</td>
-                        <td><span class="status-badge ${statusClass}">${log.status}</span></td>
-                        <td>${sentAt}</td>
-                        <td>${errorMsg}</td>
+                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <td class="py-3 px-4 text-gray-900 dark:text-white">${log.recipient}</td>
+                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400">${log.subject.length > 30 ? log.subject.substring(0, 30) + '...' : log.subject}</td>
+                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400">${log.targetGroup || '-'}</td>
+                        <td class="py-3 px-4"><span class="px-2 py-0.5 text-xs rounded ${statusClass}">${log.status}</span></td>
+                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400">${sentAt}</td>
+                        <td class="py-3 px-4">${errorMsg}</td>
                     </tr>
                 `;
             });
         }
 
-        $('#logsTableBody').html(tbody);
+        document.getElementById('logsTableBody').innerHTML = tbody;
         renderPagination(data);
     }
 
     function renderPagination(data) {
-        const pagination = $('#logsPagination ul');
-        pagination.empty();
+        const pagination = document.getElementById('paginationList');
+        pagination.innerHTML = '';
 
         if (data.totalPages <= 1) {
-            $('#logsPagination').hide();
+            document.getElementById('logsPagination').classList.add('hidden');
             return;
         }
 
-        $('#logsPagination').show();
+        document.getElementById('logsPagination').classList.remove('hidden');
 
         // Previous
-        pagination.append(`
-            <li class="page-item ${!data.hasPrevious ? 'disabled' : ''}">
-                <a class="page-link" href="#" onclick="loadEmailLogs(${currentPage - 1}); return false;">
-                    <i class="fas fa-chevron-left"></i>
-                </a>
+        pagination.innerHTML += `
+            <li>
+                <button class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md ${!data.hasPrevious ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}"
+                        onclick="loadEmailLogs(${currentPage - 1})" ${!data.hasPrevious ? 'disabled' : ''}>
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                </button>
             </li>
-        `);
+        `;
 
         // Page numbers
         const startPage = Math.max(0, currentPage - 2);
         const endPage = Math.min(data.totalPages - 1, currentPage + 2);
 
         for (let i = startPage; i <= endPage; i++) {
-            pagination.append(`
-                <li class="page-item ${i === currentPage ? 'active' : ''}">
-                    <a class="page-link" href="#" onclick="loadEmailLogs(${i}); return false;">${i + 1}</a>
+            pagination.innerHTML += `
+                <li>
+                    <button class="px-3 py-1.5 text-sm border rounded-md ${i === currentPage ? 'bg-accent-500 text-white border-accent-500' : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}"
+                            onclick="loadEmailLogs(${i})">${i + 1}</button>
                 </li>
-            `);
+            `;
         }
 
         // Next
-        pagination.append(`
-            <li class="page-item ${!data.hasNext ? 'disabled' : ''}">
-                <a class="page-link" href="#" onclick="loadEmailLogs(${currentPage + 1}); return false;">
-                    <i class="fas fa-chevron-right"></i>
-                </a>
+        pagination.innerHTML += `
+            <li>
+                <button class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md ${!data.hasNext ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}"
+                        onclick="loadEmailLogs(${currentPage + 1})" ${!data.hasNext ? 'disabled' : ''}>
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </button>
             </li>
-        `);
+        `;
+
+        lucide.createIcons();
     }
 
     function loadEmailStats() {
@@ -862,45 +811,40 @@
             .then(data => {
                 if (data.is_success && data.payload) {
                     const stats = data.payload;
-                    $('#statsTotalSent').text(stats.totalSent.toLocaleString());
-                    $('#statsSentToday').text(stats.sentToday.toLocaleString());
-                    $('#statsFailedToday').text(stats.failedToday.toLocaleString());
-                    $('#statsSuccessRate').text(stats.successRate + '%');
+                    document.getElementById('statsTotalSent').textContent = stats.totalSent.toLocaleString();
+                    document.getElementById('statsSentToday').textContent = stats.sentToday.toLocaleString();
+                    document.getElementById('statsFailedToday').textContent = stats.failedToday.toLocaleString();
+                    document.getElementById('statsSuccessRate').textContent = stats.successRate + '%';
                 }
             })
             .catch(error => console.error('Error loading stats:', error));
     }
 
     // Filter and search handlers
-    $('#logStatusFilter').on('change', function() {
+    document.getElementById('logStatusFilter').addEventListener('change', function() {
         loadEmailLogs(0);
     });
 
-    $('#logSearchInput').on('keyup', function(e) {
+    document.getElementById('logSearchInput').addEventListener('keyup', function(e) {
         if (e.key === 'Enter') {
             loadEmailLogs(0);
         }
     });
 
-    $('#btnSearchLogs').on('click', function() {
+    document.getElementById('btnSearchLogs').addEventListener('click', function() {
         loadEmailLogs(0);
     });
 
-    // Load data when tab is shown
-    $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
-        if ($(e.target).attr('href') === '#emailLogs') {
-            loadEmailLogs();
-            loadEmailStats();
-        } else if ($(e.target).attr('href') === '#emailTemplates') {
-            loadTemplates();
-        }
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        loadTemplates();
     });
 
-    // Initialize
-    $(function () {
-        $('[data-toggle="tooltip"]').tooltip();
-        // Load templates for dropdowns
-        loadTemplates();
+    // Close modals on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeTemplateModal();
+        }
     });
 </script>
 </th:block>

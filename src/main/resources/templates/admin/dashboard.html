@@ -3,357 +3,307 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{admin/layout/default}">
 <head>
-    <title th:text="#{dashboard.title} + ' - ' + #{admin.title}">Dashboard - OneTime Admin</title>
+    <title>대시보드 - OneTime Admin</title>
 </head>
 <body>
 <div layout:fragment="content">
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800" th:text="#{dashboard.title}">Dashboard</h1>
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
         <div>
-            <button class="btn btn-sm btn-outline-primary" id="btnRefresh" onclick="location.reload()">
-                <i class="fas fa-sync-alt mr-1"></i> Refresh
+            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">대시보드</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">서비스 현황을 한눈에 확인하세요</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-400 dark:text-gray-500" th:text="'데이터 기준: ' + ${#temporals.format(#temporals.createNow(), 'HH:mm:ss')}">
+                데이터 기준: 12:00:00
+            </span>
+            <button onclick="location.reload()"
+                    class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                <i data-lucide="refresh-cw" class="w-4 h-4 inline"></i>
             </button>
-            <small class="text-muted ml-2" th:text="#{admin.dataAsOf} + ' ' + ${#temporals.format(#temporals.createNow(), 'HH:mm:ss')}">
-                Data as of 12:00:00
-            </small>
         </div>
     </div>
 
     <!-- Date Filter -->
     <div th:replace="~{admin/fragments/date-filter :: dateFilter}"></div>
 
-    <!-- Summary Cards Row -->
-    <div class="row">
-        <!-- Total Users Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                <span th:text="#{dashboard.totalUsers}">Total Users</span>
-                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                                   th:title="#{info.totalUsers}"></i>
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"
-                                 th:text="${#numbers.formatInteger(summary.totalUsers, 0, 'COMMA')}">0</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- Total Users -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">총 가입 유저</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                       th:text="${#numbers.formatInteger(summary.totalUsers, 0, 'COMMA')}">0</p>
+                </div>
+                <div class="w-10 h-10 bg-accent-50 dark:bg-accent-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="users" class="w-5 h-5 text-accent-600 dark:text-accent-400"></i>
                 </div>
             </div>
         </div>
 
-        <!-- Total Events Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                <span th:text="#{dashboard.totalEvents}">Total Events</span>
-                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                                   th:title="#{info.totalEvents}"></i>
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"
-                                 th:text="${#numbers.formatInteger(summary.totalEvents, 0, 'COMMA')}">0</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
+        <!-- Total Events -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">총 생성 이벤트</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                       th:text="${#numbers.formatInteger(summary.totalEvents, 0, 'COMMA')}">0</p>
+                </div>
+                <div class="w-10 h-10 bg-accent-50 dark:bg-accent-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="calendar" class="w-5 h-5 text-accent-600 dark:text-accent-400"></i>
                 </div>
             </div>
         </div>
 
-        <!-- MAU Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                <span th:text="#{dashboard.mau}">MAU (This Month)</span>
-                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                                   th:title="#{info.mau}"></i>
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"
-                                 th:text="${#numbers.formatInteger(summary.mau, 0, 'COMMA')}">0</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
+        <!-- MAU -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">MAU (최근 30일)</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                       th:text="${#numbers.formatInteger(summary.mau, 0, 'COMMA')}">0</p>
+                </div>
+                <div class="w-10 h-10 bg-accent-50 dark:bg-accent-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="trending-up" class="w-5 h-5 text-accent-600 dark:text-accent-400"></i>
                 </div>
             </div>
         </div>
 
-        <!-- Dormant Rate Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                <span th:text="#{dashboard.dormantRate}">Dormant Rate (60d+)</span>
-                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                                   th:title="#{info.dormantRate}"></i>
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"
-                                 th:text="${#numbers.formatDecimal(summary.dormantRate, 1, 1) + '%'}">0%</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-bed fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
+        <!-- Dormant Rate -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">휴면율 (60일+)</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                       th:text="${#numbers.formatDecimal(summary.dormantRate, 1, 1) + '%'}">0%</p>
+                </div>
+                <div class="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                    <i data-lucide="moon" class="w-5 h-5 text-gray-600 dark:text-gray-400"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Additional Stats Row -->
-    <div class="row">
-        <!-- Avg Participants Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-secondary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
-                                <span th:text="#{dashboard.avgParticipants}">Avg Participants/Event</span>
-                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                                   th:title="#{info.avgParticipants}"></i>
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"
-                                 th:text="${#numbers.formatDecimal(summary.avgParticipantsPerEvent, 1, 2)}">0</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-friends fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
+    <!-- Additional Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- Avg Participants -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">평균 참여자/이벤트</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                       th:text="${#numbers.formatDecimal(summary.avgParticipantsPerEvent, 1, 2)}">0</p>
+                </div>
+                <div class="w-10 h-10 bg-accent-50 dark:bg-accent-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="user-plus" class="w-5 h-5 text-accent-600 dark:text-accent-400"></i>
                 </div>
             </div>
         </div>
 
-        <!-- Marketing Target Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-danger shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                <span th:text="#{dashboard.marketingTargets}">Marketing Targets</span>
-                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                                   th:title="#{info.marketingTargets}"></i>
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"
-                                 th:text="${#numbers.formatInteger(summary.marketingTargetUsers, 0, 'COMMA')}">0</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-bullhorn fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
+        <!-- Marketing Targets -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">마케팅 타겟</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                       th:text="${#numbers.formatInteger(summary.marketingTargetUsers, 0, 'COMMA')}">0</p>
+                </div>
+                <div class="w-10 h-10 bg-accent-50 dark:bg-accent-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="target" class="w-5 h-5 text-accent-600 dark:text-accent-400"></i>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Charts Row -->
-    <div class="row">
-        <!-- Monthly Signups Chart (Area Chart) -->
-        <div class="col-xl-8 col-lg-7">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary" th:text="#{dashboard.monthlySignups}">Monthly New Signups</h6>
-                </div>
-                <div class="card-body">
-                    <div class="chart-area">
-                        <canvas id="signupsChart"></canvas>
-                    </div>
-                </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <!-- Monthly Signups Chart -->
+        <div class="lg:col-span-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">월별 신규 가입</h3>
+            <div class="h-64">
+                <canvas id="signupsChart"></canvas>
             </div>
         </div>
 
-        <!-- OAuth Provider Ratio (Pie Chart) -->
-        <div class="col-xl-4 col-lg-5">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary" th:text="#{dashboard.providerRatio}">OAuth Provider Ratio</h6>
-                </div>
-                <div class="card-body">
-                    <div class="chart-pie pt-4 pb-2">
-                        <canvas id="providersChart"></canvas>
-                    </div>
-                    <div class="mt-4 text-center small" id="providerLegend">
-                        <!-- Legend will be dynamically generated -->
-                    </div>
-                </div>
+        <!-- OAuth Provider Chart -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">OAuth 제공자 비율</h3>
+            <div class="h-48">
+                <canvas id="providersChart"></canvas>
             </div>
+            <div class="mt-4 flex flex-wrap justify-center gap-3 text-xs text-gray-600 dark:text-gray-400" id="providerLegend"></div>
         </div>
     </div>
 
-    <!-- Additional Charts Row -->
-    <div class="row">
-        <!-- Weekday Event Distribution (Bar Chart) -->
-        <div class="col-xl-6 col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary" th:text="#{dashboard.eventsByWeekday}">Events by Weekday</h6>
-                </div>
-                <div class="card-body">
-                    <div class="chart-bar">
-                        <canvas id="weekdayChart"></canvas>
-                    </div>
-                </div>
+    <!-- Second Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Weekday Chart -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">요일별 이벤트</h3>
+            <div class="h-64">
+                <canvas id="weekdayChart"></canvas>
             </div>
         </div>
 
-        <!-- TOP Keywords (Table) -->
-        <div class="col-xl-6 col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary" th:text="#{dashboard.topKeywords}">Event Title Keywords TOP 10</h6>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm">
-                            <thead>
-                                <tr>
-                                    <th th:text="#{table.rank}">Rank</th>
-                                    <th th:text="#{table.keyword}">Keyword</th>
-                                    <th th:text="#{table.count}">Count</th>
-                                    <th th:text="#{table.ratio}">Ratio</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="item, stat : ${charts.topKeywords}">
-                                    <td th:text="${stat.index + 1}">1</td>
-                                    <td th:text="${item.keyword}">Keyword</td>
-                                    <td th:text="${item.count}">0</td>
-                                    <td th:text="${#numbers.formatDecimal(item.percentage, 1, 1) + '%'}">0%</td>
-                                </tr>
-                                <tr th:if="${#lists.isEmpty(charts.topKeywords)}">
-                                    <td colspan="4" class="text-center text-muted" th:text="#{misc.noData}">No data available</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        <!-- Top Keywords Table -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">이벤트 제목 키워드 TOP 10</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-gray-700">
+                            <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">순위</th>
+                            <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">키워드</th>
+                            <th class="text-right py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">개수</th>
+                            <th class="text-right py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">비율</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item, stat : ${charts.topKeywords}" class="border-b border-gray-100 dark:border-gray-800">
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400" th:text="${stat.index + 1}">1</td>
+                            <td class="py-2 px-3 text-gray-900 dark:text-white font-medium" th:text="${item.keyword}">Keyword</td>
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400 text-right" th:text="${item.count}">0</td>
+                            <td class="py-2 px-3 text-accent-600 dark:text-accent-400 text-right"
+                                th:text="${#numbers.formatDecimal(item.percentage, 1, 1) + '%'}">0%</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(charts.topKeywords)}">
+                            <td colspan="4" class="py-8 text-center text-gray-400 dark:text-gray-500">데이터 없음</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Page specific scripts -->
 <th:block layout:fragment="scripts">
 <script th:inline="javascript">
-    // Chart.js data (from Thymeleaf)
     const signupsData = /*[[${charts.monthlySignups}]]*/ {labels: [], data: []};
     const providersData = /*[[${charts.providers}]]*/ {labels: [], data: []};
     const weekdayData = /*[[${charts.weekdayDistribution}]]*/ {labels: [], data: []};
-    const newSignupsLabel = /*[[#{misc.newSignups}]]*/ 'New Signups';
 
-    // Color palette (SB Admin 2 style)
-    const colors = {
-        primary: '#4e73df',
-        success: '#1cc88a',
-        info: '#36b9cc',
-        warning: '#f6c23e',
-        danger: '#e74a3b',
-        secondary: '#858796'
-    };
+    // Accent colors (blue palette)
+    const accentColors = ['#677CEE', '#8198f3', '#a5b4fd', '#c7d2ff', '#5367d6', '#4555bd'];
+    const isDark = document.documentElement.classList.contains('dark');
 
-    const chartColors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'];
+    function getChartColors() {
+        const dark = document.documentElement.classList.contains('dark');
+        return {
+            text: dark ? '#9ca3af' : '#6b7280',
+            grid: dark ? '#374151' : '#f0f0f0',
+            accent: '#677CEE',
+            accentBg: dark ? 'rgba(103, 124, 238, 0.2)' : 'rgba(103, 124, 238, 0.1)'
+        };
+    }
 
-    // Monthly Signups Area Chart
-    new Chart(document.getElementById('signupsChart'), {
+    const colors = getChartColors();
+
+    // Monthly Signups Chart
+    const signupsChart = new Chart(document.getElementById('signupsChart'), {
         type: 'line',
         data: {
             labels: signupsData.labels,
             datasets: [{
-                label: newSignupsLabel,
+                label: '신규 가입',
                 data: signupsData.data,
-                backgroundColor: 'rgba(78, 115, 223, 0.05)',
-                borderColor: colors.primary,
-                pointBackgroundColor: colors.primary,
-                pointBorderColor: colors.primary,
-                pointHoverBackgroundColor: colors.primary,
-                pointHoverBorderColor: colors.primary,
+                backgroundColor: colors.accentBg,
+                borderColor: colors.accent,
+                pointBackgroundColor: colors.accent,
                 fill: true,
                 tension: 0.3
             }]
         },
         options: {
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
+            plugins: { legend: { display: false } },
             scales: {
-                y: { beginAtZero: true }
+                y: {
+                    beginAtZero: true,
+                    grid: { color: colors.grid },
+                    ticks: { color: colors.text }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: colors.text }
+                }
             }
         }
     });
 
-    // OAuth Provider Doughnut Chart
+    // Providers Doughnut Chart
     const providersChart = new Chart(document.getElementById('providersChart'), {
         type: 'doughnut',
         data: {
             labels: providersData.labels,
             datasets: [{
                 data: providersData.data,
-                backgroundColor: chartColors.slice(0, providersData.labels.length),
-                hoverBorderColor: 'rgba(234, 236, 244, 1)'
+                backgroundColor: accentColors.slice(0, providersData.labels.length),
+                borderWidth: 0
             }]
         },
         options: {
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
+            plugins: { legend: { display: false } },
             cutout: '70%'
         }
     });
 
-    // Generate legend for providers chart
+    // Generate legend
     const legendContainer = document.getElementById('providerLegend');
     providersData.labels.forEach((label, index) => {
-        const colorIndex = index % chartColors.length;
-        const legendItem = document.createElement('span');
-        legendItem.className = 'mr-2';
-        legendItem.innerHTML = `<i class="fas fa-circle" style="color: ${chartColors[colorIndex]}"></i> ${label}`;
-        legendContainer.appendChild(legendItem);
+        const span = document.createElement('span');
+        span.className = 'flex items-center gap-1';
+        span.innerHTML = `<span class="w-2 h-2 rounded-full" style="background-color: ${accentColors[index]}"></span>${label}`;
+        legendContainer.appendChild(span);
     });
 
     // Weekday Bar Chart
-    new Chart(document.getElementById('weekdayChart'), {
+    const weekdayChart = new Chart(document.getElementById('weekdayChart'), {
         type: 'bar',
         data: {
             labels: weekdayData.labels,
             datasets: [{
                 label: 'Events',
                 data: weekdayData.data,
-                backgroundColor: colors.primary,
-                borderColor: colors.primary,
-                borderWidth: 1
+                backgroundColor: colors.accent,
+                borderRadius: 4
             }]
         },
         options: {
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
+            plugins: { legend: { display: false } },
             scales: {
-                y: { beginAtZero: true }
+                y: {
+                    beginAtZero: true,
+                    grid: { color: colors.grid },
+                    ticks: { color: colors.text }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: colors.text }
+                }
             }
         }
     });
 
-    // Initialize Bootstrap tooltips
-    $(function () {
-        $('[data-toggle="tooltip"]').tooltip();
+    // Listen for theme changes
+    window.addEventListener('themeChanged', function(e) {
+        const newColors = getChartColors();
+
+        // Update signups chart
+        signupsChart.data.datasets[0].backgroundColor = newColors.accentBg;
+        signupsChart.options.scales.y.grid.color = newColors.grid;
+        signupsChart.options.scales.y.ticks.color = newColors.text;
+        signupsChart.options.scales.x.ticks.color = newColors.text;
+        signupsChart.update();
+
+        // Update weekday chart
+        weekdayChart.options.scales.y.grid.color = newColors.grid;
+        weekdayChart.options.scales.y.ticks.color = newColors.text;
+        weekdayChart.options.scales.x.ticks.color = newColors.text;
+        weekdayChart.update();
     });
 </script>
 </th:block>

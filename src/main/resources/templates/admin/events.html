@@ -3,293 +3,183 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{admin/layout/default}">
 <head>
-    <title th:text="#{events.title} + ' - ' + #{admin.title}">Event Statistics - OneTime Admin</title>
+    <title>이벤트 통계 - OneTime Admin</title>
 </head>
 <body>
 <div layout:fragment="content">
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800" th:text="#{events.title}">Event Statistics</h1>
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">이벤트 통계</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">서비스 이벤트 현황을 확인하세요</p>
     </div>
 
     <!-- Date Filter -->
     <div th:replace="~{admin/fragments/date-filter :: dateFilter}"></div>
 
     <!-- Summary Cards -->
-    <div class="row">
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                <span th:text="#{events.totalEvents}">Total Events</span>
-                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                                   th:title="#{info.totalEvents}"></i>
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"
-                                 th:text="${#numbers.formatInteger(data.totalEvents, 0, 'COMMA')}">0</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+            <p class="text-sm text-gray-500 dark:text-gray-400">총 생성 이벤트</p>
+            <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+               th:text="${#numbers.formatInteger(data.totalEvents, 0, 'COMMA')}">0</p>
         </div>
-
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                <span th:text="#{events.activeEvents}">Active Events</span>
-                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                                   th:title="#{info.activeEvents}"></i>
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"
-                                 th:text="${#numbers.formatInteger(data.activeEvents, 0, 'COMMA')}">0</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+            <p class="text-sm text-gray-500 dark:text-gray-400">활성 이벤트</p>
+            <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+               th:text="${#numbers.formatInteger(data.activeEvents, 0, 'COMMA')}">0</p>
         </div>
-
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                <span th:text="#{events.avgParticipants}">Avg Participants</span>
-                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                                   th:title="#{info.avgParticipants}"></i>
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"
-                                 th:text="${#numbers.formatDecimal(data.avgParticipants, 1, 2)}">0</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-friends fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+            <p class="text-sm text-gray-500 dark:text-gray-400">평균 참여자</p>
+            <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+               th:text="${#numbers.formatDecimal(data.avgParticipants, 1, 2)}">0</p>
         </div>
     </div>
 
     <!-- Distribution Tables -->
-    <div class="row">
-        <div class="col-xl-6 col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <span th:text="#{events.categoryDistribution}">Category Distribution</span>
-                        <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                           th:title="#{info.categoryDistribution}"></i>
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th th:text="#{table.category}">Category</th>
-                                    <th th:text="#{table.count}">Count</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="entry : ${data.categoryDistribution}">
-                                    <td th:text="${entry.key}">Category</td>
-                                    <td th:text="${entry.value}">0</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">카테고리 분포</h3>
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-gray-200 dark:border-gray-700">
+                        <th class="text-left py-2 text-gray-500 dark:text-gray-400 font-medium">카테고리</th>
+                        <th class="text-right py-2 text-gray-500 dark:text-gray-400 font-medium">개수</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="entry : ${data.categoryDistribution}" class="border-b border-gray-100 dark:border-gray-800">
+                        <td class="py-2 text-gray-900 dark:text-white" th:text="${entry.key}">Category</td>
+                        <td class="py-2 text-gray-600 dark:text-gray-400 text-right" th:text="${entry.value}">0</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
-        <div class="col-xl-6 col-lg-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <span th:text="#{events.weekdayDistribution}">Weekday Distribution</span>
-                        <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                           th:title="#{info.weekdayDistribution}"></i>
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th th:text="#{table.day}">Day</th>
-                                    <th th:text="#{table.count}">Count</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="entry : ${data.weekdayDistribution}">
-                                    <td th:text="${entry.key}">Day</td>
-                                    <td th:text="${entry.value}">0</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">요일별 분포</h3>
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-gray-200 dark:border-gray-700">
+                        <th class="text-left py-2 text-gray-500 dark:text-gray-400 font-medium">요일</th>
+                        <th class="text-right py-2 text-gray-500 dark:text-gray-400 font-medium">개수</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="entry : ${data.weekdayDistribution}" class="border-b border-gray-100 dark:border-gray-800">
+                        <td class="py-2 text-gray-900 dark:text-white" th:text="${entry.key}">Day</td>
+                        <td class="py-2 text-gray-600 dark:text-gray-400 text-right" th:text="${entry.value}">0</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <!-- Time × Weekday Heatmap -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <span th:text="#{events.timeWeekdayHeatmap}">Time × Weekday Heatmap</span>
-                        <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                           th:title="#{info.timeWeekdayHeatmap}"></i>
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div id="heatmapLoading" class="text-center py-3">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="sr-only">Loading...</span>
-                        </div>
-                    </div>
-                    <div id="heatmapContent" style="display: none;">
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-sm" id="heatmapTable" style="font-size: 0.75rem;">
-                                <thead id="heatmapHeader"></thead>
-                                <tbody id="heatmapBody"></tbody>
-                            </table>
-                        </div>
-                        <div class="mt-3 d-flex align-items-center justify-content-end">
-                            <small class="text-muted mr-3">Event Count:</small>
-                            <div class="d-flex align-items-center">
-                                <span class="mr-1" style="width: 20px; height: 15px; background-color: #f8f9fa; border: 1px solid #ddd; display: inline-block;"></span>
-                                <small class="mr-3">0</small>
-                                <span class="mr-1" style="width: 20px; height: 15px; background-color: rgba(29, 233, 182, 0.3); display: inline-block;"></span>
-                                <small class="mr-3">Low</small>
-                                <span class="mr-1" style="width: 20px; height: 15px; background-color: rgba(29, 233, 182, 0.6); display: inline-block;"></span>
-                                <small class="mr-3">Medium</small>
-                                <span class="mr-1" style="width: 20px; height: 15px; background-color: rgba(29, 233, 182, 1); display: inline-block;"></span>
-                                <small>High</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <!-- Heatmap -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
+        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">시간대 x 요일 히트맵</h3>
+        <div id="heatmapLoading" class="text-center py-8">
+            <div class="inline-block w-6 h-6 border-2 border-gray-200 dark:border-gray-600 border-t-accent-500 rounded-full animate-spin"></div>
+        </div>
+        <div id="heatmapContent" class="hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead id="heatmapHeader"></thead>
+                    <tbody id="heatmapBody"></tbody>
+                </table>
+            </div>
+            <div class="mt-3 flex items-center justify-end gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <span>Event Count:</span>
+                <span class="w-4 h-3 bg-accent-100 dark:bg-accent-900/30 border dark:border-accent-800"></span><span>0</span>
+                <span class="w-4 h-3 bg-accent-300 dark:bg-accent-700"></span><span>Low</span>
+                <span class="w-4 h-3 bg-accent-500"></span><span>Medium</span>
+                <span class="w-4 h-3 bg-accent-700 dark:bg-accent-400"></span><span>High</span>
             </div>
         </div>
     </div>
 
     <!-- Top Keywords -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <span th:text="#{events.topKeywords}">Top Keywords in Event Titles</span>
-                        <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                           th:title="#{info.topKeywords}"></i>
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th th:text="#{table.rank}">Rank</th>
-                                    <th th:text="#{table.keyword}">Keyword</th>
-                                    <th th:text="#{table.count}">Count</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="item, stat : ${data.topKeywords}">
-                                    <td th:text="${stat.index + 1}">1</td>
-                                    <td th:text="${item.keyword}">Keyword</td>
-                                    <td th:text="${item.count}">0</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
+        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">제목 키워드 TOP</h3>
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-gray-200 dark:border-gray-700">
+                    <th class="text-left py-2 text-gray-500 dark:text-gray-400 font-medium w-16">순위</th>
+                    <th class="text-left py-2 text-gray-500 dark:text-gray-400 font-medium">키워드</th>
+                    <th class="text-right py-2 text-gray-500 dark:text-gray-400 font-medium w-20">개수</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="item, stat : ${data.topKeywords}" class="border-b border-gray-100 dark:border-gray-800">
+                    <td class="py-2 text-gray-600 dark:text-gray-400" th:text="${stat.index + 1}">1</td>
+                    <td class="py-2 text-gray-900 dark:text-white font-medium" th:text="${item.keyword}">Keyword</td>
+                    <td class="py-2 text-accent-600 dark:text-accent-400 text-right" th:text="${item.count}">0</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
-    <!-- Event List (Full Width) -->
-    <div class="mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+    <!-- Event List -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+        <div class="flex items-center justify-between mb-4">
             <div>
-                <h4 class="mb-1 font-weight-bold text-gray-800">Events</h4>
-                <p class="text-muted mb-0" th:text="#{events.eventListDesc}">모든 이벤트들의 목록을 보여주는 페이지입니다.</p>
+                <h3 class="text-sm font-medium text-gray-900 dark:text-white">이벤트 목록</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">모든 이벤트들의 목록을 보여줍니다</p>
             </div>
-            <div class="d-flex align-items-center">
-                <select id="eventSort" class="form-control form-control-sm" style="width: auto;">
-                    <option value="created_date:desc" th:text="#{sort.newest}">Newest</option>
-                    <option value="created_date:asc" th:text="#{sort.oldest}">Oldest</option>
-                    <option value="participant_count:desc" th:text="#{sort.mostParticipants}">Most Participants</option>
-                    <option value="participant_count:asc" th:text="#{sort.leastParticipants}">Least Participants</option>
-                </select>
-            </div>
+            <select id="eventSort" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md">
+                <option value="created_date:desc">최신순</option>
+                <option value="created_date:asc">오래된순</option>
+                <option value="participant_count:desc">참여자 많은순</option>
+                <option value="participant_count:asc">참여자 적은순</option>
+            </select>
         </div>
-        <!-- Search & Date Filter -->
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <div class="input-group">
-                    <input type="text" id="eventSearch" class="form-control form-control-sm"
-                           th:placeholder="#{search.eventPlaceholder}" placeholder="제목 검색...">
-                    <div class="input-group-append">
-                        <button class="btn btn-sm btn-primary" type="button" onclick="loadEventList(1)">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="d-flex align-items-center">
-                    <span class="text-muted mr-2" th:text="#{filter.createdDate}">생성일:</span>
-                    <input type="date" id="eventStartDate" class="form-control form-control-sm mr-2" style="width: 150px;">
-                    <span class="text-muted mr-2">~</span>
-                    <input type="date" id="eventEndDate" class="form-control form-control-sm mr-2" style="width: 150px;">
-                    <button class="btn btn-sm btn-outline-secondary" type="button" onclick="clearEventDateFilter()">
-                        <i class="fas fa-times"></i>
+
+        <!-- Search & Filters -->
+        <div class="flex flex-wrap gap-3 mb-4">
+            <div class="flex-1 min-w-[200px]">
+                <div class="flex">
+                    <input type="text" id="eventSearch" placeholder="제목 검색..."
+                           class="flex-1 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-l-md focus:outline-none focus:ring-2 focus:ring-accent-500">
+                    <button onclick="loadEventList(1)"
+                            class="px-3 py-1.5 bg-accent-500 text-white text-sm rounded-r-md hover:bg-accent-600 transition-colors">
+                        <i data-lucide="search" class="w-4 h-4"></i>
                     </button>
                 </div>
             </div>
-            <div class="col-md-2 text-right">
-                <span id="eventTotalCount" class="text-muted"></span>
+            <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-500 dark:text-gray-400">생성일:</span>
+                <input type="date" id="eventStartDate" class="px-2 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md">
+                <span class="text-gray-400 dark:text-gray-500">~</span>
+                <input type="date" id="eventEndDate" class="px-2 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md">
+                <button onclick="clearEventDateFilter()" class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
             </div>
+            <span id="eventTotalCount" class="text-sm text-gray-500 dark:text-gray-400"></span>
         </div>
-        <div id="eventListLoading" class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="sr-only">Loading...</span>
-            </div>
+
+        <!-- Loading -->
+        <div id="eventListLoading" class="text-center py-8">
+            <div class="inline-block w-6 h-6 border-2 border-gray-200 dark:border-gray-600 border-t-accent-500 rounded-full animate-spin"></div>
         </div>
-        <div id="eventListContent" style="display: none;">
-            <div class="table-responsive">
-                <table class="table table-hover table-compact w-100">
-                    <thead class="thead-light">
-                        <tr>
-                            <th style="width: 8%;" th:text="#{table.category}">Category</th>
-                            <th th:text="#{table.name}">Name</th>
-                            <th style="width: 15%;" class="text-center" th:text="#{table.dateRange}">Date Range</th>
-                            <th style="width: 12%;" class="text-center" th:text="#{table.timeRange}">Time Range</th>
-                            <th style="width: 10%;" class="text-center" th:text="#{table.participants}">Participants</th>
-                            <th style="width: 15%;" class="text-center" th:text="#{table.createdDate}">Created Date</th>
+
+        <!-- Content -->
+        <div id="eventListContent" class="hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-gray-700">
+                            <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[8%]">카테고리</th>
+                            <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">제목</th>
+                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[15%]">날짜 범위</th>
+                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[12%]">시간 범위</th>
+                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[10%]">참여자</th>
+                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[15%]">생성일</th>
                         </tr>
                     </thead>
                     <tbody id="eventListBody"></tbody>
                 </table>
             </div>
-            <nav aria-label="Event pagination">
-                <ul class="pagination justify-content-center" id="eventPagination"></ul>
-            </nav>
+            <div class="flex justify-center mt-4" id="eventPagination"></div>
         </div>
     </div>
 </div>
@@ -302,12 +192,12 @@
 
     function loadEventList(page = 1) {
         currentEventPage = page;
-        $('#eventListLoading').show();
-        $('#eventListContent').hide();
+        document.getElementById('eventListLoading').classList.remove('hidden');
+        document.getElementById('eventListContent').classList.add('hidden');
 
-        const search = $('#eventSearch').val() || '';
-        const startDate = $('#eventStartDate').val() || '';
-        const endDate = $('#eventEndDate').val() || '';
+        const search = document.getElementById('eventSearch').value || '';
+        const startDate = document.getElementById('eventStartDate').value || '';
+        const endDate = document.getElementById('eventEndDate').value || '';
 
         let url = `/api/v1/admin/statistics/events?page=${page}&size=20&keyword=${currentEventSort}&sorting=${currentEventSorting}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
@@ -321,113 +211,92 @@
                     renderEventList(data.payload);
                 }
             })
-            .catch(error => console.error('Error:', error))
             .finally(() => {
-                $('#eventListLoading').hide();
-                $('#eventListContent').show();
+                document.getElementById('eventListLoading').classList.add('hidden');
+                document.getElementById('eventListContent').classList.remove('hidden');
+                lucide.createIcons();
             });
     }
 
     function clearEventDateFilter() {
-        $('#eventSearch').val('');
-        $('#eventStartDate').val('');
-        $('#eventEndDate').val('');
+        document.getElementById('eventSearch').value = '';
+        document.getElementById('eventStartDate').value = '';
+        document.getElementById('eventEndDate').value = '';
         loadEventList(1);
     }
 
     function renderEventList(data) {
         const events = data.dashboard_events || [];
         const pageInfo = data.page_info || {};
+        const isDark = document.documentElement.classList.contains('dark');
 
-        // Total count display
-        $('#eventTotalCount').text(`총 ${pageInfo.total_elements || 0}개`);
+        document.getElementById('eventTotalCount').textContent = `총 ${pageInfo.total_elements || 0}개`;
 
         let tbody = '';
         if (events.length === 0) {
-            tbody = '<tr><td colspan="6" class="text-center text-muted py-4">No events</td></tr>';
+            tbody = '<tr><td colspan="6" class="py-8 text-center text-gray-400 dark:text-gray-500">이벤트가 없습니다</td></tr>';
         } else {
             events.forEach(event => {
                 const category = event.category || '-';
-                const categoryClass = category === 'DATE' ? 'text-primary' : 'text-info';
                 const categoryLabel = category === 'DATE' ? '날짜' : '요일';
                 const eventUrl = `https://www.onetime-with-members.com/ko/events/view/${event.event_id}`;
+                const bgClass = isDark ? 'bg-gray-800' : 'bg-gray-100';
                 tbody += `
-                    <tr style="cursor: pointer;" onclick="window.open('${eventUrl}', '_blank')">
-                        <td><span class="${categoryClass} font-weight-bold">${categoryLabel}</span></td>
-                        <td>${event.title || '-'}</td>
-                        <td class="text-center">${event.date_range || '-'}</td>
-                        <td class="text-center">${event.time_range || '-'}</td>
-                        <td class="text-center">${event.participant_count || 0}명</td>
-                        <td class="text-center text-muted">${event.created_date || '-'}</td>
+                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" onclick="window.open('${eventUrl}', '_blank')">
+                        <td class="py-2 px-3"><span class="text-xs px-2 py-0.5 ${bgClass} rounded">${categoryLabel}</span></td>
+                        <td class="py-2 px-3 text-gray-900 dark:text-white">${event.title || '-'}</td>
+                        <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${event.date_range || '-'}</td>
+                        <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${event.time_range || '-'}</td>
+                        <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${event.participant_count || 0}명</td>
+                        <td class="py-2 px-3 text-center text-gray-400 dark:text-gray-500">${event.created_date || '-'}</td>
                     </tr>
                 `;
             });
         }
-        $('#eventListBody').html(tbody);
+        document.getElementById('eventListBody').innerHTML = tbody;
         renderEventPagination(pageInfo);
     }
 
     function renderEventPagination(pageInfo) {
         const totalPages = pageInfo.total_pages || 1;
         const currentPage = pageInfo.page || 1;
-
-        let pagination = '';
-
-        // Calculate page group (10 pages per group)
         const pageGroup = Math.floor((currentPage - 1) / 10);
         const startPage = pageGroup * 10 + 1;
         const endPage = Math.min(startPage + 9, totalPages);
 
-        // First & Previous
-        pagination += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-            <a class="page-link" href="#" onclick="loadEventList(1); return false;">«</a>
-        </li>`;
-        pagination += `<li class="page-item ${startPage === 1 ? 'disabled' : ''}">
-            <a class="page-link" href="#" onclick="loadEventList(${startPage - 1}); return false;">‹</a>
-        </li>`;
+        let html = '<div class="flex gap-1">';
+        html += `<button onclick="loadEventList(1)" class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${currentPage === 1 ? 'text-gray-300 dark:text-gray-600' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">«</button>`;
+        html += `<button onclick="loadEventList(${startPage - 1})" class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${startPage === 1 ? 'text-gray-300 dark:text-gray-600' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">‹</button>`;
 
-        // Page numbers (10 at a time)
         for (let i = startPage; i <= endPage; i++) {
-            pagination += `<li class="page-item ${i === currentPage ? 'active' : ''}">
-                <a class="page-link" href="#" onclick="loadEventList(${i}); return false;">${i}</a>
-            </li>`;
+            html += `<button onclick="loadEventList(${i})" class="px-3 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${i === currentPage ? 'bg-accent-500 text-white border-accent-500' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">${i}</button>`;
         }
 
-        // Next & Last
-        pagination += `<li class="page-item ${endPage >= totalPages ? 'disabled' : ''}">
-            <a class="page-link" href="#" onclick="loadEventList(${endPage + 1}); return false;">›</a>
-        </li>`;
-        pagination += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-            <a class="page-link" href="#" onclick="loadEventList(${totalPages}); return false;">»</a>
-        </li>`;
+        html += `<button onclick="loadEventList(${endPage + 1})" class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${endPage >= totalPages ? 'text-gray-300 dark:text-gray-600' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">›</button>`;
+        html += `<button onclick="loadEventList(${totalPages})" class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${currentPage === totalPages ? 'text-gray-300 dark:text-gray-600' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">»</button>`;
+        html += '</div>';
 
-        $('#eventPagination').html(pagination);
+        document.getElementById('eventPagination').innerHTML = html;
     }
 
-    // Sort change handler
-    $('#eventSort').on('change', function() {
-        const [sort, sorting] = $(this).val().split(':');
+    document.getElementById('eventSort').addEventListener('change', function() {
+        const [sort, sorting] = this.value.split(':');
         currentEventSort = sort;
         currentEventSorting = sorting;
         loadEventList(1);
     });
 
-    // Search on Enter key
-    $('#eventSearch').on('keypress', function(e) {
-        if (e.which === 13) {
-            loadEventList(1);
-        }
+    document.getElementById('eventSearch').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') loadEventList(1);
     });
 
-    // Date filter change
-    $('#eventStartDate, #eventEndDate').on('change', function() {
-        loadEventList(1);
-    });
+    document.getElementById('eventStartDate').addEventListener('change', () => loadEventList(1));
+    document.getElementById('eventEndDate').addEventListener('change', () => loadEventList(1));
 
-    // Time × Weekday Heatmap
+    // Heatmap
     function loadHeatmap() {
-        $('#heatmapLoading').show();
-        $('#heatmapContent').hide();
+        document.getElementById('heatmapLoading').classList.remove('hidden');
+        document.getElementById('heatmapContent').classList.add('hidden');
 
         const urlParams = new URLSearchParams(window.location.search);
         const startDate = urlParams.get('startDate') || '';
@@ -448,10 +317,9 @@
                     renderHeatmap(data.payload);
                 }
             })
-            .catch(error => console.error('Error loading heatmap:', error))
             .finally(() => {
-                $('#heatmapLoading').hide();
-                $('#heatmapContent').show();
+                document.getElementById('heatmapLoading').classList.add('hidden');
+                document.getElementById('heatmapContent').classList.remove('hidden');
             });
     }
 
@@ -462,35 +330,48 @@
         const hours = heatmapData.hours || [];
         const data = heatmapData.data || [];
         const maxValue = heatmapData.max_value || 1;
+        const isDark = document.documentElement.classList.contains('dark');
 
-        // Build header (weekdays)
-        let headerHtml = '<tr><th class="text-center" style="width: 60px;">Hour</th>';
+        let headerHtml = '<tr><th class="text-center py-2 px-2 text-gray-500 dark:text-gray-400 font-medium">시간</th>';
         weekdays.forEach(day => {
-            headerHtml += `<th class="text-center">${day}</th>`;
+            headerHtml += `<th class="text-center py-2 px-2 text-gray-500 dark:text-gray-400 font-medium">${day}</th>`;
         });
         headerHtml += '</tr>';
         header.innerHTML = headerHtml;
 
-        // Build body (hours × weekdays)
+        // Accent color palette for heatmap
+        const getHeatmapColor = (intensity) => {
+            if (isDark) {
+                if (intensity === 0) return 'rgba(103, 124, 238, 0.05)';
+                return `rgba(103, 124, 238, ${0.2 + intensity * 0.6})`;
+            } else {
+                if (intensity === 0) return 'rgba(103, 124, 238, 0.05)';
+                return `rgba(103, 124, 238, ${0.1 + intensity * 0.6})`;
+            }
+        };
+
         let bodyHtml = '';
         hours.forEach((hour, hIdx) => {
             bodyHtml += '<tr>';
-            bodyHtml += `<td class="text-center font-weight-bold">${hour}:00</td>`;
+            bodyHtml += `<td class="text-center py-1 px-2 text-gray-600 dark:text-gray-400 font-medium">${hour}:00</td>`;
             for (let dIdx = 0; dIdx < weekdays.length; dIdx++) {
                 const count = data[hIdx] ? (data[hIdx][dIdx] || 0) : 0;
                 const intensity = maxValue > 0 ? count / maxValue : 0;
-                const bgColor = count === 0 ? '#f8f9fa' : `rgba(29, 233, 182, ${0.2 + intensity * 0.8})`;
-                const textColor = intensity > 0.5 ? '#fff' : '#333';
-                bodyHtml += `<td class="text-center" style="background-color: ${bgColor}; color: ${textColor};">${count > 0 ? count : ''}</td>`;
+                const bgColor = getHeatmapColor(intensity);
+                const textColor = intensity > 0.5 ? '#fff' : (isDark ? '#a5b4fd' : '#4555bd');
+                bodyHtml += `<td class="text-center py-1 px-2" style="background-color: ${bgColor}; color: ${textColor};">${count > 0 ? count : ''}</td>`;
             }
             bodyHtml += '</tr>';
         });
         body.innerHTML = bodyHtml;
     }
 
-    // Initialize
-    $(function () {
-        $('[data-toggle="tooltip"]').tooltip();
+    // Re-render heatmap on theme change
+    window.addEventListener('themeChanged', function() {
+        loadHeatmap();
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
         loadHeatmap();
         loadEventList(1);
     });

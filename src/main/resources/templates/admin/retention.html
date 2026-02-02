@@ -3,311 +3,230 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{admin/layout/default}">
 <head>
-    <title th:text="#{retention.title} + ' - ' + #{admin.title}">Retention Analysis - OneTime Admin</title>
+    <title>리텐션 분석 - OneTime Admin</title>
 </head>
 <body>
 <div layout:fragment="content">
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800" th:text="#{retention.title}">Retention Analysis</h1>
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">리텐션 분석</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">사용자 유지율을 분석합니다</p>
+        </div>
     </div>
 
     <!-- Date Filter -->
     <div th:replace="~{admin/fragments/date-filter :: dateFilter}"></div>
 
     <!-- Summary Cards -->
-    <div class="row">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                <span th:text="#{retention.dormant30}">Dormant 30d+</span>
-                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                                   th:title="#{info.dormant30}"></i>
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"
-                                 th:text="${#numbers.formatInteger(data.dormantUsers30Days, 0, 'COMMA')}">0</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-clock fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- Dormant 30d+ -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                        휴면 30일+
+                        <span class="cursor-help" title="30일 이상 미접속 사용자">
+                            <i data-lucide="info" class="w-3 h-3 text-gray-400"></i>
+                        </span>
+                    </p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                       th:text="${#numbers.formatInteger(data.dormantUsers30Days, 0, 'COMMA')}">0</p>
+                </div>
+                <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="user-x" class="w-5 h-5 text-amber-600 dark:text-amber-400"></i>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                <span th:text="#{retention.dormant60}">Dormant 60d+</span>
-                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                                   th:title="#{info.dormant60}"></i>
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"
-                                 th:text="${#numbers.formatInteger(data.dormantUsers60Days, 0, 'COMMA')}">0</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-clock fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
+        <!-- Dormant 60d+ -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                        휴면 60일+
+                        <span class="cursor-help" title="60일 이상 미접속 사용자">
+                            <i data-lucide="info" class="w-3 h-3 text-gray-400"></i>
+                        </span>
+                    </p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                       th:text="${#numbers.formatInteger(data.dormantUsers60Days, 0, 'COMMA')}">0</p>
+                </div>
+                <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="user-x" class="w-5 h-5 text-amber-600 dark:text-amber-400"></i>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-danger shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                <span th:text="#{retention.dormant90}">Dormant 90d+</span>
-                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                                   th:title="#{info.dormant90}"></i>
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"
-                                 th:text="${#numbers.formatInteger(data.dormantUsers90Days, 0, 'COMMA')}">0</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-slash fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
+        <!-- Dormant 90d+ -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                        휴면 90일+
+                        <span class="cursor-help" title="90일 이상 미접속 사용자">
+                            <i data-lucide="info" class="w-3 h-3 text-gray-400"></i>
+                        </span>
+                    </p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                       th:text="${#numbers.formatInteger(data.dormantUsers90Days, 0, 'COMMA')}">0</p>
+                </div>
+                <div class="w-10 h-10 bg-red-50 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="user-minus" class="w-5 h-5 text-red-600 dark:text-red-400"></i>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                <span th:text="#{retention.returningRate}">Returning Rate</span>
-                                <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                                   th:title="#{info.returningRate}"></i>
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"
-                                 th:text="${#numbers.formatDecimal(data.returningUserRate, 1, 1) + '%'}">0%</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-redo fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
+        <!-- Returning Rate -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                        복귀율
+                        <span class="cursor-help" title="재접속한 사용자 비율">
+                            <i data-lucide="info" class="w-3 h-3 text-gray-400"></i>
+                        </span>
+                    </p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                       th:text="${#numbers.formatDecimal(data.returningUserRate, 1, 1) + '%'}">0%</p>
+                </div>
+                <div class="w-10 h-10 bg-green-50 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="rotate-ccw" class="w-5 h-5 text-green-600 dark:text-green-400"></i>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Monthly MAU Chart -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <span th:text="#{retention.monthlyMau}">Monthly Active Users (MAU)</span>
-                        <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                           th:title="#{info.monthlyMau}"></i>
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="chart-area">
-                        <canvas id="mauChart"></canvas>
-                    </div>
-                </div>
-            </div>
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
+        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            월간 활성 사용자 (MAU)
+            <span class="cursor-help" title="월별 로그인한 고유 사용자 수">
+                <i data-lucide="info" class="w-3 h-3 text-gray-400"></i>
+            </span>
+        </h3>
+        <div class="h-64">
+            <canvas id="mauChart"></canvas>
         </div>
     </div>
 
     <!-- Conversion Funnel -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <span th:text="#{retention.funnel}">Conversion Funnel</span>
-                        <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                           th:title="#{info.funnel}"></i>
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div id="funnelLoading" class="text-center py-3">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="sr-only">Loading...</span>
-                        </div>
-                    </div>
-                    <div id="funnelContent" style="display: none;">
-                        <div id="funnelChart"></div>
-                    </div>
-                </div>
-            </div>
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
+        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            전환 퍼널
+            <span class="cursor-help" title="가입 → 이벤트 생성 → 참여자 확보 전환율">
+                <i data-lucide="info" class="w-3 h-3 text-gray-400"></i>
+            </span>
+        </h3>
+        <div id="funnelLoading" class="flex justify-center py-8">
+            <div class="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 dark:border-gray-600 border-t-accent-500"></div>
+        </div>
+        <div id="funnelContent" class="hidden">
+            <div id="funnelChart"></div>
         </div>
     </div>
 
     <!-- TTV Distribution -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <span th:text="#{retention.ttv}">Time to Value (TTV)</span>
-                        <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                           th:title="#{info.ttv}"></i>
-                    </h6>
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
+        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            Time to Value (TTV)
+            <span class="cursor-help" title="가입 후 첫 이벤트 생성까지 걸린 시간">
+                <i data-lucide="info" class="w-3 h-3 text-gray-400"></i>
+            </span>
+        </h3>
+        <div id="ttvLoading" class="flex justify-center py-8">
+            <div class="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 dark:border-gray-600 border-t-accent-500"></div>
+        </div>
+        <div id="ttvContent" class="hidden">
+            <!-- TTV Summary Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">평균</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="ttvAverage">-</p>
                 </div>
-                <div class="card-body">
-                    <div id="ttvLoading" class="text-center py-3">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="sr-only">Loading...</span>
-                        </div>
-                    </div>
-                    <div id="ttvContent" style="display: none;">
-                        <!-- TTV Summary Cards -->
-                        <div class="row mb-4">
-                            <div class="col-md-3">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center py-3">
-                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1"
-                                             th:text="#{retention.ttvAverage}">Average</div>
-                                        <div class="h4 mb-0 font-weight-bold" id="ttvAverage">-</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center py-3">
-                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1"
-                                             th:text="#{retention.ttvMedian}">Median</div>
-                                        <div class="h4 mb-0 font-weight-bold" id="ttvMedian">-</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center py-3">
-                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1"
-                                             th:text="#{retention.activationRate}">Activation Rate</div>
-                                        <div class="h4 mb-0 font-weight-bold" id="ttvActivation">-</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center py-3">
-                                        <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
-                                            Users with Event</div>
-                                        <div class="h4 mb-0 font-weight-bold" id="ttvUsersWithEvent">-</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- TTV Distribution Chart -->
-                        <div class="chart-bar">
-                            <canvas id="ttvChart"></canvas>
-                        </div>
-                    </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">중앙값</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="ttvMedian">-</p>
                 </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">활성화율</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="ttvActivation">-</p>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">이벤트 생성 유저</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="ttvUsersWithEvent">-</p>
+                </div>
+            </div>
+            <!-- TTV Distribution Chart -->
+            <div class="h-64">
+                <canvas id="ttvChart"></canvas>
             </div>
         </div>
     </div>
 
     <!-- WAU/MAU Stickiness -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <span th:text="#{retention.stickiness}">Stickiness (WAU/MAU)</span>
-                        <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                           th:title="#{info.stickiness}"></i>
-                    </h6>
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
+        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            Stickiness (WAU/MAU)
+            <span class="cursor-help" title="주간 활성 사용자 / 월간 활성 사용자 비율">
+                <i data-lucide="info" class="w-3 h-3 text-gray-400"></i>
+            </span>
+        </h3>
+        <div id="stickinessLoading" class="flex justify-center py-8">
+            <div class="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 dark:border-gray-600 border-t-accent-500"></div>
+        </div>
+        <div id="stickinessContent" class="hidden">
+            <!-- Stickiness Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-accent-500 text-white rounded-lg p-4 text-center">
+                    <p class="text-xs uppercase mb-1 opacity-80">현재 Stickiness</p>
+                    <p class="text-2xl font-bold" id="stickinessValue">-</p>
                 </div>
-                <div class="card-body">
-                    <div id="stickinessLoading" class="text-center py-3">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="sr-only">Loading...</span>
-                        </div>
-                    </div>
-                    <div id="stickinessContent" style="display: none;">
-                        <!-- Stickiness Summary Cards -->
-                        <div class="row mb-4">
-                            <div class="col-md-4">
-                                <div class="card bg-gradient-primary text-white">
-                                    <div class="card-body text-center py-3">
-                                        <div class="text-xs font-weight-bold text-uppercase mb-1">Current Stickiness</div>
-                                        <div class="h3 mb-0 font-weight-bold" id="stickinessValue">-</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center py-3">
-                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1"
-                                             th:text="#{retention.currentWau}">This Week WAU</div>
-                                        <div class="h4 mb-0 font-weight-bold" id="stickinessWau">-</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center py-3">
-                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1"
-                                             th:text="#{retention.currentMau}">This Month MAU</div>
-                                        <div class="h4 mb-0 font-weight-bold" id="stickinessMau">-</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Stickiness Trend Chart -->
-                        <div class="chart-area">
-                            <canvas id="stickinessChart"></canvas>
-                        </div>
-                    </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">이번 주 WAU</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="stickinessWau">-</p>
                 </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">이번 달 MAU</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="stickinessMau">-</p>
+                </div>
+            </div>
+            <!-- Stickiness Trend Chart -->
+            <div class="h-64">
+                <canvas id="stickinessChart"></canvas>
             </div>
         </div>
     </div>
 
     <!-- Cohort Retention Table -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <span th:text="#{retention.cohort}">Cohort Retention Analysis</span>
-                        <i class="fas fa-info-circle ml-1 text-gray-400" data-toggle="tooltip"
-                           th:title="#{info.cohort}"></i>
-                    </h6>
-                    <select id="cohortMonths" class="form-control form-control-sm" style="width: auto;">
-                        <option value="6">6 months</option>
-                        <option value="12" selected>12 months</option>
-                    </select>
-                </div>
-                <div class="card-body">
-                    <div id="cohortLoading" class="text-center py-3">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="sr-only">Loading...</span>
-                        </div>
-                    </div>
-                    <div id="cohortContent" style="display: none;">
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-sm" id="cohortTable" style="font-size: 0.8rem;">
-                                <thead id="cohortHeader"></thead>
-                                <tbody id="cohortBody"></tbody>
-                            </table>
-                        </div>
-                        <div class="mt-3">
-                            <small class="text-muted">
-                                <i class="fas fa-info-circle mr-1"></i>
-                                M0 = signup month, M1 = 1 month later, etc. Values show % of users still active.
-                            </small>
-                        </div>
-                    </div>
-                </div>
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                코호트 리텐션 분석
+                <span class="cursor-help" title="가입 월별 사용자 유지율">
+                    <i data-lucide="info" class="w-3 h-3 text-gray-400"></i>
+                </span>
+            </h3>
+            <select id="cohortMonths"
+                    class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
+                <option value="6">6개월</option>
+                <option value="12" selected>12개월</option>
+            </select>
+        </div>
+        <div id="cohortLoading" class="flex justify-center py-8">
+            <div class="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 dark:border-gray-600 border-t-accent-500"></div>
+        </div>
+        <div id="cohortContent" class="hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs" id="cohortTable">
+                    <thead id="cohortHeader"></thead>
+                    <tbody id="cohortBody"></tbody>
+                </table>
             </div>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-3">
+                <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
+                M0 = 가입월, M1 = 1개월 후, etc. 값은 잔존율(%)을 나타냅니다.
+            </p>
         </div>
     </div>
 </div>
@@ -316,30 +235,89 @@
 <script th:inline="javascript">
     const mauData = /*[[${data.monthlyMau}]]*/ [];
 
-    new Chart(document.getElementById('mauChart'), {
+    function getChartColors() {
+        const dark = document.documentElement.classList.contains('dark');
+        return {
+            text: dark ? '#9ca3af' : '#6b7280',
+            grid: dark ? '#374151' : '#f0f0f0',
+            accent: '#677CEE',
+            accentBg: dark ? 'rgba(103, 124, 238, 0.2)' : 'rgba(103, 124, 238, 0.1)',
+            secondary: dark ? '#8198f3' : '#5367d6',
+            tertiary: dark ? '#a5b4fd' : '#8198f3'
+        };
+    }
+
+    const colors = getChartColors();
+
+    // Accent color palette
+    const accentColors = ['#677CEE', '#8198f3', '#a5b4fd', '#c7d2ff', '#5367d6', '#4555bd'];
+
+    // MAU Chart
+    const mauChart = new Chart(document.getElementById('mauChart'), {
         type: 'line',
         data: {
             labels: mauData.map(d => d.month),
             datasets: [{
                 label: 'MAU',
                 data: mauData.map(d => d.count),
-                backgroundColor: 'rgba(78, 115, 223, 0.05)',
-                borderColor: '#4e73df',
+                backgroundColor: colors.accentBg,
+                borderColor: colors.accent,
                 fill: true,
                 tension: 0.3
             }]
         },
         options: {
             maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
             scales: {
-                y: { beginAtZero: true }
+                y: {
+                    beginAtZero: true,
+                    grid: { color: colors.grid },
+                    ticks: { color: colors.text }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: colors.text }
+                }
             }
         }
     });
 
-    // Initialize Bootstrap tooltips
-    $(function () {
-        $('[data-toggle="tooltip"]').tooltip();
+    // Listen for theme changes
+    window.addEventListener('themeChanged', function() {
+        const newColors = getChartColors();
+
+        // Update MAU chart
+        mauChart.data.datasets[0].backgroundColor = newColors.accentBg;
+        mauChart.options.scales.y.grid.color = newColors.grid;
+        mauChart.options.scales.y.ticks.color = newColors.text;
+        mauChart.options.scales.x.ticks.color = newColors.text;
+        mauChart.update();
+
+        // Update TTV chart if exists
+        if (ttvChart) {
+            ttvChart.options.scales.y.grid.color = newColors.grid;
+            ttvChart.options.scales.y.ticks.color = newColors.text;
+            ttvChart.options.scales.x.ticks.color = newColors.text;
+            ttvChart.update();
+        }
+
+        // Update Stickiness chart if exists
+        if (stickinessChart) {
+            stickinessChart.data.datasets[0].backgroundColor = newColors.accentBg;
+            stickinessChart.options.scales.y.grid.color = newColors.grid;
+            stickinessChart.options.scales.y.ticks.color = newColors.text;
+            stickinessChart.options.scales.x.ticks.color = newColors.text;
+            stickinessChart.update();
+        }
+
+        // Reload cohort and funnel for theme-aware colors
+        loadCohortData(document.getElementById('cohortMonths').value);
+        loadFunnelData();
+    });
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
         loadFunnelData();
         loadTtvData();
         loadStickinessData();
@@ -350,8 +328,8 @@
     let stickinessChart = null;
 
     function loadStickinessData() {
-        $('#stickinessLoading').show();
-        $('#stickinessContent').hide();
+        document.getElementById('stickinessLoading').classList.remove('hidden');
+        document.getElementById('stickinessContent').classList.add('hidden');
 
         fetch('/api/v1/admin/statistics/stickiness?months=12')
             .then(response => response.json())
@@ -362,48 +340,40 @@
             })
             .catch(error => console.error('Error loading stickiness:', error))
             .finally(() => {
-                $('#stickinessLoading').hide();
-                $('#stickinessContent').show();
+                document.getElementById('stickinessLoading').classList.add('hidden');
+                document.getElementById('stickinessContent').classList.remove('hidden');
             });
     }
 
     function renderStickiness(stickinessData) {
-        // Update summary cards
+        const colors = getChartColors();
+
         document.getElementById('stickinessValue').textContent = stickinessData.current_stickiness.toFixed(1) + '%';
         document.getElementById('stickinessWau').textContent = stickinessData.current_wau.toLocaleString();
         document.getElementById('stickinessMau').textContent = stickinessData.current_mau.toLocaleString();
 
-        // Render trend chart
         const ctx = document.getElementById('stickinessChart').getContext('2d');
-
-        if (stickinessChart) {
-            stickinessChart.destroy();
-        }
+        if (stickinessChart) stickinessChart.destroy();
 
         const trend = stickinessData.trend || [];
-        const labels = trend.map(t => t.month);
-        const stickinessValues = trend.map(t => t.stickiness);
-        const wauValues = trend.map(t => t.wau);
-        const mauValues = trend.map(t => t.mau);
-
         stickinessChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: labels,
+                labels: trend.map(t => t.month),
                 datasets: [
                     {
                         label: 'Stickiness (%)',
-                        data: stickinessValues,
-                        borderColor: '#4e73df',
-                        backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                        data: trend.map(t => t.stickiness),
+                        borderColor: colors.accent,
+                        backgroundColor: colors.accentBg,
                         fill: true,
                         tension: 0.3,
                         yAxisID: 'y'
                     },
                     {
                         label: 'WAU',
-                        data: wauValues,
-                        borderColor: '#36b9cc',
+                        data: trend.map(t => t.wau),
+                        borderColor: colors.secondary,
                         backgroundColor: 'transparent',
                         borderDash: [5, 5],
                         tension: 0.3,
@@ -411,8 +381,8 @@
                     },
                     {
                         label: 'MAU',
-                        data: mauValues,
-                        borderColor: '#1cc88a',
+                        data: trend.map(t => t.mau),
+                        borderColor: colors.tertiary,
                         backgroundColor: 'transparent',
                         borderDash: [5, 5],
                         tension: 0.3,
@@ -422,34 +392,38 @@
             },
             options: {
                 maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            color: colors.text
+                        }
+                    }
+                },
                 scales: {
                     y: {
                         type: 'linear',
                         display: true,
                         position: 'left',
-                        title: { display: true, text: 'Stickiness (%)' },
+                        title: { display: true, text: 'Stickiness (%)', color: colors.text },
                         beginAtZero: true,
-                        max: 100
+                        max: 100,
+                        grid: { color: colors.grid },
+                        ticks: { color: colors.text }
                     },
                     y1: {
                         type: 'linear',
                         display: true,
                         position: 'right',
-                        title: { display: true, text: 'Users' },
+                        title: { display: true, text: 'Users', color: colors.text },
                         beginAtZero: true,
-                        grid: { drawOnChartArea: false }
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                if (context.dataset.label === 'Stickiness (%)') {
-                                    return `${context.dataset.label}: ${context.raw.toFixed(1)}%`;
-                                }
-                                return `${context.dataset.label}: ${context.raw.toLocaleString()}`;
-                            }
-                        }
+                        grid: { drawOnChartArea: false },
+                        ticks: { color: colors.text }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: colors.text }
                     }
                 }
             }
@@ -460,8 +434,8 @@
     let ttvChart = null;
 
     function loadTtvData() {
-        $('#ttvLoading').show();
-        $('#ttvContent').hide();
+        document.getElementById('ttvLoading').classList.remove('hidden');
+        document.getElementById('ttvContent').classList.add('hidden');
 
         const urlParams = new URLSearchParams(window.location.search);
         const startDate = urlParams.get('startDate') || '';
@@ -484,71 +458,59 @@
             })
             .catch(error => console.error('Error loading TTV:', error))
             .finally(() => {
-                $('#ttvLoading').hide();
-                $('#ttvContent').show();
+                document.getElementById('ttvLoading').classList.add('hidden');
+                document.getElementById('ttvContent').classList.remove('hidden');
             });
     }
 
     function renderTtv(ttvData) {
-        // Update summary cards
+        const colors = getChartColors();
+
         document.getElementById('ttvAverage').textContent = ttvData.average_days.toFixed(1) + ' days';
         document.getElementById('ttvMedian').textContent = ttvData.median_days.toFixed(0) + ' days';
         document.getElementById('ttvActivation').textContent = ttvData.activation_rate.toFixed(1) + '%';
         document.getElementById('ttvUsersWithEvent').textContent =
             ttvData.users_with_event.toLocaleString() + ' / ' + ttvData.total_users.toLocaleString();
 
-        // Render bar chart
         const ctx = document.getElementById('ttvChart').getContext('2d');
-
-        if (ttvChart) {
-            ttvChart.destroy();
-        }
+        if (ttvChart) ttvChart.destroy();
 
         const distribution = ttvData.distribution || [];
-        const labels = distribution.map(d => d.label);
-        const counts = distribution.map(d => d.count);
-        const percentages = distribution.map(d => d.percentage);
 
         ttvChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: labels,
+                labels: distribution.map(d => d.label),
                 datasets: [{
                     label: 'Users',
-                    data: counts,
-                    backgroundColor: [
-                        'rgba(28, 200, 138, 0.8)',   // Same day - green
-                        'rgba(54, 185, 204, 0.8)',  // 1-3 days - cyan
-                        'rgba(78, 115, 223, 0.8)',  // 4-7 days - blue
-                        'rgba(246, 194, 62, 0.8)',  // 8-14 days - yellow
-                        'rgba(231, 74, 59, 0.8)',   // 15-30 days - red
-                        'rgba(133, 135, 150, 0.8)'  // 31+ days - gray
-                    ],
-                    borderWidth: 1
+                    data: distribution.map(d => d.count),
+                    backgroundColor: accentColors,
+                    borderRadius: 4
                 }]
             },
             options: {
                 maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Users'
-                        }
-                    }
-                },
                 plugins: {
+                    legend: { display: false },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
                                 const idx = context.dataIndex;
-                                return `${context.raw.toLocaleString()} users (${percentages[idx]}%)`;
+                                return `${context.raw.toLocaleString()} users (${distribution[idx].percentage}%)`;
                             }
                         }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: colors.grid },
+                        title: { display: true, text: 'Users', color: colors.text },
+                        ticks: { color: colors.text }
                     },
-                    legend: {
-                        display: false
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: colors.text }
                     }
                 }
             }
@@ -557,8 +519,8 @@
 
     // Funnel Analysis
     function loadFunnelData() {
-        $('#funnelLoading').show();
-        $('#funnelContent').hide();
+        document.getElementById('funnelLoading').classList.remove('hidden');
+        document.getElementById('funnelContent').classList.add('hidden');
 
         const urlParams = new URLSearchParams(window.location.search);
         const startDate = urlParams.get('startDate') || '';
@@ -581,8 +543,8 @@
             })
             .catch(error => console.error('Error loading funnel:', error))
             .finally(() => {
-                $('#funnelLoading').hide();
-                $('#funnelContent').show();
+                document.getElementById('funnelLoading').classList.add('hidden');
+                document.getElementById('funnelContent').classList.remove('hidden');
             });
     }
 
@@ -591,59 +553,49 @@
         const steps = funnelData.steps;
 
         if (!steps || steps.length === 0) {
-            container.innerHTML = '<p class="text-muted text-center">No data available</p>';
+            container.innerHTML = '<p class="text-gray-400 dark:text-gray-500 text-center py-4">데이터 없음</p>';
             return;
         }
 
         const maxCount = steps[0].count;
-        const colors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e'];
 
-        let html = '<div class="funnel-container">';
-
+        let html = '<div class="space-y-3">';
         steps.forEach((step, idx) => {
             const widthPercent = maxCount > 0 ? (step.count / maxCount) * 100 : 0;
-            const color = colors[idx % colors.length];
+            const color = accentColors[idx % accentColors.length];
             const dropoffText = idx > 0 && step.dropoff_rate > 0
-                ? `<span class="text-danger ml-2">(-${step.dropoff_rate.toFixed(1)}%)</span>`
+                ? `<span class="text-red-500 dark:text-red-400 ml-2">(-${step.dropoff_rate.toFixed(1)}%)</span>`
                 : '';
 
             html += `
-                <div class="funnel-step mb-3">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="font-weight-bold">${step.label}</span>
-                        <span>
+                <div>
+                    <div class="flex justify-between items-center mb-1 text-sm">
+                        <span class="font-medium text-gray-900 dark:text-white">${step.label}</span>
+                        <span class="text-gray-600 dark:text-gray-400">
                             <strong>${step.count.toLocaleString()}</strong>
-                            <span class="text-muted ml-1">(${step.rate.toFixed(1)}%)</span>
+                            <span class="text-gray-400 dark:text-gray-500 ml-1">(${step.rate.toFixed(1)}%)</span>
                             ${dropoffText}
                         </span>
                     </div>
-                    <div class="progress" style="height: 30px;">
-                        <div class="progress-bar" role="progressbar"
-                             style="width: ${widthPercent}%; background-color: ${color};"
-                             aria-valuenow="${widthPercent}" aria-valuemin="0" aria-valuemax="100">
-                        </div>
+                    <div class="h-8 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
+                        <div class="h-full rounded" style="width: ${widthPercent}%; background-color: ${color};"></div>
                     </div>
                 </div>
             `;
 
-            // Arrow between steps
             if (idx < steps.length - 1) {
-                html += `
-                    <div class="text-center text-muted mb-2">
-                        <i class="fas fa-arrow-down"></i>
-                    </div>
-                `;
+                html += `<div class="flex justify-center text-gray-300 dark:text-gray-600"><i data-lucide="arrow-down" class="w-4 h-4"></i></div>`;
             }
         });
-
         html += '</div>';
         container.innerHTML = html;
+        lucide.createIcons();
     }
 
     // Cohort Retention Table
     function loadCohortData(months) {
-        $('#cohortLoading').show();
-        $('#cohortContent').hide();
+        document.getElementById('cohortLoading').classList.remove('hidden');
+        document.getElementById('cohortContent').classList.add('hidden');
 
         fetch(`/api/v1/admin/statistics/cohort?months=${months}`)
             .then(response => response.json())
@@ -654,38 +606,38 @@
             })
             .catch(error => console.error('Error loading cohort:', error))
             .finally(() => {
-                $('#cohortLoading').hide();
-                $('#cohortContent').show();
+                document.getElementById('cohortLoading').classList.add('hidden');
+                document.getElementById('cohortContent').classList.remove('hidden');
             });
     }
 
     function renderCohortTable(cohortData) {
         const header = document.getElementById('cohortHeader');
         const body = document.getElementById('cohortBody');
+        const isDark = document.documentElement.classList.contains('dark');
 
-        // Build header
-        let headerHtml = '<tr>';
-        headerHtml += '<th class="text-center" th:text="#{retention.cohortMonth}">Cohort</th>';
-        headerHtml += '<th class="text-center" th:text="#{retention.cohortSize}">Size</th>';
+        let headerHtml = '<tr class="border-b border-gray-200 dark:border-gray-700">';
+        headerHtml += '<th class="text-center py-2 px-2 text-gray-500 dark:text-gray-400 font-medium">코호트</th>';
+        headerHtml += '<th class="text-center py-2 px-2 text-gray-500 dark:text-gray-400 font-medium">크기</th>';
         cohortData.periods.forEach(p => {
-            headerHtml += `<th class="text-center">${p}</th>`;
+            headerHtml += `<th class="text-center py-2 px-2 text-gray-500 dark:text-gray-400 font-medium">${p}</th>`;
         });
         headerHtml += '</tr>';
         header.innerHTML = headerHtml;
 
-        // Build body
         let bodyHtml = '';
         if (cohortData.cohorts.length === 0) {
-            bodyHtml = `<tr><td colspan="${cohortData.periods.length + 2}" class="text-center text-muted">No data available</td></tr>`;
+            bodyHtml = `<tr><td colspan="${cohortData.periods.length + 2}" class="text-center text-gray-400 dark:text-gray-500 py-8">데이터 없음</td></tr>`;
         } else {
             cohortData.cohorts.forEach(row => {
-                bodyHtml += '<tr>';
-                bodyHtml += `<td class="text-center font-weight-bold">${row.month}</td>`;
-                bodyHtml += `<td class="text-center">${row.size}</td>`;
+                bodyHtml += '<tr class="border-b border-gray-100 dark:border-gray-800">';
+                bodyHtml += `<td class="text-center py-2 px-2 font-medium text-gray-900 dark:text-white">${row.month}</td>`;
+                bodyHtml += `<td class="text-center py-2 px-2 text-gray-600 dark:text-gray-400">${row.size}</td>`;
                 row.retention.forEach((rate, idx) => {
-                    const color = getHeatmapColor(rate, idx === 0);
+                    const color = getHeatmapColor(rate, idx === 0, isDark);
                     const displayValue = rate > 0 ? rate.toFixed(1) + '%' : '-';
-                    bodyHtml += `<td class="text-center" style="background-color: ${color}">${displayValue}</td>`;
+                    const textColor = rate > 50 ? (isDark ? '#fff' : '#fff') : (isDark ? '#a5b4fd' : '#4555bd');
+                    bodyHtml += `<td class="text-center py-2 px-2" style="background-color: ${color}; color: ${textColor};">${displayValue}</td>`;
                 });
                 bodyHtml += '</tr>';
             });
@@ -693,16 +645,16 @@
         body.innerHTML = bodyHtml;
     }
 
-    function getHeatmapColor(rate, isFirst) {
-        if (rate === 0) return '#f8f9fa';
-        if (isFirst) return 'rgba(28, 200, 138, 0.3)'; // Green for M0
+    function getHeatmapColor(rate, isFirst, isDark) {
+        if (rate === 0) return isDark ? 'rgba(103, 124, 238, 0.05)' : 'rgba(103, 124, 238, 0.05)';
+        if (isFirst) return isDark ? 'rgba(103, 124, 238, 0.3)' : 'rgba(103, 124, 238, 0.2)';
         const intensity = Math.min(rate / 100, 1);
-        return `rgba(29, 233, 182, ${0.1 + intensity * 0.5})`;
+        return `rgba(103, 124, 238, ${0.1 + intensity * 0.6})`;
     }
 
     // Cohort months selector
-    $('#cohortMonths').on('change', function() {
-        loadCohortData($(this).val());
+    document.getElementById('cohortMonths').addEventListener('change', function() {
+        loadCohortData(this.value);
     });
 </script>
 </th:block>

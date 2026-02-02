@@ -7,13 +7,15 @@
 </head>
 <body>
 <div layout:fragment="content">
-    <div class="d-flex flex-column justify-content-center align-items-center" style="min-height: 60vh;">
+    <div class="flex flex-col justify-center items-center" style="min-height: 60vh;">
         <div class="text-center">
-            <div class="error mx-auto" data-text="404" style="font-size: 7rem; font-weight: 700; color: #dddfeb;">404</div>
-            <p class="lead text-gray-800 mb-4">Page Not Found</p>
-            <p class="text-gray-500 mb-5">요청하신 페이지를 찾을 수 없습니다.</p>
-            <a href="/admin/dashboard" class="btn btn-primary btn-lg">
-                <i class="fas fa-home mr-2"></i>대시보드로 이동
+            <div class="text-[120px] font-bold text-gray-200 dark:text-gray-700 leading-none mb-4">404</div>
+            <p class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Page Not Found</p>
+            <p class="text-gray-500 dark:text-gray-400 mb-8">요청하신 페이지를 찾을 수 없습니다.</p>
+            <a href="/admin/dashboard"
+               class="inline-flex items-center px-6 py-3 bg-accent-500 text-white text-sm font-medium rounded-md hover:bg-accent-600 transition-colors">
+                <i data-lucide="home" class="w-4 h-4 mr-2"></i>
+                대시보드로 이동
             </a>
         </div>
     </div>

@@ -2,72 +2,111 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title th:text="#{admin.login} + ' - ' + #{admin.title}">Login - OneTime Admin</title>
-    <!-- SB Admin 2 CSS (CDN) -->
-    <link href="https://cdn.jsdelivr.net/npm/startbootstrap-sb-admin-2@4.1.4/css/sb-admin-2.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>로그인 - OneTime Admin</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        accent: {
+                            500: '#677CEE',
+                            600: '#5367d6',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    </style>
 </head>
-<body class="bg-gradient-primary">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-xl-5 col-lg-6 col-md-8">
-                <div class="card o-hidden border-0 shadow-lg my-5">
-                    <div class="card-body p-0">
-                        <div class="p-5">
-                            <div class="text-center">
-                                <h1 class="h4 text-gray-900 mb-2">
-                                    <i class="fas fa-clock text-primary"></i>
-                                </h1>
-                                <h1 class="h4 text-gray-900 mb-4" th:text="#{admin.title}">OneTime Admin</h1>
-                            </div>
-
-                            <!-- Language Selector -->
-                            <div class="text-center mb-4">
-                                <a th:href="@{/admin/login(lang=ko)}" class="btn btn-sm"
-                                   th:classappend="${#locale.language == 'ko' ? 'btn-primary' : 'btn-outline-secondary'}">한국어</a>
-                                <a th:href="@{/admin/login(lang=en)}" class="btn btn-sm"
-                                   th:classappend="${#locale.language == 'en' ? 'btn-primary' : 'btn-outline-secondary'}">English</a>
-                            </div>
-
-                            <!-- Error message -->
-                            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <span th:text="${error}">Login failed</span>
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-
-                            <form class="user" method="post" th:action="@{/admin/login}">
-                                <div class="form-group">
-                                    <input type="email" name="email" class="form-control form-control-user"
-                                           th:placeholder="#{admin.email}" required autofocus>
-                                </div>
-                                <div class="form-group">
-                                    <input type="password" name="password" class="form-control form-control-user"
-                                           th:placeholder="#{admin.password}" required>
-                                </div>
-                                <button type="submit" class="btn btn-primary btn-user btn-block" th:text="#{admin.login}">
-                                    Login
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Footer -->
-                <div class="text-center text-white-50">
-                    <small th:text="#{admin.copyright}">Copyright © OneTime Admin 2026</small>
-                </div>
+<body class="bg-white dark:bg-gray-900 min-h-screen flex items-center justify-center transition-colors duration-200">
+    <div class="w-full max-w-sm px-6">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-12 h-12 bg-accent-500 rounded-lg mb-4">
+                <span class="text-white text-xl font-bold">O</span>
             </div>
+            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">OneTime Admin</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">관리자 계정으로 로그인하세요</p>
         </div>
+
+        <!-- Error message -->
+        <div th:if="${error}" class="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-md">
+            <p class="text-sm text-red-600 dark:text-red-400" th:text="${error}">Login failed</p>
+        </div>
+
+        <!-- Login Form -->
+        <form method="post" th:action="@{/admin/login}" class="space-y-4">
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">이메일</label>
+                <input type="email" name="email" id="email" required autofocus
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent"
+                       placeholder="admin@example.com">
+            </div>
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">비밀번호</label>
+                <input type="password" name="password" id="password" required
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent"
+                       placeholder="••••••••">
+            </div>
+            <button type="submit"
+                    class="w-full py-2 px-4 bg-accent-500 text-white text-sm font-medium rounded-md hover:bg-accent-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-500 dark:focus:ring-offset-gray-900">
+                로그인
+            </button>
+        </form>
+
+        <!-- Theme Toggle -->
+        <div class="flex justify-center mt-6">
+            <button id="themeToggle" type="button"
+                    class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+                    title="테마 변경">
+                <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+                <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+            </button>
+        </div>
+
+        <!-- Footer -->
+        <p class="text-center text-xs text-gray-400 dark:text-gray-500 mt-6">
+            Copyright © OneTime Admin 2026
+        </p>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/startbootstrap-sb-admin-2@4.1.4/js/sb-admin-2.min.js"></script>
+    <script>
+        lucide.createIcons();
+
+        document.getElementById('themeToggle').addEventListener('click', function() {
+            const html = document.documentElement;
+            const isDark = html.classList.contains('dark');
+
+            if (isDark) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+            lucide.createIcons();
+        });
+    </script>
 </body>
 </html>
