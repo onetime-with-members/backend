@@ -52,6 +52,8 @@ public class SecurityConfig {
 		"/api/v1/bar-banners/activated/all",
 		"/api/v1/banners/*/clicks",
 		"/api/v1/test/**",
+		"api/v1/banners/staging",
+		"api/v1/bar-banners/staging",
 		"/actuator/health"
 	};
 	
