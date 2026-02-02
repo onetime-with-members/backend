@@ -19,7 +19,6 @@ public enum ErrorStatus implements BaseErrorCode {
 	_NOT_FOUND_HANDLER(HttpStatus.NOT_FOUND, "E_NOT_FOUND_HANDLER", "해당 경로에 대한 핸들러를 찾을 수 없습니다."),
 	_FAILED_TRANSLATE_SWAGGER(HttpStatus.INTERNAL_SERVER_ERROR, "E_FAILED_TRANSLATE_SWAGGER", "Rest Docs로 생성된 json파일을 통한 스웨거 변환에 실패하였습니다."),
     _UNIDENTIFIED_USER(HttpStatus.INTERNAL_SERVER_ERROR, "E_UNIDENTIFIED_USER", "인증 정보를 처리하는 과정에서 서버 오류가 발생했습니다."),
-    _INVALID_API_KEY(HttpStatus.UNAUTHORIZED, "E_INVALID_API_KEY", "유효하지 않은 서버 인증 키입니다."),
     ;
 
     private final HttpStatus httpStatus;
