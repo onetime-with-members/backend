@@ -65,7 +65,12 @@
                 const end = new Date();
                 const start = new Date();
                 start.setDate(end.getDate() - 29);
-                const formatDate = (d) => d.toISOString().split('T')[0];
+                const formatDate = (d) => {
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                };
                 const url = new URL(window.location.href);
                 url.searchParams.set('startDate', formatDate(start));
                 url.searchParams.set('endDate', formatDate(end));
@@ -111,7 +116,12 @@
             const start = new Date();
             start.setDate(end.getDate() - (days - 1));  // 정확히 N일 포함 (오늘 포함)
 
-            const formatDate = (d) => d.toISOString().split('T')[0];
+            const formatDate = (d) => {
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
             startInput.value = formatDate(start);
             endInput.value = formatDate(end);
 
