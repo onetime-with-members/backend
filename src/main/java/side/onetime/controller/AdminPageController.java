@@ -16,6 +16,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import side.onetime.auth.dto.CustomAdminDetails;
 import side.onetime.dto.admin.request.LoginAdminUserRequest;
 import side.onetime.dto.admin.response.LoginAdminUserResponse;
 import side.onetime.exception.CustomException;
@@ -34,6 +38,24 @@ public class AdminPageController {
 
     private static final String ADMIN_TOKEN_COOKIE = "admin_token";
     private static final int COOKIE_MAX_AGE = 60 * 60 * 24; // 1 day
+
+    // ==================== Model Attributes ====================
+
+    @ModelAttribute("adminName")
+    public String getAdminName() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getPrincipal() instanceof CustomAdminDetails details) {
+                String email = details.admin().getEmail();
+                if (email != null && !email.isEmpty()) {
+                    return String.valueOf(email.charAt(0)).toUpperCase();
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Could not get admin name: {}", e.getMessage());
+        }
+        return "A";
+    }
 
     // ==================== Authentication ====================
 
