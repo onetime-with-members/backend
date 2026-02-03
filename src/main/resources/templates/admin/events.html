@@ -141,7 +141,7 @@
         <div class="flex items-center justify-between mb-4">
             <div>
                 <h3 class="text-sm font-medium text-gray-900 dark:text-white">이벤트 목록</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">모든 이벤트들의 목록을 보여줍니다</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">선택한 기간 내 생성된 이벤트</p>
             </div>
             <div class="flex items-center gap-2">
                 <button onclick="exportEventsCsv()"
@@ -169,15 +169,6 @@
                         <i data-lucide="search" class="w-4 h-4"></i>
                     </button>
                 </div>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="text-sm text-gray-500 dark:text-gray-400">생성일:</span>
-                <input type="date" id="eventStartDate" class="px-2 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md">
-                <span class="text-gray-400 dark:text-gray-500">~</span>
-                <input type="date" id="eventEndDate" class="px-2 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md">
-                <button onclick="clearEventDateFilter()" class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
             </div>
             <span id="eventTotalCount" class="text-sm text-gray-500 dark:text-gray-400"></span>
             <span id="heatmapFilterBadge" class="hidden px-2 py-1 text-xs bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300 rounded-full flex items-center gap-1">
@@ -269,14 +260,22 @@
 
     const dayOfWeekNames = ['', '일', '월', '화', '수', '목', '금', '토'];
 
+    // 글로벌 날짜 필터에서 값 가져오기
+    function getGlobalDateFilter() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return {
+            startDate: urlParams.get('startDate') || '',
+            endDate: urlParams.get('endDate') || ''
+        };
+    }
+
     function loadEventList(page = 1) {
         currentEventPage = page;
         document.getElementById('eventListLoading').classList.remove('hidden');
         document.getElementById('eventListContent').classList.add('hidden');
 
         const search = document.getElementById('eventSearch').value || '';
-        const startDate = document.getElementById('eventStartDate').value || '';
-        const endDate = document.getElementById('eventEndDate').value || '';
+        const { startDate, endDate } = getGlobalDateFilter();
 
         let url = `/api/v1/admin/statistics/events?page=${page}&size=20&keyword=${currentEventSort}&sorting=${currentEventSorting}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
@@ -299,10 +298,8 @@
             });
     }
 
-    function clearEventDateFilter() {
+    function clearEventSearch() {
         document.getElementById('eventSearch').value = '';
-        document.getElementById('eventStartDate').value = '';
-        document.getElementById('eventEndDate').value = '';
         currentHour = null;
         currentDayOfWeek = null;
         updateHeatmapFilterBadge();
@@ -407,9 +404,6 @@
     document.getElementById('eventSearch').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') loadEventList(1);
     });
-
-    document.getElementById('eventStartDate').addEventListener('change', () => loadEventList(1));
-    document.getElementById('eventEndDate').addEventListener('change', () => loadEventList(1));
 
     // Heatmap
     function loadHeatmap() {
@@ -519,8 +513,7 @@
         btn.innerHTML = '<div class="w-4 h-4 border-2 border-gray-300 border-t-white rounded-full animate-spin"></div>';
 
         const search = document.getElementById('eventSearch').value || '';
-        const startDate = document.getElementById('eventStartDate').value || '';
-        const endDate = document.getElementById('eventEndDate').value || '';
+        const { startDate, endDate } = getGlobalDateFilter();
 
         let url = `/api/v1/admin/export/events/csv?keyword=${currentEventSort}&sorting=${currentEventSorting}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;

@@ -95,7 +95,7 @@
         <div class="flex items-center justify-between mb-4">
             <div>
                 <h3 class="text-sm font-medium text-gray-900 dark:text-white">유저 목록</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">모든 유저들의 목록을 보여줍니다</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">선택한 기간 내 가입한 유저</p>
             </div>
             <div class="flex items-center gap-2">
                 <button onclick="exportUsersCsv()"
@@ -112,7 +112,7 @@
             </div>
         </div>
 
-        <!-- Search & Filters -->
+        <!-- Search -->
         <div class="flex flex-wrap gap-3 mb-4">
             <div class="flex-1 min-w-[200px]">
                 <div class="flex">
@@ -123,15 +123,6 @@
                         <i data-lucide="search" class="w-4 h-4"></i>
                     </button>
                 </div>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="text-sm text-gray-500 dark:text-gray-400">가입일:</span>
-                <input type="date" id="userStartDate" class="px-2 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md">
-                <span class="text-gray-400 dark:text-gray-500">~</span>
-                <input type="date" id="userEndDate" class="px-2 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md">
-                <button onclick="clearUserDateFilter()" class="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
             </div>
             <span id="userTotalCount" class="text-sm text-gray-500 dark:text-gray-400"></span>
         </div>
@@ -324,14 +315,22 @@
     let currentUserSort = 'created_date';
     let currentUserSorting = 'desc';
 
+    // 글로벌 날짜 필터에서 값 가져오기
+    function getGlobalDateFilter() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return {
+            startDate: urlParams.get('startDate') || '',
+            endDate: urlParams.get('endDate') || ''
+        };
+    }
+
     function loadUserList(page = 1) {
         currentUserPage = page;
         document.getElementById('userListLoading').classList.remove('hidden');
         document.getElementById('userListContent').classList.add('hidden');
 
         const search = document.getElementById('userSearch').value || '';
-        const startDate = document.getElementById('userStartDate').value || '';
-        const endDate = document.getElementById('userEndDate').value || '';
+        const { startDate, endDate } = getGlobalDateFilter();
 
         let url = `/api/v1/admin/statistics/users?page=${page}&size=20&keyword=${currentUserSort}&sorting=${currentUserSorting}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
@@ -352,10 +351,8 @@
             });
     }
 
-    function clearUserDateFilter() {
+    function clearUserSearch() {
         document.getElementById('userSearch').value = '';
-        document.getElementById('userStartDate').value = '';
-        document.getElementById('userEndDate').value = '';
         loadUserList(1);
     }
 
@@ -429,9 +426,6 @@
         if (e.key === 'Enter') loadUserList(1);
     });
 
-    document.getElementById('userStartDate').addEventListener('change', () => loadUserList(1));
-    document.getElementById('userEndDate').addEventListener('change', () => loadUserList(1));
-
     function showUserDetail(userId) {
         document.getElementById('userDetailModal').classList.remove('hidden');
         document.getElementById('userDetailLoading').classList.remove('hidden');
@@ -482,8 +476,7 @@
         btn.innerHTML = '<div class="w-4 h-4 border-2 border-gray-300 border-t-white rounded-full animate-spin"></div>';
 
         const search = document.getElementById('userSearch').value || '';
-        const startDate = document.getElementById('userStartDate').value || '';
-        const endDate = document.getElementById('userEndDate').value || '';
+        const { startDate, endDate } = getGlobalDateFilter();
 
         let url = `/api/v1/admin/export/users/csv?keyword=${currentUserSort}&sorting=${currentUserSorting}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
