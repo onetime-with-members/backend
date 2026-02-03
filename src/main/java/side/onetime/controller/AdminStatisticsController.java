@@ -45,7 +45,7 @@ import side.onetime.util.DateUtil;
 @RestController
 @RequestMapping("/api/v1/admin/statistics")
 @RequiredArgsConstructor
-public class AdminStatisticsApiController {
+public class AdminStatisticsController {
 
     private final StatisticsService statisticsService;
     private final AdminService adminService;
