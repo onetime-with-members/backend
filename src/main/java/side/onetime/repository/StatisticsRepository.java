@@ -521,6 +521,32 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     );
 
     /**
+     * 재방문 유저 상세 목록 (이벤트 2개+ 참여)
+     * 기간 내 가입한 유저 기준
+     */
+    @Query(value = """
+        SELECT u.users_id, u.email, u.name, u.nickname, u.provider, u.provider_id,
+               u.service_policy_agreement, u.privacy_policy_agreement, u.marketing_policy_agreement,
+               u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date,
+               COUNT(DISTINCT ep.events_id) AS participation_count
+        FROM users u
+        JOIN event_participations ep ON u.users_id = ep.users_id
+        WHERE u.status = 'ACTIVE'
+          AND u.created_date >= :startDate AND u.created_date < :endDate
+        GROUP BY u.users_id, u.email, u.name, u.nickname, u.provider, u.provider_id,
+                 u.service_policy_agreement, u.privacy_policy_agreement, u.marketing_policy_agreement,
+                 u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date
+        HAVING COUNT(DISTINCT ep.events_id) >= 2
+        ORDER BY participation_count DESC, u.created_date DESC
+        LIMIT :limit
+        """, nativeQuery = true)
+    List<Object[]> findReturningUserDetails(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("limit") int limit
+    );
+
+    /**
      * 이벤트 참여 경험이 있는 총 유저 수
      * 기간 내 가입한 유저 기준
      */

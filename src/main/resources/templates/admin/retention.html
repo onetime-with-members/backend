@@ -18,10 +18,17 @@
     <!-- Date Filter -->
     <div th:replace="~{admin/fragments/date-filter :: dateFilter}"></div>
 
+    <!-- Info Alert -->
+    <div class="bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-800 rounded-lg p-4 mb-6 flex items-center gap-3">
+        <i data-lucide="info" class="w-5 h-5 text-accent-500 flex-shrink-0"></i>
+        <p class="text-sm text-accent-700 dark:text-accent-300">카드를 클릭하면 해당 유저 목록을 확인할 수 있습니다.</p>
+    </div>
+
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <!-- Dormant 7d+ -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer hover:border-accent-400 dark:hover:border-accent-600 hover:shadow-sm transition-all"
+             onclick="showRetentionDetail('dormant7')">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">휴면 7일+</p>
@@ -36,7 +43,8 @@
         </div>
 
         <!-- Dormant 30d+ -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer hover:border-accent-400 dark:hover:border-accent-600 hover:shadow-sm transition-all"
+             onclick="showRetentionDetail('dormant30')">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">휴면 30일+</p>
@@ -51,7 +59,8 @@
         </div>
 
         <!-- Dormant 90d+ -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer hover:border-accent-400 dark:hover:border-accent-600 hover:shadow-sm transition-all"
+             onclick="showRetentionDetail('dormant90')">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">휴면 90일+</p>
@@ -66,7 +75,8 @@
         </div>
 
         <!-- Returning Rate -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer hover:border-accent-400 dark:hover:border-accent-600 hover:shadow-sm transition-all"
+             onclick="showRetentionDetail('returning')">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">복귀율</p>
@@ -323,11 +333,212 @@
             </p>
         </div>
     </div>
+
+    <!-- User List Modal -->
+    <div id="retentionModal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="retentionModalLabel">유저 목록</h3>
+                <button onclick="closeRetentionModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-auto p-4">
+                <div id="retentionLoading" class="flex justify-center py-12">
+                    <div class="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 dark:border-gray-600 border-t-accent-500"></div>
+                </div>
+                <div id="retentionContent" class="hidden">
+                    <div class="flex gap-2 mb-4">
+                        <span class="px-3 py-1 text-xs bg-accent-500 text-white rounded-full" id="retentionTotalBadge">Total: 0</span>
+                        <span class="px-3 py-1 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full" id="retentionShowingBadge">Showing: 0</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm" id="retentionTable">
+                            <thead id="retentionTableHead"></thead>
+                            <tbody id="retentionTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" onclick="closeRetentionModal()"
+                        class="px-4 py-2 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <th:block layout:fragment="scripts">
 <script th:inline="javascript">
     const mauData = /*[[${data.monthlyMau}]]*/ [];
+
+    // ==================== Retention Modal ====================
+    const retentionTypeConfig = {
+        dormant7: {
+            title: '휴면 7일+ 사용자',
+            endpoint: '/api/v1/admin/statistics/marketing/dormant?days=7'
+        },
+        dormant30: {
+            title: '휴면 30일+ 사용자',
+            endpoint: '/api/v1/admin/statistics/marketing/dormant?days=30'
+        },
+        dormant90: {
+            title: '휴면 90일+ 사용자',
+            endpoint: '/api/v1/admin/statistics/marketing/dormant?days=90'
+        },
+        returning: {
+            title: '복귀 유저 (이벤트 2회+ 참여)',
+            endpoint: '/api/v1/admin/statistics/retention/returning'
+        }
+    };
+
+    function getDateParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const startDate = urlParams.get('startDate') || '';
+        const endDate = urlParams.get('endDate') || '';
+        let params = '';
+        if (startDate) params += (params ? '&' : '?') + 'startDate=' + startDate;
+        if (endDate) params += (params ? '&' : '?') + 'endDate=' + endDate;
+        return params;
+    }
+
+    function showRetentionDetail(type) {
+        const config = retentionTypeConfig[type];
+        if (!config) return;
+
+        document.getElementById('retentionModalLabel').textContent = config.title;
+        document.getElementById('retentionLoading').classList.remove('hidden');
+        document.getElementById('retentionContent').classList.add('hidden');
+        document.getElementById('retentionModal').classList.remove('hidden');
+
+        let url = config.endpoint + '&limit=100';
+        // For returning endpoint, add date params
+        if (type === 'returning') {
+            const dateParams = getDateParams();
+            url = config.endpoint + (dateParams || '?') + '&limit=100';
+        }
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    renderRetentionUsers(data.payload, type);
+                } else {
+                    showAlert('데이터를 불러오는데 실패했습니다', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('데이터를 불러오는데 실패했습니다', 'error');
+            })
+            .finally(() => {
+                document.getElementById('retentionLoading').classList.add('hidden');
+                document.getElementById('retentionContent').classList.remove('hidden');
+                lucide.createIcons();
+            });
+    }
+
+    function closeRetentionModal() {
+        document.getElementById('retentionModal').classList.add('hidden');
+    }
+
+    // Close modal on backdrop click
+    document.getElementById('retentionModal').addEventListener('click', function(e) {
+        if (e.target === this) closeRetentionModal();
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !document.getElementById('retentionModal').classList.contains('hidden')) {
+            closeRetentionModal();
+        }
+    });
+
+    function renderRetentionUsers(data, type) {
+        const users = data.users || [];
+        const count = users.length;
+
+        document.getElementById('retentionTotalBadge').textContent = 'Total: ' + data.totalCount.toLocaleString();
+        document.getElementById('retentionShowingBadge').textContent = 'Showing: ' + count;
+
+        const isDark = document.documentElement.classList.contains('dark');
+        const badgeClass = isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700';
+
+        // Different columns based on type
+        let thead = '';
+        if (type === 'returning') {
+            thead = `
+                <tr class="border-b border-gray-200 dark:border-gray-700">
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">ID</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">Email</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">이름</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">닉네임</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">Provider</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">가입일</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">참여 이벤트</th>
+                </tr>
+            `;
+        } else {
+            thead = `
+                <tr class="border-b border-gray-200 dark:border-gray-700">
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">ID</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">Email</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">이름</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">닉네임</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">Provider</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">마케팅</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">가입일</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">미접속 일수</th>
+                </tr>
+            `;
+        }
+        document.getElementById('retentionTableHead').innerHTML = thead;
+
+        let tbody = '';
+        if (!users || users.length === 0) {
+            const colspan = type === 'returning' ? 7 : 8;
+            tbody = `<tr><td colspan="${colspan}" class="py-12">
+                <div class="flex flex-col items-center justify-center text-center">
+                    <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+                        <i data-lucide="users" class="w-6 h-6 text-gray-400 dark:text-gray-500"></i>
+                    </div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">해당하는 유저가 없습니다</p>
+                </div>
+            </td></tr>`;
+        } else {
+            users.forEach(user => {
+                if (type === 'returning') {
+                    tbody += `
+                        <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.userId || '-'}</td>
+                            <td class="py-2 px-3 text-gray-900 dark:text-white">${user.email || '-'}</td>
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.name || '-'}</td>
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.nickname || '-'}</td>
+                            <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs ${badgeClass} rounded">${user.provider || '-'}</span></td>
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.createdDate ? new Date(user.createdDate).toLocaleDateString() : '-'}</td>
+                            <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">${user.eventCount || 0}회</span></td>
+                        </tr>
+                    `;
+                } else {
+                    tbody += `
+                        <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.userId || '-'}</td>
+                            <td class="py-2 px-3 text-gray-900 dark:text-white">${user.email || '-'}</td>
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.name || '-'}</td>
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.nickname || '-'}</td>
+                            <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs ${badgeClass} rounded">${user.provider || '-'}</span></td>
+                            <td class="py-2 px-3">${user.marketingPolicyAgreement ? '<i data-lucide="check" class="w-4 h-4 text-green-600 dark:text-green-400"></i>' : '<i data-lucide="x" class="w-4 h-4 text-red-500 dark:text-red-400"></i>'}</td>
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.createdDate ? new Date(user.createdDate).toLocaleDateString() : '-'}</td>
+                            <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded">${user.daysInactive || 0}일</span></td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+        document.getElementById('retentionTableBody').innerHTML = tbody;
+    }
 
     function getChartColors() {
         const dark = document.documentElement.classList.contains('dark');

@@ -76,7 +76,7 @@ public record MarketingTargetDetailResponse(
                         builder.daysSinceSignup(row[14] != null ? ((Number) row[14]).intValue() : null);
                     }
                 }
-                case "oneTime", "vip" -> {
+                case "oneTime", "vip", "returning" -> {
                     if (row.length > 14) {
                         builder.eventCount(row[14] != null ? ((Number) row[14]).intValue() : null);
                     }

@@ -661,6 +661,24 @@ public class StatisticsService {
         return MarketingTargetDetailResponse.ofEvents("zeroParticipant", totalCount, events);
     }
 
+    /**
+     * 복귀 유저 상세 목록 (이벤트 2회+ 참여)
+     * 기간 필터 지원
+     */
+    @Transactional(readOnly = true)
+    public MarketingTargetDetailResponse getReturningUsers(LocalDate startDate, LocalDate endDate, int limit) {
+        DateTimeRange range = DateTimeRange.of(startDate, endDate);
+
+        long totalCount = nullToZero(statisticsRepository.countReturningUsers(range.start(), range.end()));
+
+        List<Object[]> rows = statisticsRepository.findReturningUserDetails(range.start(), range.end(), limit);
+        List<MarketingTargetDetailResponse.UserDetail> users = rows.stream()
+                .map(row -> MarketingTargetDetailResponse.UserDetail.fromRow(row, "returning"))
+                .toList();
+
+        return MarketingTargetDetailResponse.ofUsers("returning", totalCount, users);
+    }
+
     // ==================== Native Query 기반 헬퍼 메서드 ====================
 
     private DashboardChartsResponse.ChartData getMonthlySignupsFromNativeQuery(

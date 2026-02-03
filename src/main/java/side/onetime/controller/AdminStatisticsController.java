@@ -286,4 +286,19 @@ public class AdminStatisticsController {
         MarketingTargetDetailResponse response = statisticsService.getZeroParticipantEvents(limit, sort, search);
         return ApiResponse.onSuccess(SuccessStatus._GET_MARKETING_TARGET_DETAIL, response);
     }
+
+    /**
+     * 복귀 유저 목록 (이벤트 2회+ 참여)
+     * 리텐션 분석 페이지에서 사용
+     */
+    @GetMapping("/retention/returning")
+    public ResponseEntity<ApiResponse<MarketingTargetDetailResponse>> getReturningUsers(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(defaultValue = "100") int limit) {
+        LocalDate start = startDate != null ? startDate : LocalDate.of(2020, 1, 1);
+        LocalDate end = endDate != null ? endDate : LocalDate.now();
+        MarketingTargetDetailResponse response = statisticsService.getReturningUsers(start, end, limit);
+        return ApiResponse.onSuccess(SuccessStatus._GET_MARKETING_TARGET_DETAIL, response);
+    }
 }
