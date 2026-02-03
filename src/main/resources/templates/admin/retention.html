@@ -951,8 +951,8 @@
     function renderTtv(ttvData) {
         const colors = getChartColors();
 
-        document.getElementById('ttvAverage').textContent = ttvData.average_days.toFixed(1) + ' days';
-        document.getElementById('ttvMedian').textContent = ttvData.median_days.toFixed(0) + ' days';
+        document.getElementById('ttvAverage').textContent = ttvData.average_days === 0 ? '당일' : ttvData.average_days.toFixed(1) + ' days';
+        document.getElementById('ttvMedian').textContent = ttvData.median_days === 0 ? '당일' : ttvData.median_days.toFixed(0) + ' days';
         document.getElementById('ttvActivation').textContent = ttvData.activation_rate.toFixed(1) + '%';
         document.getElementById('ttvUsersWithEvent').textContent =
             ttvData.users_with_event.toLocaleString() + ' / ' + ttvData.total_users.toLocaleString();
