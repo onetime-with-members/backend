@@ -206,7 +206,12 @@
     <!-- WAU/MAU Stickiness -->
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
         <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">Stickiness (WAU/MAU)</h3>
-        <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">서비스 중독성 지표 - 높을수록 유저가 자주 방문</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">최근 30일 방문자 중 최근 7일에도 방문한 비율 - 높을수록 자주 재방문</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">
+            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 bg-amber-400 rounded-full"></span>10~20% 낮음</span>
+            <span class="inline-flex items-center gap-1 ml-3"><span class="w-2 h-2 bg-blue-400 rounded-full"></span>20~30% 보통</span>
+            <span class="inline-flex items-center gap-1 ml-3"><span class="w-2 h-2 bg-green-400 rounded-full"></span>30%+ 좋음</span>
+        </p>
         <div id="stickinessLoading" class="animate-pulse">
             <!-- Summary Cards Skeleton -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -234,11 +239,11 @@
                     <p class="text-2xl font-bold" id="stickinessValue">-</p>
                 </div>
                 <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">이번 주 WAU</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">최근 7일 WAU</p>
                     <p class="text-lg font-semibold text-gray-900 dark:text-white" id="stickinessWau">-</p>
                 </div>
                 <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">이번 달 MAU</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">최근 30일 MAU</p>
                     <p class="text-lg font-semibold text-gray-900 dark:text-white" id="stickinessMau">-</p>
                 </div>
             </div>

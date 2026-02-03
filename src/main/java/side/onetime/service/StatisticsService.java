@@ -1011,6 +1011,8 @@ public class StatisticsService {
     /**
      * Get WAU/MAU Stickiness
      * 서비스 점착도 = WAU / MAU × 100
+     * - WAU: 최근 7일 활성 유저
+     * - MAU: 최근 30일 활성 유저
      *
      * @param months 분석할 개월 수
      * @return 점착도 데이터
@@ -1018,23 +1020,23 @@ public class StatisticsService {
     @Transactional(readOnly = true)
     public StickinessResponse getStickiness(int months) {
         LocalDate now = LocalDate.now();
+        LocalDateTime endDate = now.plusDays(1).atStartOfDay();
 
-        // Current month MAU
-        LocalDateTime monthStart = now.withDayOfMonth(1).atStartOfDay();
-        LocalDateTime monthEnd = now.plusDays(1).atStartOfDay();
-        long currentMau = nullToZero(statisticsRepository.countMau(monthStart, monthEnd));
+        // MAU: 최근 30일 활성 유저
+        LocalDateTime mauStart = now.minusDays(29).atStartOfDay();
+        long currentMau = nullToZero(statisticsRepository.countMau(mauStart, endDate));
 
-        // Current week WAU (last 7 days)
-        LocalDateTime weekStart = now.minusDays(6).atStartOfDay();
-        long currentWau = nullToZero(statisticsRepository.countWau(weekStart, monthEnd));
+        // WAU: 최근 7일 활성 유저
+        LocalDateTime wauStart = now.minusDays(6).atStartOfDay();
+        long currentWau = nullToZero(statisticsRepository.countWau(wauStart, endDate));
 
         // Current stickiness
         double currentStickiness = currentMau > 0 ? Math.round((double) currentWau / currentMau * 1000.0) / 10.0 : 0;
 
         // Build monthly trend
         LocalDateTime trendStart = now.minusMonths(months).withDayOfMonth(1).atStartOfDay();
-        List<Object[]> monthlyWauData = statisticsRepository.findMonthlyAvgWau(trendStart, monthEnd);
-        List<Object[]> monthlyMauData = statisticsRepository.findMonthlyMau(trendStart, monthEnd);
+        List<Object[]> monthlyWauData = statisticsRepository.findMonthlyAvgWau(trendStart, endDate);
+        List<Object[]> monthlyMauData = statisticsRepository.findMonthlyMau(trendStart, endDate);
 
         // Build MAU map
         Map<String, Long> mauMap = new HashMap<>();
