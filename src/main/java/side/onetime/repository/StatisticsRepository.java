@@ -96,7 +96,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         WHERE u.status = 'ACTIVE'
           AND u.marketing_policy_agreement = 1
           AND u.created_date >= :startDate AND u.created_date < :endDate
-        GROUP BY u.users_id
+        GROUP BY u.users_id, u.created_date
         HAVING DATEDIFF(NOW(), COALESCE(MAX(COALESCE(rt.last_used_at, rt.issued_at)), u.created_date)) >= :days
         """, nativeQuery = true)
     List<Object[]> countDormantUsersWithMarketing(
