@@ -25,6 +25,7 @@ import side.onetime.exception.CustomException;
 import side.onetime.service.AdminService;
 import side.onetime.service.StatisticsService;
 import side.onetime.util.ClientInfoExtractor;
+import side.onetime.util.CookieUtil;
 import side.onetime.util.DateUtil;
 import side.onetime.util.JwtUtil;
 
@@ -79,7 +80,7 @@ public class AdminPageController {
                     new LoginAdminUserRequest(email, password), browserId, userIp, userAgent
             );
 
-            jwtUtil.setAdminTokenCookies(response, result.accessToken(), result.refreshToken());
+            CookieUtil.setAdminTokenCookies(response, result.accessToken(), result.refreshToken());
 
             return "redirect:/admin/dashboard";
         } catch (CustomException e) {
@@ -91,7 +92,7 @@ public class AdminPageController {
 
     @GetMapping("/logout")
     public String logout(HttpServletResponse response) {
-        jwtUtil.clearAdminTokenCookies(response);
+        CookieUtil.clearAdminTokenCookies(response);
         return "redirect:/admin/login";
     }
 

@@ -22,6 +22,7 @@ import side.onetime.dto.token.response.ReissueTokenResponse;
 import side.onetime.exception.CustomException;
 import side.onetime.service.TokenService;
 import side.onetime.util.ClientInfoExtractor;
+import side.onetime.util.CookieUtil;
 import side.onetime.util.JwtUtil;
 
 @Slf4j
@@ -65,11 +66,11 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // 2. Check cookie for admin pages
         if (token == null) {
-            var adminAccessToken = jwtUtil.getAdminAccessToken(request);
+            var adminAccessToken = CookieUtil.getAdminAccessToken(request);
             if (adminAccessToken.isPresent()) {
                 token = adminAccessToken.get();
                 isAdminRequest = true;
-                refreshToken = jwtUtil.getAdminRefreshToken(request).orElse(null);
+                refreshToken = CookieUtil.getAdminRefreshToken(request).orElse(null);
             }
         }
 
@@ -94,7 +95,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     );
 
                     // 새 토큰으로 쿠키 갱신
-                    jwtUtil.setAdminTokenCookies(response, reissued.accessToken(), reissued.refreshToken());
+                    CookieUtil.setAdminTokenCookies(response, reissued.accessToken(), reissued.refreshToken());
 
                     // 새 액세스 토큰으로 인증
                     authenticateUser(reissued.accessToken());
