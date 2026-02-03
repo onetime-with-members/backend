@@ -21,13 +21,14 @@ public record DashboardEvent(
         String startTime,
         String endTime,
         Category category,
+        String creatorNickname,
         int participantCount,
         String createdDate,
         List<String> ranges,
         String dateRange,
         String timeRange
 ) {
-    public static DashboardEvent of(Event event, List<Schedule> schedules, int participantCount) {
+    public static DashboardEvent of(Event event, List<Schedule> schedules, int participantCount, String creatorNickname) {
         String dateRange;
         List<String> ranges;
 
@@ -84,6 +85,7 @@ public record DashboardEvent(
                 event.getStartTime(),
                 event.getEndTime(),
                 event.getCategory(),
+                creatorNickname,
                 participantCount,
                 event.getCreatedDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd (E) a hh:mm", Locale.KOREAN)),
                 ranges,

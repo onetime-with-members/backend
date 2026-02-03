@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import side.onetime.domain.*;
 import side.onetime.domain.enums.AdminStatus;
+import side.onetime.domain.enums.EventStatus;
 import side.onetime.dto.admin.request.LoginAdminUserRequest;
 import side.onetime.dto.admin.request.RegisterAdminUserRequest;
 import side.onetime.dto.admin.request.UpdateAdminUserStatusRequest;
@@ -237,11 +238,22 @@ public class AdminService {
                         row -> ((Number) row[1]).longValue()
                 ));
 
+        // 생성자 정보 조회 (CREATOR 또는 CREATOR_AND_PARTICIPANT)
+        Map<Long, String> creatorNicknameMap = eventParticipationRepository.findAllByEventIdIn(eventIds).stream()
+                .filter(ep -> ep.getEventStatus() == EventStatus.CREATOR || ep.getEventStatus() == EventStatus.CREATOR_AND_PARTICIPANT)
+                .filter(ep -> ep.getUser() != null)
+                .collect(Collectors.toMap(
+                        ep -> ep.getEvent().getId(),
+                        ep -> ep.getUser().getNickname() != null ? ep.getUser().getNickname() : ep.getUser().getName(),
+                        (existing, replacement) -> existing // 중복 시 첫 번째 값 유지
+                ));
+
         List<DashboardEvent> dashboardEvents = pagedEvents.stream()
                 .map(event -> {
                     List<Schedule> schedules = scheduleMap.getOrDefault(event.getId(), List.of());
                     int participantCount = participantCountMap.getOrDefault(event.getId(), 0L).intValue();
-                    return DashboardEvent.of(event, schedules, participantCount);
+                    String creatorNickname = creatorNicknameMap.getOrDefault(event.getId(), "-");
+                    return DashboardEvent.of(event, schedules, participantCount, creatorNickname);
                 }).toList();
 
         PageInfo pageInfo = PageInfo.of(pageable.getPageNumber() + 1, pageable.getPageSize(), (int) totalElements, totalPages);

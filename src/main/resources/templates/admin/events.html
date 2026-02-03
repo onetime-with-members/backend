@@ -234,11 +234,12 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-gray-200 dark:border-gray-700">
-                            <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[8%]">카테고리</th>
+                            <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[7%]">카테고리</th>
                             <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">제목</th>
-                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[15%]">날짜 범위</th>
-                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[12%]">시간 범위</th>
-                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[10%]">참여자</th>
+                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[13%]">날짜 범위</th>
+                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[10%]">시간 범위</th>
+                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[10%]">생성자</th>
+                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[8%]">참여자</th>
                             <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[15%]">생성일</th>
                         </tr>
                     </thead>
@@ -341,7 +342,7 @@
 
         let tbody = '';
         if (events.length === 0) {
-            tbody = `<tr><td colspan="6" class="py-12">
+            tbody = `<tr><td colspan="7" class="py-12">
                 <div class="flex flex-col items-center justify-center text-center">
                     <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
                         <i data-lucide="calendar-x" class="w-6 h-6 text-gray-400 dark:text-gray-500"></i>
@@ -362,6 +363,7 @@
                         <td class="py-2 px-3 text-gray-900 dark:text-white">${event.title || '-'}</td>
                         <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${event.date_range || '-'}</td>
                         <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${event.time_range || '-'}</td>
+                        <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${event.creator_nickname || '-'}</td>
                         <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${event.participant_count || 0}명</td>
                         <td class="py-2 px-3 text-center text-gray-400 dark:text-gray-500">${event.created_date || '-'}</td>
                     </tr>
