@@ -53,7 +53,7 @@ public class AdminStatisticsController {
     // ==================== Events / Users 목록 ====================
 
     /**
-     * 이벤트 목록 조회 (페이지네이션, 정렬, 검색, 기간 필터)
+     * 이벤트 목록 조회 (페이지네이션, 정렬, 검색, 기간 필터, 시간대/요일 필터)
      *
      * @param page 페이지 번호 (1부터 시작)
      * @param size 페이지 크기 (기본 10)
@@ -62,6 +62,8 @@ public class AdminStatisticsController {
      * @param search 검색어 (제목)
      * @param startDate 시작일 (생성일 기준)
      * @param endDate 종료일 (생성일 기준)
+     * @param hour 시간대 필터 (0-23)
+     * @param dayOfWeek 요일 필터 (1=일, 2=월, 3=화, 4=수, 5=목, 6=금, 7=토)
      */
     @GetMapping("/events")
     public ResponseEntity<ApiResponse<GetAllDashboardEventsResponse>> getAllEvents(
@@ -71,9 +73,11 @@ public class AdminStatisticsController {
             @RequestParam(defaultValue = "desc") String sorting,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+            @RequestParam(required = false) Integer hour,
+            @RequestParam(required = false) Integer dayOfWeek) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        GetAllDashboardEventsResponse response = adminService.getAllDashboardEvents(pageable, keyword, sorting, search, startDate, endDate);
+        GetAllDashboardEventsResponse response = adminService.getAllDashboardEvents(pageable, keyword, sorting, search, startDate, endDate, hour, dayOfWeek);
         return ApiResponse.onSuccess(SuccessStatus._GET_ALL_DASHBOARD_EVENTS, response);
     }
 

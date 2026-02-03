@@ -207,6 +207,13 @@ public class AdminService {
     @Transactional(readOnly = true)
     public GetAllDashboardEventsResponse getAllDashboardEvents(Pageable pageable, String keyword, String sorting,
                                                                 String search, LocalDate startDate, LocalDate endDate) {
+        return getAllDashboardEvents(pageable, keyword, sorting, search, startDate, endDate, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public GetAllDashboardEventsResponse getAllDashboardEvents(Pageable pageable, String keyword, String sorting,
+                                                                String search, LocalDate startDate, LocalDate endDate,
+                                                                Integer hour, Integer dayOfWeek) {
         adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
                 .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
 
@@ -214,8 +221,8 @@ public class AdminService {
         LocalDateTime endDateTime = endDate != null ? endDate.plusDays(1).atStartOfDay() : null;
 
         // 검색/필터 적용된 이벤트 조회
-        List<Event> pagedEvents = eventRepository.findAllWithFilters(pageable, keyword, sorting, search, startDateTime, endDateTime);
-        long totalElements = eventRepository.countWithFilters(search, startDateTime, endDateTime);
+        List<Event> pagedEvents = eventRepository.findAllWithFilters(pageable, keyword, sorting, search, startDateTime, endDateTime, hour, dayOfWeek);
+        long totalElements = eventRepository.countWithFilters(search, startDateTime, endDateTime, hour, dayOfWeek);
         int totalPages = (int) Math.ceil((double) totalElements / pageable.getPageSize());
 
         List<Long> eventIds = pagedEvents.stream().map(Event::getId).toList();

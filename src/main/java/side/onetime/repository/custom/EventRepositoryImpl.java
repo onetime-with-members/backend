@@ -2,6 +2,8 @@ package side.onetime.repository.custom;
 
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberTemplate;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -177,6 +179,16 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
     @Override
     public List<Event> findAllWithFilters(Pageable pageable, String sortField, String sorting,
                                            String search, LocalDateTime startDate, LocalDateTime endDate) {
+        return findAllWithFilters(pageable, sortField, sorting, search, startDate, endDate, null, null);
+    }
+
+    /**
+     * 검색, 기간, 시간대, 요일 필터를 포함한 이벤트 조회 메서드
+     */
+    @Override
+    public List<Event> findAllWithFilters(Pageable pageable, String sortField, String sorting,
+                                           String search, LocalDateTime startDate, LocalDateTime endDate,
+                                           Integer hour, Integer dayOfWeek) {
         Order order = sorting.equalsIgnoreCase("asc") ? Order.ASC : Order.DESC;
         String field = NamingUtil.toCamelCase(sortField);
 
@@ -196,6 +208,20 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
         }
         if (endDate != null) {
             query.where(event.createdDate.lt(endDate));
+        }
+
+        // 시간대 필터 (HOUR)
+        if (hour != null) {
+            NumberTemplate<Integer> hourExpr = Expressions.numberTemplate(Integer.class,
+                    "HOUR({0})", event.createdDate);
+            query.where(hourExpr.eq(hour));
+        }
+
+        // 요일 필터 (DAYOFWEEK: 1=SUN, 2=MON, ..., 7=SAT)
+        if (dayOfWeek != null) {
+            NumberTemplate<Integer> dayOfWeekExpr = Expressions.numberTemplate(Integer.class,
+                    "DAYOFWEEK({0})", event.createdDate);
+            query.where(dayOfWeekExpr.eq(dayOfWeek));
         }
 
         // 정렬
@@ -218,6 +244,15 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
      */
     @Override
     public long countWithFilters(String search, LocalDateTime startDate, LocalDateTime endDate) {
+        return countWithFilters(search, startDate, endDate, null, null);
+    }
+
+    /**
+     * 검색, 기간, 시간대, 요일 필터를 포함한 이벤트 개수 조회
+     */
+    @Override
+    public long countWithFilters(String search, LocalDateTime startDate, LocalDateTime endDate,
+                                  Integer hour, Integer dayOfWeek) {
         QEvent event = QEvent.event;
 
         JPAQuery<Long> query = queryFactory.select(event.count())
@@ -232,6 +267,20 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
         }
         if (endDate != null) {
             query.where(event.createdDate.lt(endDate));
+        }
+
+        // 시간대 필터 (HOUR)
+        if (hour != null) {
+            NumberTemplate<Integer> hourExpr = Expressions.numberTemplate(Integer.class,
+                    "HOUR({0})", event.createdDate);
+            query.where(hourExpr.eq(hour));
+        }
+
+        // 요일 필터 (DAYOFWEEK: 1=SUN, 2=MON, ..., 7=SAT)
+        if (dayOfWeek != null) {
+            NumberTemplate<Integer> dayOfWeekExpr = Expressions.numberTemplate(Integer.class,
+                    "DAYOFWEEK({0})", event.createdDate);
+            query.where(dayOfWeekExpr.eq(dayOfWeek));
         }
 
         Long count = query.fetchOne();

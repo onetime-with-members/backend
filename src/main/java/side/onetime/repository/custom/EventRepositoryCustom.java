@@ -19,5 +19,12 @@ public interface EventRepositoryCustom {
     List<Event> findAllWithFilters(Pageable pageable, String sortField, String sorting,
                                     String search, LocalDateTime startDate, LocalDateTime endDate);
 
+    List<Event> findAllWithFilters(Pageable pageable, String sortField, String sorting,
+                                    String search, LocalDateTime startDate, LocalDateTime endDate,
+                                    Integer hour, Integer dayOfWeek);
+
     long countWithFilters(String search, LocalDateTime startDate, LocalDateTime endDate);
+
+    long countWithFilters(String search, LocalDateTime startDate, LocalDateTime endDate,
+                          Integer hour, Integer dayOfWeek);
 }
