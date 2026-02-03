@@ -25,7 +25,9 @@ import side.onetime.dto.admin.response.LoginAdminUserResponse;
 import side.onetime.exception.CustomException;
 import side.onetime.service.AdminService;
 import side.onetime.service.StatisticsService;
+import side.onetime.util.ClientInfoExtractor;
 import side.onetime.util.DateUtil;
+import side.onetime.util.JwtUtil;
 
 @Slf4j
 @Controller
@@ -35,9 +37,13 @@ public class AdminPageController {
 
     private final AdminService adminService;
     private final StatisticsService statisticsService;
+    private final JwtUtil jwtUtil;
+    private final ClientInfoExtractor clientInfoExtractor;
 
-    private static final String ADMIN_TOKEN_COOKIE = "admin_token";
-    private static final int COOKIE_MAX_AGE = 60 * 60 * 24; // 1 day
+    private static final String ADMIN_ACCESS_TOKEN_COOKIE = "admin_token";
+    private static final String ADMIN_REFRESH_TOKEN_COOKIE = "admin_refresh_token";
+    private static final int ACCESS_COOKIE_MAX_AGE = 60 * 60; // 1 hour
+    private static final int REFRESH_COOKIE_MAX_AGE = 60 * 60 * 24 * 14; // 14 days
 
     // ==================== Model Attributes ====================
 
@@ -67,18 +73,31 @@ public class AdminPageController {
     @PostMapping("/login")
     public String login(@RequestParam String email,
                         @RequestParam String password,
+                        HttpServletRequest request,
                         HttpServletResponse response,
                         RedirectAttributes redirectAttributes) {
         try {
+            String browserId = jwtUtil.hashUserAgent(request.getHeader("User-Agent"));
+            String userIp = clientInfoExtractor.extractClientIp(request);
+            String userAgent = clientInfoExtractor.extractUserAgent(request);
+
             LoginAdminUserResponse result = adminService.loginAdminUser(
-                    new LoginAdminUserRequest(email, password)
+                    new LoginAdminUserRequest(email, password), browserId, userIp, userAgent
             );
 
-            Cookie cookie = new Cookie(ADMIN_TOKEN_COOKIE, result.accessToken());
-            cookie.setHttpOnly(true);
-            cookie.setPath("/");
-            cookie.setMaxAge(COOKIE_MAX_AGE);
-            response.addCookie(cookie);
+            // Access Token 쿠키
+            Cookie accessCookie = new Cookie(ADMIN_ACCESS_TOKEN_COOKIE, result.accessToken());
+            accessCookie.setHttpOnly(true);
+            accessCookie.setPath("/");
+            accessCookie.setMaxAge(ACCESS_COOKIE_MAX_AGE);
+            response.addCookie(accessCookie);
+
+            // Refresh Token 쿠키
+            Cookie refreshCookie = new Cookie(ADMIN_REFRESH_TOKEN_COOKIE, result.refreshToken());
+            refreshCookie.setHttpOnly(true);
+            refreshCookie.setPath("/");
+            refreshCookie.setMaxAge(REFRESH_COOKIE_MAX_AGE);
+            response.addCookie(refreshCookie);
 
             return "redirect:/admin/dashboard";
         } catch (CustomException e) {
@@ -90,11 +109,19 @@ public class AdminPageController {
 
     @GetMapping("/logout")
     public String logout(HttpServletResponse response) {
-        Cookie cookie = new Cookie(ADMIN_TOKEN_COOKIE, null);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
+        // Access Token 쿠키 삭제
+        Cookie accessCookie = new Cookie(ADMIN_ACCESS_TOKEN_COOKIE, null);
+        accessCookie.setHttpOnly(true);
+        accessCookie.setPath("/");
+        accessCookie.setMaxAge(0);
+        response.addCookie(accessCookie);
+
+        // Refresh Token 쿠키 삭제
+        Cookie refreshCookie = new Cookie(ADMIN_REFRESH_TOKEN_COOKIE, null);
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge(0);
+        response.addCookie(refreshCookie);
 
         return "redirect:/admin/login";
     }

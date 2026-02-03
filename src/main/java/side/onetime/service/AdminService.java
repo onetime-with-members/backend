@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,6 +36,7 @@ public class AdminService {
     private final MemberRepository memberRepository;
     private final UserRepository userRepository;
     private final StatisticsRepository statisticsRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final JwtUtil jwtUtil;
 
     /**
@@ -64,9 +66,12 @@ public class AdminService {
      * - 비밀번호가 일치하지 않으면 예외가 발생합니다.
      *
      * @param request 로그인 요청 정보 (이메일, 비밀번호)
+     * @param browserId 브라우저 식별자 (User-Agent 해시)
+     * @param userIp 클라이언트 IP
+     * @param userAgent User-Agent 문자열
      */
-    @Transactional(readOnly = true)
-    public LoginAdminUserResponse loginAdminUser(LoginAdminUserRequest request) {
+    @Transactional
+    public LoginAdminUserResponse loginAdminUser(LoginAdminUserRequest request, String browserId, String userIp, String userAgent) {
 
         AdminUser adminUser = adminRepository.findAdminUserByEmail(request.email())
                         .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
@@ -76,7 +81,27 @@ public class AdminService {
         if (!request.password().equals(adminUser.getPassword())) {
             throw new CustomException(AdminErrorStatus._IS_NOT_EQUAL_PASSWORD);
         }
-        return LoginAdminUserResponse.of(jwtUtil.generateAccessToken(adminUser.getId(), "ADMIN"));
+
+        Long adminId = adminUser.getId();
+
+        // 기존 브라우저의 ACTIVE 토큰 revoke
+        refreshTokenRepository.revokeByUserIdAndBrowserId(adminId, browserId);
+
+        // 새 토큰 생성
+        String jti = UUID.randomUUID().toString();
+        String accessToken = jwtUtil.generateAccessToken(adminId, "ADMIN");
+        String refreshTokenValue = jwtUtil.generateRefreshToken(adminId, "ADMIN", browserId, jti);
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiryAt = jwtUtil.calculateRefreshTokenExpiryAt(now);
+
+        RefreshToken refreshToken = RefreshToken.create(
+                adminId, "ADMIN", jti, browserId, refreshTokenValue,
+                now, expiryAt, userIp, userAgent
+        );
+        refreshTokenRepository.save(refreshToken);
+
+        return LoginAdminUserResponse.of(accessToken, refreshTokenValue);
     }
 
     /**

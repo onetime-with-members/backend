@@ -1,5 +1,6 @@
 package side.onetime.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -11,9 +12,14 @@ import side.onetime.dto.admin.request.LoginAdminUserRequest;
 import side.onetime.dto.admin.request.RegisterAdminUserRequest;
 import side.onetime.dto.admin.request.UpdateAdminUserStatusRequest;
 import side.onetime.dto.admin.response.*;
+import side.onetime.dto.token.request.ReissueTokenRequest;
+import side.onetime.dto.token.response.ReissueTokenResponse;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.AdminService;
+import side.onetime.service.TokenService;
+import side.onetime.util.ClientInfoExtractor;
+import side.onetime.util.JwtUtil;
 
 import java.util.List;
 
@@ -23,6 +29,9 @@ import java.util.List;
 public class AdminController {
 
     private final AdminService adminService;
+    private final TokenService tokenService;
+    private final JwtUtil jwtUtil;
+    private final ClientInfoExtractor clientInfoExtractor;
 
     /**
      * 관리자 계정 회원가입 API.
@@ -44,18 +53,46 @@ public class AdminController {
     /**
      * 관리자 로그인 API.
      *
-     * 입력된 정보를 검증한 후, 새로운 관리자 계정을 생성합니다.
-     * 생성된 계정은 승인 대기 상태로 등록되며, 관리자 승인 이후에만 접근 권한이 활성화됩니다.
+     * 입력된 정보를 검증한 후, 액세스 토큰과 리프레시 토큰을 발급합니다.
+     * 리프레시 토큰은 DB에 저장되며, Token Rotation 전략이 적용됩니다.
      *
-     * @param request 관리자 이름, 이메일, 비밀번호 정보를 담은 요청 객체
-     * @return 성공 응답 메시지
+     * @param request 관리자 이메일, 비밀번호 정보를 담은 요청 객체
+     * @param httpRequest HTTP 요청 객체 (브라우저 정보 추출용)
+     * @return 액세스 토큰, 리프레시 토큰 응답
      */
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginAdminUserResponse>> loginAdminUser(
-            @Valid @RequestBody LoginAdminUserRequest request) {
+            @Valid @RequestBody LoginAdminUserRequest request,
+            HttpServletRequest httpRequest) {
 
-        LoginAdminUserResponse response = adminService.loginAdminUser(request);
+        String browserId = jwtUtil.hashUserAgent(httpRequest.getHeader("User-Agent"));
+        String userIp = clientInfoExtractor.extractClientIp(httpRequest);
+        String userAgent = clientInfoExtractor.extractUserAgent(httpRequest);
+
+        LoginAdminUserResponse response = adminService.loginAdminUser(request, browserId, userIp, userAgent);
         return ApiResponse.onSuccess(SuccessStatus._LOGIN_ADMIN_USER, response);
+    }
+
+    /**
+     * 관리자 토큰 재발급 API.
+     *
+     * 리프레시 토큰을 이용하여 새로운 액세스 토큰과 리프레시 토큰을 발급합니다.
+     * Token Rotation 전략이 적용되며, 재사용 공격 탐지 시 전체 세션이 무효화됩니다.
+     *
+     * @param request 리프레시 토큰을 담은 요청 객체
+     * @param httpRequest HTTP 요청 객체
+     * @return 새 액세스 토큰, 리프레시 토큰 응답
+     */
+    @PostMapping("/reissue")
+    public ResponseEntity<ApiResponse<ReissueTokenResponse>> reissueAdminToken(
+            @Valid @RequestBody ReissueTokenRequest request,
+            HttpServletRequest httpRequest) {
+
+        String userIp = clientInfoExtractor.extractClientIp(httpRequest);
+        String userAgent = clientInfoExtractor.extractUserAgent(httpRequest);
+
+        ReissueTokenResponse response = tokenService.reissueToken(request, userIp, userAgent);
+        return ApiResponse.onSuccess(SuccessStatus._REISSUE_TOKENS, response);
     }
 
     /**

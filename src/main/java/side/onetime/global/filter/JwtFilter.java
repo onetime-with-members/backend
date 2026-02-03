@@ -19,7 +19,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import side.onetime.auth.service.CustomAdminDetailsService;
 import side.onetime.auth.service.CustomUserDetailsService;
+import side.onetime.dto.token.request.ReissueTokenRequest;
+import side.onetime.dto.token.response.ReissueTokenResponse;
 import side.onetime.exception.CustomException;
+import side.onetime.service.TokenService;
+import side.onetime.util.ClientInfoExtractor;
 import side.onetime.util.JwtUtil;
 
 @Slf4j
@@ -30,6 +34,13 @@ public class JwtFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService customUserDetailsService;
     private final CustomAdminDetailsService customAdminDetailsService;
+    private final TokenService tokenService;
+    private final ClientInfoExtractor clientInfoExtractor;
+
+    private static final String ADMIN_ACCESS_TOKEN_COOKIE = "admin_token";
+    private static final String ADMIN_REFRESH_TOKEN_COOKIE = "admin_refresh_token";
+    private static final int ACCESS_COOKIE_MAX_AGE = 60 * 60; // 1 hour
+    private static final int REFRESH_COOKIE_MAX_AGE = 60 * 60 * 24 * 14; // 14 days
 
     /**
      * 요청을 처리하며 JWT 검증 및 인증 설정을 수행합니다.
@@ -50,6 +61,8 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         String token = null;
+        String refreshToken = null;
+        boolean isAdminRequest = false;
 
         // 1. Check Authorization header first (for API requests)
         String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
@@ -59,11 +72,14 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // 2. Check cookie for admin pages
         if (token == null && request.getCookies() != null) {
-            token = Arrays.stream(request.getCookies())
-                    .filter(c -> "admin_token".equals(c.getName()))
-                    .findFirst()
-                    .map(Cookie::getValue)
-                    .orElse(null);
+            for (Cookie cookie : request.getCookies()) {
+                if (ADMIN_ACCESS_TOKEN_COOKIE.equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    isAdminRequest = true;
+                } else if (ADMIN_REFRESH_TOKEN_COOKIE.equals(cookie.getName())) {
+                    refreshToken = cookie.getValue();
+                }
+            }
         }
 
         if (token == null) {
@@ -73,21 +89,68 @@ public class JwtFilter extends OncePerRequestFilter {
 
         try {
             jwtUtil.validateToken(token);
-
-            String userType = jwtUtil.getClaimFromToken(token, "userType", String.class);
-            Long userId = jwtUtil.getClaimFromToken(token, "userId", Long.class);
-
-            UserDetails userDetails = "ADMIN".equals(userType)
-                    ? customAdminDetailsService.loadAdminByAdminId(userId)
-                    : customUserDetailsService.loadUserByUserId(userId);
-            setAuthentication(userDetails);
-
+            authenticateUser(token);
             filterChain.doFilter(request, response);
 
         } catch (CustomException e) {
-            log.error("❌ JWT 필터 예외 발생 - 요청 URI: {}, 메서드: {}", request.getRequestURI(), request.getMethod());
+            // 어드민 요청이고 리프레시 토큰이 있으면 자동 재발급 시도
+            if (isAdminRequest && refreshToken != null) {
+                try {
+                    String userIp = clientInfoExtractor.extractClientIp(request);
+                    String userAgent = clientInfoExtractor.extractUserAgent(request);
+                    ReissueTokenResponse reissued = tokenService.reissueToken(
+                            new ReissueTokenRequest(refreshToken), userIp, userAgent
+                    );
+
+                    // 새 토큰으로 쿠키 갱신
+                    setAdminTokenCookies(response, reissued.accessToken(), reissued.refreshToken());
+
+                    // 새 액세스 토큰으로 인증
+                    authenticateUser(reissued.accessToken());
+                    filterChain.doFilter(request, response);
+                    return;
+
+                } catch (Exception reissueEx) {
+                    log.warn("Admin token reissue failed: {}", reissueEx.getMessage());
+                    // 재발급 실패 시 로그인 페이지로 리다이렉트
+                    response.sendRedirect("/admin/login");
+                    return;
+                }
+            }
+
+            log.error("JWT 필터 예외 발생 - 요청 URI: {}, 메서드: {}", request.getRequestURI(), request.getMethod());
             writeErrorResponse(response, e);
         }
+    }
+
+    /**
+     * 토큰에서 사용자 정보를 추출하여 인증 설정
+     */
+    private void authenticateUser(String token) {
+        String userType = jwtUtil.getClaimFromToken(token, "userType", String.class);
+        Long userId = jwtUtil.getClaimFromToken(token, "userId", Long.class);
+
+        UserDetails userDetails = "ADMIN".equals(userType)
+                ? customAdminDetailsService.loadAdminByAdminId(userId)
+                : customUserDetailsService.loadUserByUserId(userId);
+        setAuthentication(userDetails);
+    }
+
+    /**
+     * 어드민 토큰 쿠키 설정
+     */
+    private void setAdminTokenCookies(HttpServletResponse response, String accessToken, String newRefreshToken) {
+        Cookie accessCookie = new Cookie(ADMIN_ACCESS_TOKEN_COOKIE, accessToken);
+        accessCookie.setHttpOnly(true);
+        accessCookie.setPath("/");
+        accessCookie.setMaxAge(ACCESS_COOKIE_MAX_AGE);
+        response.addCookie(accessCookie);
+
+        Cookie refreshCookie = new Cookie(ADMIN_REFRESH_TOKEN_COOKIE, newRefreshToken);
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge(REFRESH_COOKIE_MAX_AGE);
+        response.addCookie(refreshCookie);
     }
 
     /**
@@ -121,6 +184,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 path.startsWith("/favicon.ico") ||
                 path.equals("/api/v1/tokens/action-reissue") ||
                 path.equals("/api/v1/users/logout") ||
+                path.equals("/api/v1/admin/reissue") ||
                 path.equals("/admin/login") ||
                 path.startsWith("/admin/css") ||
                 path.startsWith("/admin/js") ||
