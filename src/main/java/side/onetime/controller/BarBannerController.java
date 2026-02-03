@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import side.onetime.dto.barbanner.request.ExportBarBannerRequest;
 import side.onetime.dto.barbanner.request.RegisterBarBannerRequest;
@@ -22,6 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/bar-banners")
 @RequiredArgsConstructor
+@Validated
 public class BarBannerController {
 
     private final BarBannerService barBannerService;

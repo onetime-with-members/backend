@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import side.onetime.dto.banner.request.ExportBannerRequest;
@@ -21,9 +22,11 @@ import side.onetime.service.BannerService;
 
 import java.util.List;
 
+
 @RestController
 @RequestMapping("/api/v1/banners")
 @RequiredArgsConstructor
+@Validated
 public class BannerController {
 
     private final BannerService bannerService;
