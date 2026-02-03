@@ -26,6 +26,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         SELECT DATE(last_used_at) AS date, COUNT(DISTINCT users_id) AS dau
         FROM refresh_token
         WHERE last_used_at >= :startDate AND last_used_at < :endDate
+          AND user_type = 'USER'
         GROUP BY DATE(last_used_at)
         ORDER BY date
         """, nativeQuery = true)
@@ -43,6 +44,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         SELECT DATE_FORMAT(last_used_at, '%Y-%m') AS month, COUNT(DISTINCT users_id) AS mau
         FROM refresh_token
         WHERE last_used_at >= :startDate AND last_used_at < :endDate
+          AND user_type = 'USER'
         GROUP BY DATE_FORMAT(last_used_at, '%Y-%m')
         ORDER BY month
         """, nativeQuery = true)
@@ -59,6 +61,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         SELECT COUNT(DISTINCT users_id)
         FROM refresh_token
         WHERE last_used_at >= :startDate AND last_used_at < :endDate
+          AND user_type = 'USER'
         """, nativeQuery = true)
     Long countMau(
             @Param("startDate") LocalDateTime startDate,
@@ -72,6 +75,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         SELECT HOUR(last_used_at) AS hour, COUNT(*) AS count
         FROM refresh_token
         WHERE last_used_at >= :startDate AND last_used_at < :endDate
+          AND user_type = 'USER'
         GROUP BY HOUR(last_used_at)
         ORDER BY hour
         """, nativeQuery = true)
@@ -89,7 +93,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     @Query(value = """
         SELECT COUNT(DISTINCT u.users_id) AS dormant_count
         FROM users u
-        LEFT JOIN refresh_token rt ON u.users_id = rt.users_id
+        LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
         WHERE u.status = 'ACTIVE'
           AND u.marketing_policy_agreement = 1
         GROUP BY u.users_id
@@ -113,7 +117,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         FROM (
             SELECT u.users_id, COALESCE(DATEDIFF(NOW(), MAX(rt.last_used_at)), 999) AS days_inactive
             FROM users u
-            LEFT JOIN refresh_token rt ON u.users_id = rt.users_id
+            LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
             WHERE u.status = 'ACTIVE'
             GROUP BY u.users_id
         ) sub
@@ -139,7 +143,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         FROM (
             SELECT u.users_id, COALESCE(DATEDIFF(NOW(), MAX(rt.last_used_at)), 999) AS days_inactive
             FROM users u
-            LEFT JOIN refresh_token rt ON u.users_id = rt.users_id
+            LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
             WHERE u.status = 'ACTIVE'
               AND u.created_date >= :startDate AND u.created_date < :endDate
             GROUP BY u.users_id
@@ -161,7 +165,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
                MAX(rt.last_used_at) AS last_login,
                COALESCE(DATEDIFF(NOW(), MAX(rt.last_used_at)), 999) AS days_inactive
         FROM users u
-        LEFT JOIN refresh_token rt ON u.users_id = rt.users_id
+        LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
         WHERE u.status = 'ACTIVE'
           AND u.marketing_policy_agreement = 1
         GROUP BY u.users_id, u.email, u.name, u.nickname, u.provider, u.provider_id,
@@ -711,7 +715,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     @Query(value = """
         SELECT u.email
         FROM users u
-        LEFT JOIN refresh_token rt ON u.users_id = rt.users_id
+        LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
         WHERE u.status = 'ACTIVE'
           AND u.marketing_policy_agreement = 1
           AND u.email IS NOT NULL
@@ -906,7 +910,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             DATE_FORMAT(rt.last_used_at, '%Y-%m') AS active_month,
             COUNT(DISTINCT u.users_id) AS active_users
         FROM users u
-        JOIN refresh_token rt ON u.users_id = rt.users_id
+        JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
         WHERE u.status = 'ACTIVE'
           AND u.created_date >= :startDate AND u.created_date < :endDate
           AND rt.last_used_at >= u.created_date
@@ -988,6 +992,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         SELECT COUNT(DISTINCT rt.users_id)
         FROM refresh_token rt
         WHERE rt.last_used_at >= :startDate AND rt.last_used_at < :endDate
+          AND rt.user_type = 'USER'
         """, nativeQuery = true)
     Long countWau(
             @Param("startDate") LocalDateTime startDate,
@@ -1006,6 +1011,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
                    COUNT(DISTINCT rt.users_id) AS weekly_users
             FROM refresh_token rt
             WHERE rt.last_used_at >= :startDate AND rt.last_used_at < :endDate
+              AND rt.user_type = 'USER'
             GROUP BY week_start
         ) AS weekly_data
         GROUP BY month
@@ -1025,6 +1031,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
                COUNT(DISTINCT rt.users_id) AS mau
         FROM refresh_token rt
         WHERE rt.last_used_at >= :startDate AND rt.last_used_at < :endDate
+          AND rt.user_type = 'USER'
         GROUP BY month
         ORDER BY month
         """, nativeQuery = true)
