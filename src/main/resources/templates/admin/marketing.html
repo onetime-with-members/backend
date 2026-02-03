@@ -50,7 +50,7 @@
                     <p class="text-sm text-gray-500 dark:text-gray-400">휴면 유저</p>
                     <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
                        th:text="${#numbers.formatInteger(data.dormantUsers, 0, 'COMMA')}">0</p>
-                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">60일+ 미접속 (마케팅 동의자)</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">30일+ 미접속</p>
                 </div>
                 <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
                     <i data-lucide="user-x" class="w-5 h-5 text-amber-600 dark:text-amber-400"></i>
@@ -142,7 +142,6 @@
                 <div id="detailContent" class="hidden">
                     <div class="flex gap-2 mb-4">
                         <span class="px-3 py-1 text-xs bg-accent-500 text-white rounded-full" id="totalCountBadge">Total: 0</span>
-                        <span class="px-3 py-1 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full" id="showingCountBadge">Showing: 0</span>
                         <span class="px-3 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full hidden" id="selectedCountBadge">Selected: 0</span>
                     </div>
                     <div class="overflow-x-auto">
@@ -212,10 +211,10 @@
         const urlParams = new URLSearchParams(window.location.search);
         const startDate = urlParams.get('startDate') || '';
         const endDate = urlParams.get('endDate') || '';
-        let params = '';
-        if (startDate) params += '&startDate=' + startDate;
-        if (endDate) params += '&endDate=' + endDate;
-        return params;
+        const params = new URLSearchParams();
+        if (startDate) params.set('startDate', startDate);
+        if (endDate) params.set('endDate', endDate);
+        return params.toString();
     }
 
     function showDetail(type) {
@@ -232,7 +231,8 @@
         document.getElementById('detailModal').classList.remove('hidden');
 
         const dateParams = getDateParams();
-        fetch(config.endpoint + '?limit=100' + dateParams)
+        const url = dateParams ? config.endpoint + '?' + dateParams : config.endpoint;
+        fetch(url)
             .then(response => response.json())
             .then(data => {
                 if (data.is_success && data.payload) {
@@ -335,10 +335,8 @@
 
     function renderDetail(data, isEvent) {
         const items = isEvent ? data.events : data.users;
-        const count = items ? items.length : 0;
 
         document.getElementById('totalCountBadge').textContent = 'Total: ' + data.totalCount.toLocaleString();
-        document.getElementById('showingCountBadge').textContent = 'Showing: ' + count;
 
         if (isEvent) {
             currentUsers = (items || []).map(e => ({

@@ -189,7 +189,7 @@ public class StatisticsService {
             }
         }
 
-        // Dormant rate (기간 내 가입 유저 중 60일+ 미접속 비율)
+        // Dormant rate (기간 내 가입 유저 중 30일+ 미접속 비율)
         Object[] dormantData = getFirstRow(statisticsRepository.countDormantRateByDateRange(range.start(), range.end()));
         long dormantUsers = extractLong(dormantData, 0);
         long totalUsersInRange = extractLong(dormantData, 1);
@@ -560,24 +560,20 @@ public class StatisticsService {
 
     /**
      * 마케팅 동의 유저 상세 목록
-     * 정렬, 검색 지원
+     * 정렬, 검색, 기간 필터 지원
      */
     @Transactional(readOnly = true)
-    public MarketingTargetDetailResponse getMarketingAgreedUsers(int limit, String sort, String search) {
-        // Native Query로 마케팅 동의 유저 수 조회
-        List<Object[]> userStatsList = statisticsRepository.getUserStatsByDateRange(
-                LocalDateTime.of(2000, 1, 1, 0, 0),
-                LocalDateTime.now().plusDays(1)
-        );
-        Object[] userStats = userStatsList.isEmpty() ? null : userStatsList.get(0);
-        long totalCount = userStats != null && userStats[1] != null ? ((Number) userStats[1]).longValue() : 0;
+    public MarketingTargetDetailResponse getMarketingAgreedUsers(String sort, String search,
+                                                                  LocalDate startDate, LocalDate endDate) {
+        DateTimeRange range = DateTimeRange.of(startDate, endDate);
 
-        List<Object[]> rows = statisticsRepositoryCustom.findMarketingAgreedUserDetailsWithSortAndSearch(limit, sort, search);
+        List<Object[]> rows = statisticsRepositoryCustom.findMarketingAgreedUserDetailsWithSortAndSearch(
+                sort, search, range.start(), range.end());
         List<MarketingTargetDetailResponse.UserDetail> users = rows.stream()
                 .map(row -> MarketingTargetDetailResponse.UserDetail.fromRow(row, "agreed"))
                 .toList();
 
-        return MarketingTargetDetailResponse.ofUsers("agreed", totalCount, users);
+        return MarketingTargetDetailResponse.ofUsers("agreed", users.size(), users);
     }
 
     /**
@@ -585,84 +581,89 @@ public class StatisticsService {
      * 정렬, 검색, 기간 필터 지원
      */
     @Transactional(readOnly = true)
-    public MarketingTargetDetailResponse getDormantUsers(int days, int limit, String sort, String search,
+    public MarketingTargetDetailResponse getDormantUsers(int days, String sort, String search,
                                                           LocalDate startDate, LocalDate endDate) {
         DateTimeRange range = DateTimeRange.of(startDate, endDate);
 
-        List<Object[]> countRows = statisticsRepository.countDormantUsersWithMarketing(days, range.start(), range.end());
-        long totalCount = countRows.size();
-
         List<Object[]> rows = statisticsRepositoryCustom.findDormantUserDetailsWithSortAndSearch(
-                days, limit, sort, search, range.start(), range.end());
+                days, sort, search, range.start(), range.end());
         List<MarketingTargetDetailResponse.UserDetail> users = rows.stream()
                 .map(row -> MarketingTargetDetailResponse.UserDetail.fromRow(row, "dormant"))
                 .toList();
 
-        return MarketingTargetDetailResponse.ofUsers("dormant", totalCount, users);
+        return MarketingTargetDetailResponse.ofUsers("dormant", users.size(), users);
     }
 
     /**
      * 이벤트 미생성 유저 상세 목록
-     * 정렬, 검색 지원
+     * 정렬, 검색, 기간 필터 지원
      */
     @Transactional(readOnly = true)
-    public MarketingTargetDetailResponse getNoEventUsers(int daysAfterSignup, int limit, String sort, String search) {
-        long totalCount = nullToZero(statisticsRepository.countNoEventUsers(daysAfterSignup));
+    public MarketingTargetDetailResponse getNoEventUsers(int daysAfterSignup, String sort, String search,
+                                                          LocalDate startDate, LocalDate endDate) {
+        DateTimeRange range = DateTimeRange.of(startDate, endDate);
 
-        List<Object[]> rows = statisticsRepositoryCustom.findNoEventUserDetailsWithSortAndSearch(daysAfterSignup, limit, sort, search);
+        List<Object[]> rows = statisticsRepositoryCustom.findNoEventUserDetailsWithSortAndSearch(
+                daysAfterSignup, sort, search, range.start(), range.end());
         List<MarketingTargetDetailResponse.UserDetail> users = rows.stream()
                 .map(row -> MarketingTargetDetailResponse.UserDetail.fromRow(row, "noEvent"))
                 .toList();
 
-        return MarketingTargetDetailResponse.ofUsers("noEvent", totalCount, users);
+        return MarketingTargetDetailResponse.ofUsers("noEvent", users.size(), users);
     }
 
     /**
      * 1회성 유저 상세 목록
-     * 정렬, 검색 지원
+     * 정렬, 검색, 기간 필터 지원
      */
     @Transactional(readOnly = true)
-    public MarketingTargetDetailResponse getOneTimeUsers(int limit, String sort, String search) {
-        long totalCount = nullToZero(statisticsRepository.countOneTimeUsers());
+    public MarketingTargetDetailResponse getOneTimeUsers(String sort, String search,
+                                                          LocalDate startDate, LocalDate endDate) {
+        DateTimeRange range = DateTimeRange.of(startDate, endDate);
 
-        List<Object[]> rows = statisticsRepositoryCustom.findOneTimeUserDetailsWithSortAndSearch(limit, sort, search);
+        List<Object[]> rows = statisticsRepositoryCustom.findOneTimeUserDetailsWithSortAndSearch(
+                sort, search, range.start(), range.end());
         List<MarketingTargetDetailResponse.UserDetail> users = rows.stream()
                 .map(row -> MarketingTargetDetailResponse.UserDetail.fromRow(row, "oneTime"))
                 .toList();
 
-        return MarketingTargetDetailResponse.ofUsers("oneTime", totalCount, users);
+        return MarketingTargetDetailResponse.ofUsers("oneTime", users.size(), users);
     }
 
     /**
      * VIP 유저 상세 목록
-     * 정렬, 검색 지원
+     * 정렬, 검색, 기간 필터 지원
      */
     @Transactional(readOnly = true)
-    public MarketingTargetDetailResponse getVipUsers(int limit, String sort, String search) {
-        long totalCount = nullToZero(statisticsRepository.countVipUsers());
+    public MarketingTargetDetailResponse getVipUsers(String sort, String search,
+                                                      LocalDate startDate, LocalDate endDate) {
+        DateTimeRange range = DateTimeRange.of(startDate, endDate);
 
-        List<Object[]> rows = statisticsRepositoryCustom.findVipUserDetailsWithSortAndSearch(limit, sort, search);
+        List<Object[]> rows = statisticsRepositoryCustom.findVipUserDetailsWithSortAndSearch(
+                sort, search, range.start(), range.end());
         List<MarketingTargetDetailResponse.UserDetail> users = rows.stream()
                 .map(row -> MarketingTargetDetailResponse.UserDetail.fromRow(row, "vip"))
                 .toList();
 
-        return MarketingTargetDetailResponse.ofUsers("vip", totalCount, users);
+        return MarketingTargetDetailResponse.ofUsers("vip", users.size(), users);
     }
 
     /**
      * 참여자 0명 이벤트 상세 목록
-     * 정렬, 검색 지원
+     * 정렬, 검색, 기간 필터 지원
      */
     @Transactional(readOnly = true)
-    public MarketingTargetDetailResponse getZeroParticipantEvents(int limit, String sort, String search) {
-        long totalCount = nullToZero(statisticsRepository.countZeroParticipantEvents());
+    public MarketingTargetDetailResponse getZeroParticipantEvents(String sort, String search,
+                                                                   LocalDate startDate, LocalDate endDate) {
+        DateTimeRange range = DateTimeRange.of(startDate, endDate);
 
-        List<Object[]> rows = statisticsRepositoryCustom.findZeroParticipantEventDetailsWithSortAndSearch(limit, sort, search);
+        List<Object[]> rows = statisticsRepositoryCustom.findZeroParticipantEventDetailsWithSortAndSearch(
+                sort, search, range.start(), range.end());
         List<MarketingTargetDetailResponse.EventDetail> events = rows.stream()
                 .map(MarketingTargetDetailResponse.EventDetail::fromRow)
                 .toList();
 
-        return MarketingTargetDetailResponse.ofEvents("zeroParticipant", totalCount, events);
+        return MarketingTargetDetailResponse.ofEvents("zeroParticipant", events.size(), events);
     }
 
     /**
@@ -670,17 +671,15 @@ public class StatisticsService {
      * 기간 필터 지원
      */
     @Transactional(readOnly = true)
-    public MarketingTargetDetailResponse getReturningUsers(LocalDate startDate, LocalDate endDate, int limit) {
+    public MarketingTargetDetailResponse getReturningUsers(LocalDate startDate, LocalDate endDate) {
         DateTimeRange range = DateTimeRange.of(startDate, endDate);
 
-        long totalCount = nullToZero(statisticsRepository.countReturningUsers(range.start(), range.end()));
-
-        List<Object[]> rows = statisticsRepository.findReturningUserDetails(range.start(), range.end(), limit);
+        List<Object[]> rows = statisticsRepository.findReturningUserDetails(range.start(), range.end());
         List<MarketingTargetDetailResponse.UserDetail> users = rows.stream()
                 .map(row -> MarketingTargetDetailResponse.UserDetail.fromRow(row, "returning"))
                 .toList();
 
-        return MarketingTargetDetailResponse.ofUsers("returning", totalCount, users);
+        return MarketingTargetDetailResponse.ofUsers("returning", users.size(), users);
     }
 
     /**
@@ -688,18 +687,16 @@ public class StatisticsService {
      * 기간 필터 지원
      */
     @Transactional(readOnly = true)
-    public MarketingTargetDetailResponse getDormantUsersForRetention(int days, int limit,
+    public MarketingTargetDetailResponse getDormantUsersForRetention(int days,
                                                                       LocalDate startDate, LocalDate endDate) {
         DateTimeRange range = DateTimeRange.of(startDate, endDate);
 
-        long totalCount = nullToZero(statisticsRepository.countDormantUsersForRetention(days, range.start(), range.end()));
-
-        List<Object[]> rows = statisticsRepository.findDormantUserDetailsForRetention(days, limit, range.start(), range.end());
+        List<Object[]> rows = statisticsRepository.findDormantUserDetailsForRetention(days, range.start(), range.end());
         List<MarketingTargetDetailResponse.UserDetail> users = rows.stream()
                 .map(row -> MarketingTargetDetailResponse.UserDetail.fromRow(row, "dormant"))
                 .toList();
 
-        return MarketingTargetDetailResponse.ofUsers("dormant", totalCount, users);
+        return MarketingTargetDetailResponse.ofUsers("dormant", users.size(), users);
     }
 
     // ==================== Native Query 기반 헬퍼 메서드 ====================

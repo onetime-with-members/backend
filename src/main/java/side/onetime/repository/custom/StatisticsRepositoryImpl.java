@@ -11,7 +11,7 @@ import jakarta.persistence.Query;
 
 /**
  * 통계 Repository 커스텀 구현체
- * Native Query로 정렬, 검색 기능 지원
+ * Native Query로 정렬, 검색, 기간 필터 기능 지원
  */
 @Repository
 public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
@@ -27,31 +27,33 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<Object[]> findMarketingAgreedUserDetailsWithSortAndSearch(int limit, String sort, String search) {
+    public List<Object[]> findMarketingAgreedUserDetailsWithSortAndSearch(String sort, String search,
+                                                                           LocalDateTime startDate, LocalDateTime endDate) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT ").append(USER_SELECT_COLUMNS);
         sql.append(" FROM users u");
         sql.append(" WHERE u.status = 'ACTIVE' AND u.marketing_policy_agreement = 1");
+        sql.append(" AND u.created_date >= :startDate AND u.created_date < :endDate");
 
         if (search != null && !search.isBlank()) {
             sql.append(" AND (u.name LIKE :search OR u.email LIKE :search OR u.nickname LIKE :search)");
         }
 
         sql.append(" ORDER BY ").append(getSortClause(sort, "u", SortContext.USER));
-        sql.append(" LIMIT :limit");
 
         Query query = entityManager.createNativeQuery(sql.toString());
         if (search != null && !search.isBlank()) {
             query.setParameter("search", "%" + search + "%");
         }
-        query.setParameter("limit", limit);
+        query.setParameter("startDate", startDate);
+        query.setParameter("endDate", endDate);
 
         return query.getResultList();
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<Object[]> findDormantUserDetailsWithSortAndSearch(int days, int limit, String sort, String search,
+    public List<Object[]> findDormantUserDetailsWithSortAndSearch(int days, String sort, String search,
                                                                    LocalDateTime startDate, LocalDateTime endDate) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT ").append(USER_SELECT_COLUMNS);
@@ -59,7 +61,7 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
         sql.append(", DATEDIFF(NOW(), COALESCE(MAX(COALESCE(rt.last_used_at, rt.issued_at)), u.created_date)) AS days_inactive");
         sql.append(" FROM users u");
         sql.append(" LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'");
-        sql.append(" WHERE u.status = 'ACTIVE' AND u.marketing_policy_agreement = 1");
+        sql.append(" WHERE u.status = 'ACTIVE'");
         sql.append(" AND u.created_date >= :startDate AND u.created_date < :endDate");
 
         if (search != null && !search.isBlank()) {
@@ -71,14 +73,12 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
         sql.append(" u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date");
         sql.append(" HAVING days_inactive >= :days");
         sql.append(" ORDER BY ").append(getSortClause(sort, "u", SortContext.USER));
-        sql.append(" LIMIT :limit");
 
         Query query = entityManager.createNativeQuery(sql.toString());
         if (search != null && !search.isBlank()) {
             query.setParameter("search", "%" + search + "%");
         }
         query.setParameter("days", days);
-        query.setParameter("limit", limit);
         query.setParameter("startDate", startDate);
         query.setParameter("endDate", endDate);
 
@@ -87,44 +87,48 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<Object[]> findNoEventUserDetailsWithSortAndSearch(int daysAfterSignup, int limit, String sort, String search) {
+    public List<Object[]> findNoEventUserDetailsWithSortAndSearch(int daysAfterSignup, String sort, String search,
+                                                                   LocalDateTime startDate, LocalDateTime endDate) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT ").append(USER_SELECT_COLUMNS);
         sql.append(", DATEDIFF(NOW(), u.created_date) AS days_since_signup");
         sql.append(" FROM users u");
         sql.append(" LEFT JOIN event_participations ep ON u.users_id = ep.users_id");
         sql.append("   AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')");
-        sql.append(" WHERE u.status = 'ACTIVE' AND u.marketing_policy_agreement = 1");
+        sql.append(" WHERE u.status = 'ACTIVE'");
         sql.append("   AND ep.users_id IS NULL");
         sql.append("   AND u.created_date < DATE_SUB(NOW(), INTERVAL :daysAfterSignup DAY)");
+        sql.append("   AND u.created_date >= :startDate AND u.created_date < :endDate");
 
         if (search != null && !search.isBlank()) {
             sql.append(" AND (u.name LIKE :search OR u.email LIKE :search OR u.nickname LIKE :search)");
         }
 
         sql.append(" ORDER BY ").append(getSortClause(sort, "u", SortContext.USER));
-        sql.append(" LIMIT :limit");
 
         Query query = entityManager.createNativeQuery(sql.toString());
         if (search != null && !search.isBlank()) {
             query.setParameter("search", "%" + search + "%");
         }
         query.setParameter("daysAfterSignup", daysAfterSignup);
-        query.setParameter("limit", limit);
+        query.setParameter("startDate", startDate);
+        query.setParameter("endDate", endDate);
 
         return query.getResultList();
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<Object[]> findOneTimeUserDetailsWithSortAndSearch(int limit, String sort, String search) {
+    public List<Object[]> findOneTimeUserDetailsWithSortAndSearch(String sort, String search,
+                                                                   LocalDateTime startDate, LocalDateTime endDate) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT ").append(USER_SELECT_COLUMNS);
         sql.append(", COUNT(ep.events_id) AS event_count");
         sql.append(" FROM users u");
         sql.append(" JOIN event_participations ep ON u.users_id = ep.users_id");
         sql.append("   AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')");
-        sql.append(" WHERE u.status = 'ACTIVE' AND u.marketing_policy_agreement = 1");
+        sql.append(" WHERE u.status = 'ACTIVE'");
+        sql.append("   AND u.created_date >= :startDate AND u.created_date < :endDate");
 
         if (search != null && !search.isBlank()) {
             sql.append(" AND (u.name LIKE :search OR u.email LIKE :search OR u.nickname LIKE :search)");
@@ -135,20 +139,21 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
         sql.append(" u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date");
         sql.append(" HAVING COUNT(ep.events_id) = 1");
         sql.append(" ORDER BY ").append(getSortClause(sort, "u", SortContext.USER));
-        sql.append(" LIMIT :limit");
 
         Query query = entityManager.createNativeQuery(sql.toString());
         if (search != null && !search.isBlank()) {
             query.setParameter("search", "%" + search + "%");
         }
-        query.setParameter("limit", limit);
+        query.setParameter("startDate", startDate);
+        query.setParameter("endDate", endDate);
 
         return query.getResultList();
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<Object[]> findVipUserDetailsWithSortAndSearch(int limit, String sort, String search) {
+    public List<Object[]> findVipUserDetailsWithSortAndSearch(String sort, String search,
+                                                               LocalDateTime startDate, LocalDateTime endDate) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT ").append(USER_SELECT_COLUMNS);
         sql.append(", COUNT(ep.events_id) AS event_count");
@@ -156,6 +161,7 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
         sql.append(" JOIN event_participations ep ON u.users_id = ep.users_id");
         sql.append("   AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')");
         sql.append(" WHERE u.status = 'ACTIVE'");
+        sql.append("   AND u.created_date >= :startDate AND u.created_date < :endDate");
 
         if (search != null && !search.isBlank()) {
             sql.append(" AND (u.name LIKE :search OR u.email LIKE :search OR u.nickname LIKE :search)");
@@ -166,20 +172,21 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
         sql.append(" u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date");
         sql.append(" HAVING COUNT(ep.events_id) >= 5");
         sql.append(" ORDER BY ").append(getSortClause(sort, "u", SortContext.VIP));
-        sql.append(" LIMIT :limit");
 
         Query query = entityManager.createNativeQuery(sql.toString());
         if (search != null && !search.isBlank()) {
             query.setParameter("search", "%" + search + "%");
         }
-        query.setParameter("limit", limit);
+        query.setParameter("startDate", startDate);
+        query.setParameter("endDate", endDate);
 
         return query.getResultList();
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<Object[]> findZeroParticipantEventDetailsWithSortAndSearch(int limit, String sort, String search) {
+    public List<Object[]> findZeroParticipantEventDetailsWithSortAndSearch(String sort, String search,
+                                                                            LocalDateTime startDate, LocalDateTime endDate) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT e.events_id, e.title, e.category, e.start_time, e.end_time, e.created_date,");
         sql.append(" u.users_id, u.email, u.name, u.nickname,");
@@ -190,8 +197,8 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
         sql.append(" LEFT JOIN members m ON e.events_id = m.events_id");
         sql.append(" WHERE ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')");
         sql.append("   AND e.status = 'ACTIVE'");
-        sql.append("   AND u.marketing_policy_agreement = 1");
         sql.append("   AND e.created_date < DATE_SUB(NOW(), INTERVAL 3 DAY)");
+        sql.append("   AND e.created_date >= :startDate AND e.created_date < :endDate");
 
         if (search != null && !search.isBlank()) {
             sql.append(" AND (e.title LIKE :search OR u.name LIKE :search OR u.email LIKE :search)");
@@ -201,13 +208,13 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
         sql.append(" u.users_id, u.email, u.name, u.nickname");
         sql.append(" HAVING COUNT(m.members_id) = 0");
         sql.append(" ORDER BY ").append(getSortClause(sort, "e", SortContext.EVENT));
-        sql.append(" LIMIT :limit");
 
         Query query = entityManager.createNativeQuery(sql.toString());
         if (search != null && !search.isBlank()) {
             query.setParameter("search", "%" + search + "%");
         }
-        query.setParameter("limit", limit);
+        query.setParameter("startDate", startDate);
+        query.setParameter("endDate", endDate);
 
         return query.getResultList();
     }

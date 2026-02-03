@@ -164,11 +164,9 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
                  u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date
         HAVING days_inactive >= :days
         ORDER BY days_inactive DESC
-        LIMIT :limit
         """, nativeQuery = true)
     List<Object[]> findDormantUserDetailsForRetention(
             @Param("days") int days,
-            @Param("limit") int limit,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
@@ -194,13 +192,13 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     );
 
     /**
-     * 기간 내 가입 유저의 휴면율 (60일+ 미접속)
+     * 기간 내 가입 유저의 휴면율 (30일+ 미접속)
      * 반환: [dormant_count, total_count]
      * last_used_at이 NULL이면 issued_at 사용, 둘 다 NULL이면 created_date 사용
      */
     @Query(value = """
         SELECT
-            SUM(CASE WHEN days_inactive >= 60 THEN 1 ELSE 0 END) AS dormant_count,
+            SUM(CASE WHEN days_inactive >= 30 THEN 1 ELSE 0 END) AS dormant_count,
             COUNT(*) AS total_count
         FROM (
             SELECT u.users_id,
@@ -415,17 +413,20 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
 
     /**
      * 기간 내 가입한 유저 중 휴면 유저 수 (30일+ 미접속)
-     * last_used_at이 NULL이면 issued_at 사용
+     * last_used_at이 NULL이면 issued_at 사용, 둘 다 NULL이면 created_date 사용
+     * 마케팅 동의 여부 무관
      */
     @Query(value = """
-        SELECT COUNT(DISTINCT u.users_id)
-        FROM users u
-        LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
-        WHERE u.status = 'ACTIVE'
-          AND u.marketing_policy_agreement = 1
-          AND u.created_date >= :startDate
-          AND u.created_date < :endDate
-          AND COALESCE(rt.last_used_at, rt.issued_at) < DATE_SUB(NOW(), INTERVAL 30 DAY)
+        SELECT COUNT(*) FROM (
+            SELECT u.users_id
+            FROM users u
+            LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
+            WHERE u.status = 'ACTIVE'
+              AND u.created_date >= :startDate
+              AND u.created_date < :endDate
+            GROUP BY u.users_id, u.created_date
+            HAVING DATEDIFF(NOW(), COALESCE(MAX(COALESCE(rt.last_used_at, rt.issued_at)), u.created_date)) >= 30
+        ) sub
         """, nativeQuery = true)
     Long countDormantUsersByDateRange(
             @Param("startDate") LocalDateTime startDate,
@@ -434,6 +435,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
 
     /**
      * 기간 내 가입한 유저 중 이벤트 미생성 유저 수
+     * 마케팅 동의 여부 무관
      */
     @Query(value = """
         SELECT COUNT(DISTINCT u.users_id)
@@ -441,7 +443,6 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         LEFT JOIN event_participations ep ON u.users_id = ep.users_id
             AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
         WHERE u.status = 'ACTIVE'
-          AND u.marketing_policy_agreement = 1
           AND ep.users_id IS NULL
           AND u.created_date >= :startDate
           AND u.created_date < :endDate
@@ -454,6 +455,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
 
     /**
      * 기간 내 가입한 유저 중 일회성 유저 수
+     * 마케팅 동의 여부 무관
      */
     @Query(value = """
         SELECT COUNT(*) FROM (
@@ -462,7 +464,6 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             JOIN event_participations ep ON u.users_id = ep.users_id
                 AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
             WHERE u.status = 'ACTIVE'
-              AND u.marketing_policy_agreement = 1
               AND u.created_date >= :startDate
               AND u.created_date < :endDate
             GROUP BY u.users_id
@@ -600,12 +601,10 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
                  u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date
         HAVING COUNT(DISTINCT ep.events_id) >= 2
         ORDER BY participation_count DESC, u.created_date DESC
-        LIMIT :limit
         """, nativeQuery = true)
     List<Object[]> findReturningUserDetails(
             @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate,
-            @Param("limit") int limit
+            @Param("endDate") LocalDateTime endDate
     );
 
     /**

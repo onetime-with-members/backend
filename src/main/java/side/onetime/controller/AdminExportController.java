@@ -42,10 +42,9 @@ public class AdminExportController {
     @GetMapping("/marketing/csv")
     public void exportMarketingCsv(
             @RequestParam String type,
-            @RequestParam(defaultValue = "1000") int limit,
             HttpServletResponse response) throws IOException {
 
-        MarketingTargetDetailResponse data = exportService.getMarketingData(type, limit);
+        MarketingTargetDetailResponse data = exportService.getMarketingData(type);
         String filename = "marketing_" + type + "_" + LocalDateTime.now().format(FILE_DATE_FORMAT) + ".csv";
 
         response.setContentType("text/csv; charset=UTF-8");

@@ -356,7 +356,6 @@
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex gap-2">
                             <span class="px-3 py-1 text-xs bg-accent-500 text-white rounded-full" id="retentionTotalBadge">Total: 0</span>
-                            <span class="px-3 py-1 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full" id="retentionShowingBadge">Showing: 0</span>
                             <span class="px-3 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full hidden" id="retentionSelectedBadge">Selected: 0</span>
                         </div>
                     </div>
@@ -433,14 +432,14 @@
         const endDate = urlParams.get('endDate') || '';
 
         // Build URL with date params for all types
+        const params = new URLSearchParams();
+        if (startDate) params.set('startDate', startDate);
+        if (endDate) params.set('endDate', endDate);
+        const paramStr = params.toString();
         let url = config.endpoint;
-        if (url.includes('?')) {
-            url += '&limit=100';
-        } else {
-            url += '?limit=100';
+        if (paramStr) {
+            url += (url.includes('?') ? '&' : '?') + paramStr;
         }
-        if (startDate) url += '&startDate=' + startDate;
-        if (endDate) url += '&endDate=' + endDate;
 
         fetch(url)
             .then(response => response.json())
@@ -567,7 +566,6 @@
         updateRetentionSelectionUI();
 
         document.getElementById('retentionTotalBadge').textContent = 'Total: ' + data.totalCount.toLocaleString();
-        document.getElementById('retentionShowingBadge').textContent = 'Showing: ' + count;
 
         const isDark = document.documentElement.classList.contains('dark');
         const badgeClass = isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700';
