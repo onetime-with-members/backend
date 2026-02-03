@@ -515,14 +515,14 @@ public class BannerControllerTest extends AdminControllerTestConfig {
                                                 headerWithName("X-API-KEY").description("서버 간 인증을 위한 API Key")
                                         )
                                         .requestFields(
-                                                fieldWithPath("[].bannerId").type(JsonFieldType.NUMBER).description("배너 ID"),
+                                                fieldWithPath("[].banner_id").type(JsonFieldType.NUMBER).description("배너 ID"),
                                                 fieldWithPath("[].organization").type(JsonFieldType.STRING).description("조직명"),
                                                 fieldWithPath("[].title").type(JsonFieldType.STRING).description("제목"),
-                                                fieldWithPath("[].subTitle").type(JsonFieldType.STRING).description("부제목"),
-                                                fieldWithPath("[].buttonText").type(JsonFieldType.STRING).description("버튼 텍스트"),
-                                                fieldWithPath("[].colorCode").type(JsonFieldType.STRING).description("색상 코드"),
-                                                fieldWithPath("[].imageUrl").type(JsonFieldType.STRING).description("이미지 URL"),
-                                                fieldWithPath("[].linkUrl").type(JsonFieldType.STRING).description("링크 URL")
+                                                fieldWithPath("[].sub_title").type(JsonFieldType.STRING).description("부제목"),
+                                                fieldWithPath("[].button_text").type(JsonFieldType.STRING).description("버튼 텍스트"),
+                                                fieldWithPath("[].color_code").type(JsonFieldType.STRING).description("색상 코드"),
+                                                fieldWithPath("[].image_url").type(JsonFieldType.STRING).description("이미지 URL"),
+                                                fieldWithPath("[].link_url").type(JsonFieldType.STRING).description("링크 URL")
                                         )
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),

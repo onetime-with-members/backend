@@ -461,6 +461,14 @@ public class BarBannerControllerTest extends AdminControllerTestConfig {
                                         .requestHeaders(
                                                 headerWithName("X-API-KEY").description("API 인증키")
                                         )
+                                        .requestFields(
+                                                fieldWithPath("[].bar_banner_id").type(JsonFieldType.NUMBER).description("띠배너 ID"),
+                                                fieldWithPath("[].content_kor").type(JsonFieldType.STRING).description("내용 (국문)"),
+                                                fieldWithPath("[].content_eng").type(JsonFieldType.STRING).description("내용 (영문)"),
+                                                fieldWithPath("[].background_color_code").type(JsonFieldType.STRING).description("배경색 코드"),
+                                                fieldWithPath("[].text_color_code").type(JsonFieldType.STRING).description("텍스트색 코드"),
+                                                fieldWithPath("[].link_url").type(JsonFieldType.STRING).description("링크 URL")
+                                        )
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
