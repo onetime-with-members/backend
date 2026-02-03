@@ -1,8 +1,11 @@
 package side.onetime.dto.banner.request;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import side.onetime.domain.Banner;
 import side.onetime.domain.BannerStaging;
 
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record ExportBannerRequest(
         Long bannerId,
         String organization,
