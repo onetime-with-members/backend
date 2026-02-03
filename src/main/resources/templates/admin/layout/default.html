@@ -22,6 +22,9 @@
         </div>
     </div>
 
+    <!-- Command Palette -->
+    <div th:replace="~{admin/fragments/command-palette :: commandPalette}"></div>
+
     <!-- Initialize Lucide Icons -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -31,6 +34,9 @@
 
     <!-- Topbar Script -->
     <script th:replace="~{admin/fragments/topbar :: topbar-script}"></script>
+
+    <!-- Command Palette Script -->
+    <script th:replace="~{admin/fragments/command-palette :: commandPaletteScript}"></script>
 
     <!-- Page specific scripts -->
     <th:block layout:fragment="scripts"></th:block>

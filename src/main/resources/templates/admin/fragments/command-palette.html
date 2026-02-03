@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- Command Palette Modal -->
+<div th:fragment="commandPalette" id="commandPalette" class="hidden fixed inset-0 z-50">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeCommandPalette()"></div>
+
+    <!-- Modal -->
+    <div class="absolute top-[20%] left-1/2 -translate-x-1/2 w-full max-w-lg">
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <!-- Search Input -->
+            <div class="flex items-center px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                <i data-lucide="search" class="w-5 h-5 text-gray-400 dark:text-gray-500 mr-3"></i>
+                <input type="text"
+                       id="commandInput"
+                       placeholder="페이지 검색..."
+                       autocomplete="off"
+                       class="flex-1 bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm">
+                <kbd class="px-2 py-1 text-xs font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 rounded">ESC</kbd>
+            </div>
+
+            <!-- Command List -->
+            <div id="commandList" class="max-h-80 overflow-y-auto py-2">
+                <!-- Items will be rendered by JS -->
+            </div>
+
+            <!-- Footer -->
+            <div class="px-4 py-2 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+                <div class="flex items-center justify-between text-xs text-gray-400 dark:text-gray-500">
+                    <div class="flex items-center gap-3">
+                        <span class="flex items-center gap-1">
+                            <kbd class="px-1.5 py-0.5 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">↑</kbd>
+                            <kbd class="px-1.5 py-0.5 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">↓</kbd>
+                            탐색
+                        </span>
+                        <span class="flex items-center gap-1">
+                            <kbd class="px-1.5 py-0.5 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">Enter</kbd>
+                            이동
+                        </span>
+                    </div>
+                    <span class="flex items-center gap-1">
+                        <kbd class="px-1.5 py-0.5 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">⌘</kbd>
+                        <kbd class="px-1.5 py-0.5 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">K</kbd>
+                        열기
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:fragment="commandPaletteScript">
+(function() {
+    const commands = [
+        { id: 'dashboard', name: '대시보드', description: '서비스 현황을 한눈에', icon: 'layout-dashboard', url: '/admin/dashboard', section: '메인' },
+        { id: 'users', name: '유저 통계', description: '가입자 및 활동 분석', icon: 'users', url: '/admin/statistics/users', section: '통계' },
+        { id: 'events', name: '이벤트 통계', description: '이벤트 생성 및 참여 분석', icon: 'calendar', url: '/admin/statistics/events', section: '통계' },
+        { id: 'retention', name: '리텐션', description: '코호트 및 스티키니스 분석', icon: 'activity', url: '/admin/statistics/retention', section: '통계' },
+        { id: 'marketing', name: '마케팅 타겟', description: '타겟 사용자 세그먼트', icon: 'target', url: '/admin/statistics/marketing', section: '통계' },
+        { id: 'email', name: '이메일 발송', description: '마케팅 이메일 전송', icon: 'mail', url: '/admin/email', section: '도구' },
+        { id: 'theme-toggle', name: '테마 전환', description: '다크/라이트 모드 토글', icon: 'moon', action: 'toggleTheme', section: '설정' },
+        { id: 'refresh', name: '새로고침', description: '현재 페이지 새로고침', icon: 'refresh-cw', action: 'refresh', section: '액션' }
+    ];
+
+    let selectedIndex = 0;
+    let filteredCommands = [...commands];
+    const palette = document.getElementById('commandPalette');
+    const input = document.getElementById('commandInput');
+    const list = document.getElementById('commandList');
+
+    function renderCommands() {
+        let currentSection = '';
+        list.innerHTML = filteredCommands.map((cmd, index) => {
+            let sectionHeader = '';
+            if (cmd.section !== currentSection) {
+                currentSection = cmd.section;
+                sectionHeader = `<div class="px-4 py-1.5 text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">${currentSection}</div>`;
+            }
+            const isSelected = index === selectedIndex;
+            return `
+                ${sectionHeader}
+                <div class="command-item px-4 py-2 mx-2 rounded-lg cursor-pointer flex items-center gap-3 ${isSelected ? 'bg-accent-50 dark:bg-accent-900/30' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}"
+                     data-index="${index}"
+                     onclick="executeCommand(${index})">
+                    <div class="w-8 h-8 rounded-md flex items-center justify-center ${isSelected ? 'bg-accent-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}">
+                        <i data-lucide="${cmd.icon}" class="w-4 h-4"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-medium ${isSelected ? 'text-accent-700 dark:text-accent-300' : 'text-gray-900 dark:text-white'}">${cmd.name}</div>
+                        <div class="text-xs ${isSelected ? 'text-accent-500 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500'} truncate">${cmd.description}</div>
+                    </div>
+                    ${isSelected ? '<i data-lucide="arrow-right" class="w-4 h-4 text-accent-500"></i>' : ''}
+                </div>
+            `;
+        }).join('');
+
+        if (filteredCommands.length === 0) {
+            list.innerHTML = '<div class="px-4 py-8 text-center text-gray-400 dark:text-gray-500 text-sm">검색 결과가 없습니다</div>';
+        }
+
+        lucide.createIcons();
+    }
+
+    function filterCommands(query) {
+        const q = query.toLowerCase().trim();
+        if (!q) {
+            filteredCommands = [...commands];
+        } else {
+            filteredCommands = commands.filter(cmd =>
+                cmd.name.toLowerCase().includes(q) ||
+                cmd.description.toLowerCase().includes(q) ||
+                cmd.section.toLowerCase().includes(q)
+            );
+        }
+        selectedIndex = 0;
+        renderCommands();
+    }
+
+    window.openCommandPalette = function() {
+        palette.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        input.value = '';
+        filterCommands('');
+        setTimeout(() => input.focus(), 50);
+    };
+
+    window.closeCommandPalette = function() {
+        palette.classList.add('hidden');
+        document.body.style.overflow = '';
+    };
+
+    window.executeCommand = function(index) {
+        const cmd = filteredCommands[index];
+        if (!cmd) return;
+
+        closeCommandPalette();
+
+        if (cmd.url) {
+            window.location.href = cmd.url;
+        } else if (cmd.action === 'toggleTheme') {
+            if (typeof toggleTheme === 'function') {
+                toggleTheme();
+            }
+        } else if (cmd.action === 'refresh') {
+            window.location.reload();
+        }
+    };
+
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        // Open palette with Cmd+K or Ctrl+K
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            if (palette.classList.contains('hidden')) {
+                openCommandPalette();
+            } else {
+                closeCommandPalette();
+            }
+            return;
+        }
+
+        // Only handle keys when palette is open
+        if (palette.classList.contains('hidden')) return;
+
+        if (e.key === 'Escape') {
+            closeCommandPalette();
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            selectedIndex = Math.min(selectedIndex + 1, filteredCommands.length - 1);
+            renderCommands();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            selectedIndex = Math.max(selectedIndex - 1, 0);
+            renderCommands();
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            executeCommand(selectedIndex);
+        }
+    });
+
+    // Search input handler
+    input?.addEventListener('input', function(e) {
+        filterCommands(e.target.value);
+    });
+})();
+</script>
+</html>

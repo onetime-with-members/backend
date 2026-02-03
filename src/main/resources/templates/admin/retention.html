@@ -218,6 +218,9 @@
     // Accent color palette
     const accentColors = ['#677CEE', '#8198f3', '#a5b4fd', '#c7d2ff', '#5367d6', '#4555bd'];
 
+    // Calculate MAU average
+    const mauAvg = mauData.length > 0 ? mauData.reduce((a, b) => a + b.count, 0) / mauData.length : 0;
+
     // MAU Chart
     const mauChart = new Chart(document.getElementById('mauChart'), {
         type: 'line',
@@ -234,7 +237,34 @@
         },
         options: {
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return context[0].label + ' 월간 활성 사용자';
+                        },
+                        label: function(context) {
+                            return ChartTooltipConfig.formatNumber(context.raw) + '명';
+                        },
+                        afterLabel: function(context) {
+                            const idx = context.dataIndex;
+                            if (idx > 0) {
+                                const prev = mauData[idx - 1].count;
+                                const trend = ChartTooltipConfig.getTrendIndicator(context.raw, prev);
+                                return '전월 대비' + trend;
+                            }
+                            return '';
+                        },
+                        footer: function(context) {
+                            const value = context[0].raw;
+                            const diff = value - mauAvg;
+                            const sign = diff >= 0 ? '+' : '';
+                            return '평균(' + Math.round(mauAvg) + '명) 대비: ' + sign + Math.round(diff) + '명';
+                        }
+                    }
+                }
+            },
             scales: {
                 y: {
                     beginAtZero: true,
@@ -364,6 +394,28 @@
                         labels: {
                             usePointStyle: true,
                             color: colors.text
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                return context[0].label + ' Stickiness 분석';
+                            },
+                            label: function(context) {
+                                const label = context.dataset.label;
+                                const value = context.raw;
+                                if (label === 'Stickiness (%)') {
+                                    return 'Stickiness: ' + value.toFixed(1) + '%';
+                                }
+                                return label + ': ' + ChartTooltipConfig.formatNumber(value) + '명';
+                            },
+                            footer: function(context) {
+                                const idx = context[0].dataIndex;
+                                const data = trend[idx];
+                                if (data.stickiness >= 20) return 'Good! 높은 서비스 중독성';
+                                if (data.stickiness >= 10) return 'Average: 개선 여지 있음';
+                                return 'Warning: 유저 참여 개선 필요';
+                            }
                         }
                     }
                 },

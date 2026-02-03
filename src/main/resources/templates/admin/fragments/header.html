@@ -48,6 +48,74 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- Chart Tooltip Utilities -->
+    <script>
+        // Enhanced tooltip configuration for all charts
+        window.ChartTooltipConfig = {
+            // Custom tooltip styling
+            getTooltipStyle: function() {
+                const isDark = document.documentElement.classList.contains('dark');
+                return {
+                    backgroundColor: isDark ? 'rgba(17, 24, 39, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                    titleColor: isDark ? '#f9fafb' : '#111827',
+                    bodyColor: isDark ? '#d1d5db' : '#4b5563',
+                    borderColor: isDark ? '#374151' : '#e5e7eb',
+                    borderWidth: 1,
+                    padding: 12,
+                    cornerRadius: 8,
+                    displayColors: true,
+                    titleFont: { size: 13, weight: '600' },
+                    bodyFont: { size: 12 },
+                    footerFont: { size: 11 },
+                    footerColor: isDark ? '#9ca3af' : '#6b7280'
+                };
+            },
+
+            // Calculate trend indicator
+            getTrendIndicator: function(current, previous) {
+                if (!previous || previous === 0) return '';
+                const change = ((current - previous) / previous * 100).toFixed(1);
+                if (change > 0) return ' (+' + change + '%)';
+                if (change < 0) return ' (' + change + '%)';
+                return ' (0%)';
+            },
+
+            // Format number with locale
+            formatNumber: function(value) {
+                return value.toLocaleString('ko-KR');
+            },
+
+            // Get contextual footer based on average
+            getContextFooter: function(value, average, label) {
+                if (!average) return '';
+                const diff = value - average;
+                const sign = diff >= 0 ? '+' : '';
+                return label + ' 평균 대비: ' + sign + diff.toFixed(1);
+            }
+        };
+
+        // Apply default tooltip options to Chart.js
+        Chart.defaults.plugins.tooltip.backgroundColor = function(context) {
+            return document.documentElement.classList.contains('dark')
+                ? 'rgba(17, 24, 39, 0.95)'
+                : 'rgba(255, 255, 255, 0.95)';
+        };
+        Chart.defaults.plugins.tooltip.titleColor = function(context) {
+            return document.documentElement.classList.contains('dark') ? '#f9fafb' : '#111827';
+        };
+        Chart.defaults.plugins.tooltip.bodyColor = function(context) {
+            return document.documentElement.classList.contains('dark') ? '#d1d5db' : '#4b5563';
+        };
+        Chart.defaults.plugins.tooltip.borderColor = function(context) {
+            return document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb';
+        };
+        Chart.defaults.plugins.tooltip.borderWidth = 1;
+        Chart.defaults.plugins.tooltip.padding = 12;
+        Chart.defaults.plugins.tooltip.cornerRadius = 8;
+        Chart.defaults.plugins.tooltip.titleFont = { size: 13, weight: '600' };
+        Chart.defaults.plugins.tooltip.bodyFont = { size: 12 };
+    </script>
+
     <!-- Dark Mode Script (before DOM loads to prevent flash) -->
     <script>
         (function() {

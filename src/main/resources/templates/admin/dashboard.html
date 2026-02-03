@@ -210,6 +210,9 @@
 
     const colors = getChartColors();
 
+    // Calculate average for context
+    const signupsAvg = signupsData.data.reduce((a, b) => a + b, 0) / signupsData.data.length || 0;
+
     // Monthly Signups Chart
     const signupsChart = new Chart(document.getElementById('signupsChart'), {
         type: 'line',
@@ -227,7 +230,34 @@
         },
         options: {
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return context[0].label + ' 신규 가입';
+                        },
+                        label: function(context) {
+                            return ChartTooltipConfig.formatNumber(context.raw) + '명';
+                        },
+                        afterLabel: function(context) {
+                            const idx = context.dataIndex;
+                            if (idx > 0) {
+                                const prev = signupsData.data[idx - 1];
+                                const trend = ChartTooltipConfig.getTrendIndicator(context.raw, prev);
+                                return '전월 대비' + trend;
+                            }
+                            return '';
+                        },
+                        footer: function(context) {
+                            const value = context[0].raw;
+                            const diff = value - signupsAvg;
+                            const sign = diff >= 0 ? '+' : '';
+                            return '월 평균(' + Math.round(signupsAvg) + '명) 대비: ' + sign + Math.round(diff) + '명';
+                        }
+                    }
+                }
+            },
             scales: {
                 y: {
                     beginAtZero: true,
@@ -242,6 +272,9 @@
         }
     });
 
+    // Calculate providers total
+    const providersTotal = providersData.data.reduce((a, b) => a + b, 0);
+
     // Providers Doughnut Chart
     const providersChart = new Chart(document.getElementById('providersChart'), {
         type: 'doughnut',
@@ -255,7 +288,24 @@
         },
         options: {
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return context[0].label + ' 로그인';
+                        },
+                        label: function(context) {
+                            const value = context.raw;
+                            const percentage = providersTotal > 0 ? ((value / providersTotal) * 100).toFixed(1) : 0;
+                            return ChartTooltipConfig.formatNumber(value) + '명 (' + percentage + '%)';
+                        },
+                        footer: function(context) {
+                            return '전체 ' + ChartTooltipConfig.formatNumber(providersTotal) + '명 중';
+                        }
+                    }
+                }
+            },
             cutout: '70%'
         }
     });
@@ -268,6 +318,10 @@
         span.innerHTML = `<span class="w-2 h-2 rounded-full" style="background-color: ${accentColors[index]}"></span>${label}`;
         legendContainer.appendChild(span);
     });
+
+    // Calculate weekday average
+    const weekdayAvg = weekdayData.data.reduce((a, b) => a + b, 0) / weekdayData.data.length || 0;
+    const weekdayTotal = weekdayData.data.reduce((a, b) => a + b, 0);
 
     // Weekday Bar Chart
     const weekdayChart = new Chart(document.getElementById('weekdayChart'), {
@@ -283,7 +337,27 @@
         },
         options: {
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return context[0].label + '요일 이벤트';
+                        },
+                        label: function(context) {
+                            const value = context.raw;
+                            const percentage = weekdayTotal > 0 ? ((value / weekdayTotal) * 100).toFixed(1) : 0;
+                            return ChartTooltipConfig.formatNumber(value) + '개 (' + percentage + '%)';
+                        },
+                        footer: function(context) {
+                            const value = context[0].raw;
+                            const diff = value - weekdayAvg;
+                            const sign = diff >= 0 ? '+' : '';
+                            return '요일 평균(' + Math.round(weekdayAvg) + '개) 대비: ' + sign + Math.round(diff) + '개';
+                        }
+                    }
+                }
+            },
             scales: {
                 y: {
                     beginAtZero: true,

@@ -6,6 +6,15 @@
 
     <!-- Right Side -->
     <div class="flex items-center gap-4">
+        <!-- Command Palette Button -->
+        <button onclick="openCommandPalette()"
+                class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                title="검색 (Cmd+K)">
+            <i data-lucide="search" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">검색</span>
+            <kbd class="hidden sm:inline px-1.5 py-0.5 text-xs bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">⌘K</kbd>
+        </button>
+
         <!-- Date Display -->
         <span class="text-sm text-gray-500 dark:text-gray-400" th:text="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
             2026-01-26
@@ -61,8 +70,8 @@
         }
     });
 
-    // Dark Mode Toggle
-    document.getElementById('themeToggle').addEventListener('click', function() {
+    // Dark Mode Toggle - exposed globally for command palette
+    window.toggleTheme = function() {
         const html = document.documentElement;
         const isDark = html.classList.contains('dark');
 
@@ -79,6 +88,8 @@
 
         // Dispatch custom event for charts to update
         window.dispatchEvent(new CustomEvent('themeChanged', { detail: { isDark: !isDark } }));
-    });
+    };
+
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 </script>
 </html>
