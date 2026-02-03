@@ -20,6 +20,21 @@
 
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- Dormant 7d+ -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">휴면 7일+</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                       th:text="${#numbers.formatInteger(data.dormantUsers7Days, 0, 'COMMA')}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">7일 이상 미접속</p>
+                </div>
+                <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="user-x" class="w-5 h-5 text-amber-600 dark:text-amber-400"></i>
+                </div>
+            </div>
+        </div>
+
         <!-- Dormant 30d+ -->
         <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
             <div class="flex items-center justify-between">
@@ -28,21 +43,6 @@
                     <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
                        th:text="${#numbers.formatInteger(data.dormantUsers30Days, 0, 'COMMA')}">0</p>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">30일 이상 미접속</p>
-                </div>
-                <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
-                    <i data-lucide="user-x" class="w-5 h-5 text-amber-600 dark:text-amber-400"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Dormant 60d+ -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">휴면 60일+</p>
-                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
-                       th:text="${#numbers.formatInteger(data.dormantUsers60Days, 0, 'COMMA')}">0</p>
-                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">60일 이상 미접속</p>
                 </div>
                 <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
                     <i data-lucide="user-x" class="w-5 h-5 text-amber-600 dark:text-amber-400"></i>
@@ -72,7 +72,7 @@
                     <p class="text-sm text-gray-500 dark:text-gray-400">복귀율</p>
                     <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
                        th:text="${#numbers.formatDecimal(data.returningUserRate, 1, 1) + '%'}">0%</p>
-                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">이벤트 2회+ 생성 유저 비율</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">이벤트 2회+ 참여 유저 (생성/참여 포함)</p>
                 </div>
                 <div class="w-10 h-10 bg-green-50 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
                     <i data-lucide="rotate-ccw" class="w-5 h-5 text-green-600 dark:text-green-400"></i>

@@ -346,6 +346,7 @@ public class StatisticsService {
     /**
      * Get retention statistics
      * refresh_token 기반 MAU 및 휴면 유저 분석 (설계 문서 12.3 쿼리 적용)
+     * 모든 지표가 선택한 기간 내 가입 유저 기준으로 계산됨
      */
     @Transactional(readOnly = true)
     public RetentionStatisticsResponse getRetentionStatistics(LocalDate startDate, LocalDate endDate) {
@@ -361,34 +362,41 @@ public class StatisticsService {
                 .toList();
 
         // Dormant users by period (refresh_token.last_used_at 기준)
-        List<Object[]> dormantDistribution = statisticsRepository.findDormantUserDistribution();
+        // 7일+, 30일+, 90일+ 각각 해당 기간 이상 미접속 유저 전체
+        // 기간 내 가입 유저 기준
+        List<Object[]> dormantDistribution = statisticsRepository.findDormantUserDistribution(range.start(), range.end());
         Map<String, Long> dormantMap = dormantDistribution.stream()
                 .collect(Collectors.toMap(
                         row -> (String) row[0],
                         row -> ((Number) row[1]).longValue()
                 ));
 
-        long dormant30 = dormantMap.getOrDefault("30-59", 0L);
-        long dormant60 = dormantMap.getOrDefault("60-89", 0L);
-        long dormant90 = dormantMap.getOrDefault("90+", 0L);
+        long dormant7Only = dormantMap.getOrDefault("7+", 0L);   // 7-29일
+        long dormant30Only = dormantMap.getOrDefault("30+", 0L); // 30-89일
+        long dormant90Only = dormantMap.getOrDefault("90+", 0L); // 90일+
 
-        // Returning user rate (이벤트 2개+ 참여 유저)
-        Long returningUsers = statisticsRepository.countReturningUsers();
-        Long usersWithEvents = statisticsRepository.countUsersWithEvents();
+        // 누적 계산: N일+ = N일 이상 미접속 전체
+        long dormant7 = dormant7Only + dormant30Only + dormant90Only;  // 7일 이상 전체
+        long dormant30 = dormant30Only + dormant90Only;                 // 30일 이상 전체
+        long dormant90 = dormant90Only;                                 // 90일 이상만
+
+        // Returning user rate (이벤트 2개+ 참여 유저) - 기간 내 가입 유저 기준
+        Long returningUsers = statisticsRepository.countReturningUsers(range.start(), range.end());
+        Long usersWithEvents = statisticsRepository.countUsersWithEvents(range.start(), range.end());
         double returningUserRate = usersWithEvents != null && usersWithEvents > 0 ?
                 (double) returningUsers / usersWithEvents * 100 : 0;
 
-        // Average days to first event
-        Double avgDaysToFirstEvent = statisticsRepository.findAverageDaysToFirstEvent();
+        // Average days to first event - 기간 내 가입 유저 기준
+        Double avgDaysToFirstEvent = statisticsRepository.findAverageDaysToFirstEvent(range.start(), range.end());
         if (avgDaysToFirstEvent == null) {
             avgDaysToFirstEvent = 0.0;
         }
 
         return RetentionStatisticsResponse.of(
                 monthlyMau,
-                dormant30,
-                dormant60 + dormant30, // 60일+ = 60-89 + 30-59
-                dormant90 + dormant60 + dormant30, // 90일+ = 모든 휴면
+                dormant7,   // 7일+ 미접속 전체
+                dormant30,  // 30일+ 미접속 전체
+                dormant90,  // 90일+ 미접속만
                 Math.round(returningUserRate * 100.0) / 100.0,
                 Math.round(avgDaysToFirstEvent * 100.0) / 100.0
         );

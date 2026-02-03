@@ -8,8 +8,8 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record RetentionStatisticsResponse(
         List<MonthlyMau> monthlyMau,
+        long dormantUsers7Days,
         long dormantUsers30Days,
-        long dormantUsers60Days,
         long dormantUsers90Days,
         double returningUserRate,
         double avgDaysToFirstEvent
@@ -22,14 +22,14 @@ public record RetentionStatisticsResponse(
 
     public static RetentionStatisticsResponse of(
             List<MonthlyMau> monthlyMau,
+            long dormantUsers7Days,
             long dormantUsers30Days,
-            long dormantUsers60Days,
             long dormantUsers90Days,
             double returningUserRate,
             double avgDaysToFirstEvent
     ) {
         return new RetentionStatisticsResponse(
-                monthlyMau, dormantUsers30Days, dormantUsers60Days,
+                monthlyMau, dormantUsers7Days, dormantUsers30Days,
                 dormantUsers90Days, returningUserRate, avgDaysToFirstEvent
         );
     }

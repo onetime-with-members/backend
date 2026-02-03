@@ -11,7 +11,6 @@ import side.onetime.domain.User;
 
 /**
  * 통계 전용 Repository
- * 설계 문서 섹션 12.3의 네이티브 쿼리들을 구현
  */
 public interface StatisticsRepository extends JpaRepository<User, Long> {
 
@@ -104,13 +103,15 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
 
     /**
      * 휴면 기간별 분포 (대시보드용)
+     * 7일+, 30일+, 90일+ 기준
+     * 기간 내 가입한 유저 기준
      */
     @Query(value = """
         SELECT
             CASE
-                WHEN days_inactive BETWEEN 30 AND 59 THEN '30-59'
-                WHEN days_inactive BETWEEN 60 AND 89 THEN '60-89'
                 WHEN days_inactive >= 90 THEN '90+'
+                WHEN days_inactive >= 30 THEN '30+'
+                WHEN days_inactive >= 7 THEN '7+'
                 ELSE 'active'
             END AS dormant_group,
             COUNT(*) AS user_count
@@ -119,18 +120,22 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             FROM users u
             LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
             WHERE u.status = 'ACTIVE'
+              AND u.created_date >= :startDate AND u.created_date < :endDate
             GROUP BY u.users_id
         ) sub
         GROUP BY dormant_group
         ORDER BY
             CASE dormant_group
                 WHEN 'active' THEN 1
-                WHEN '30-59' THEN 2
-                WHEN '60-89' THEN 3
+                WHEN '7+' THEN 2
+                WHEN '30+' THEN 3
                 WHEN '90+' THEN 4
             END
         """, nativeQuery = true)
-    List<Object[]> findDormantUserDistribution();
+    List<Object[]> findDormantUserDistribution(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
 
     /**
      * 기간 내 가입 유저의 휴면율 (60일+ 미접속)
@@ -497,6 +502,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
 
     /**
      * 재방문 유저 수 (이벤트 2개+ 참여)
+     * 기간 내 가입한 유저 기준
      */
     @Query(value = """
         SELECT COUNT(*) FROM (
@@ -504,27 +510,37 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             FROM users u
             JOIN event_participations ep ON u.users_id = ep.users_id
             WHERE u.status = 'ACTIVE'
+              AND u.created_date >= :startDate AND u.created_date < :endDate
             GROUP BY u.users_id
             HAVING COUNT(DISTINCT ep.events_id) >= 2
         ) AS returning_users
         """, nativeQuery = true)
-    Long countReturningUsers();
+    Long countReturningUsers(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
 
     /**
      * 이벤트 참여 경험이 있는 총 유저 수
+     * 기간 내 가입한 유저 기준
      */
     @Query(value = """
         SELECT COUNT(DISTINCT u.users_id)
         FROM users u
         JOIN event_participations ep ON u.users_id = ep.users_id
         WHERE u.status = 'ACTIVE'
+          AND u.created_date >= :startDate AND u.created_date < :endDate
         """, nativeQuery = true)
-    Long countUsersWithEvents();
+    Long countUsersWithEvents(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
 
     // ==================== 가입 후 첫 이벤트 생성까지 소요 일수 ====================
 
     /**
      * 평균 가입 후 첫 이벤트 생성까지 소요 일수
+     * 기간 내 가입한 유저 기준
      */
     @Query(value = """
         SELECT AVG(days_to_first_event) FROM (
@@ -534,11 +550,15 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
                 AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
             JOIN events e ON ep.events_id = e.events_id
             WHERE u.status = 'ACTIVE'
+              AND u.created_date >= :startDate AND u.created_date < :endDate
             GROUP BY u.users_id, u.created_date
             HAVING MIN(e.created_date) IS NOT NULL
         ) AS first_event_days
         """, nativeQuery = true)
-    Double findAverageDaysToFirstEvent();
+    Double findAverageDaysToFirstEvent(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
 
     // ==================== 대시보드 성능 개선용 쿼리 ====================
 
