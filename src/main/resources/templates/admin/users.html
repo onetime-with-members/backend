@@ -311,12 +311,12 @@
             tbody = '<tr><td colspan="6" class="py-8 text-center text-gray-400 dark:text-gray-500">유저가 없습니다</td></tr>';
         } else {
             users.forEach(user => {
-                const bgClass = isDark ? 'bg-gray-800' : 'bg-gray-100';
+                const badgeClass = isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700';
                 tbody += `
                     <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" onclick="showUserDetail(${user.id})">
                         <td class="py-2 px-3 text-gray-900 dark:text-white">${user.name || '-'}</td>
                         <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.email || '-'}</td>
-                        <td class="py-2 px-3 text-center"><span class="text-xs px-2 py-0.5 ${bgClass} rounded">${user.provider || '-'}</span></td>
+                        <td class="py-2 px-3 text-center"><span class="text-xs px-2 py-0.5 ${badgeClass} rounded">${user.provider || '-'}</span></td>
                         <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${user.language || '-'}</td>
                         <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${user.participant_count || 0}개</td>
                         <td class="py-2 px-3 text-center text-gray-400 dark:text-gray-500">${user.created_date || '-'}</td>
@@ -388,12 +388,12 @@
 
     function renderUserDetail(user) {
         const isDark = document.documentElement.classList.contains('dark');
-        const bgClass = isDark ? 'bg-gray-800' : 'bg-gray-100';
+        const badgeClass = isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700';
 
         document.getElementById('detail-name').textContent = user.name || '-';
         document.getElementById('detail-nickname').textContent = user.nickname || '-';
         document.getElementById('detail-email').textContent = user.email || '-';
-        document.getElementById('detail-provider').innerHTML = `<span class="text-xs px-2 py-0.5 ${bgClass} rounded">${user.provider || '-'}</span>`;
+        document.getElementById('detail-provider').innerHTML = `<span class="text-xs px-2 py-0.5 ${badgeClass} rounded">${user.provider || '-'}</span>`;
         document.getElementById('detail-language').textContent = user.language || '-';
         document.getElementById('detail-created-date').textContent = user.created_date || '-';
         document.getElementById('detail-marketing').innerHTML = user.marketing_agreement

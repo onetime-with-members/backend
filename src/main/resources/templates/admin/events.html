@@ -256,10 +256,10 @@
                 const category = event.category || '-';
                 const categoryLabel = category === 'DATE' ? '날짜' : '요일';
                 const eventUrl = `https://www.onetime-with-members.com/ko/events/view/${event.event_id}`;
-                const bgClass = isDark ? 'bg-gray-800' : 'bg-gray-100';
+                const badgeClass = isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700';
                 tbody += `
                     <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" onclick="window.open('${eventUrl}', '_blank')">
-                        <td class="py-2 px-3"><span class="text-xs px-2 py-0.5 ${bgClass} rounded">${categoryLabel}</span></td>
+                        <td class="py-2 px-3"><span class="text-xs px-2 py-0.5 ${badgeClass} rounded">${categoryLabel}</span></td>
                         <td class="py-2 px-3 text-gray-900 dark:text-white">${event.title || '-'}</td>
                         <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${event.date_range || '-'}</td>
                         <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${event.time_range || '-'}</td>

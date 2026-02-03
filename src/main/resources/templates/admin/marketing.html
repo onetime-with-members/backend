@@ -267,7 +267,7 @@
 
     function renderUserTable(users) {
         const isDark = document.documentElement.classList.contains('dark');
-        const bgClass = isDark ? 'bg-gray-800' : 'bg-gray-100';
+        const badgeClass = isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700';
 
         const thead = `
             <tr class="border-b border-gray-200 dark:border-gray-700">
@@ -292,7 +292,7 @@
                 if (user.daysInactive !== null && user.daysInactive !== undefined) {
                     extra = `<span class="px-2 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded">${user.daysInactive}d 미접속</span>`;
                 } else if (user.daysSinceSignup !== null && user.daysSinceSignup !== undefined) {
-                    extra = `<span class="px-2 py-0.5 text-xs ${bgClass} text-gray-700 dark:text-gray-300 rounded">${user.daysSinceSignup}d 경과</span>`;
+                    extra = `<span class="px-2 py-0.5 text-xs ${badgeClass} rounded">${user.daysSinceSignup}d 경과</span>`;
                 } else if (user.eventCount !== null && user.eventCount !== undefined) {
                     extra = `<span class="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">${user.eventCount} events</span>`;
                 }
@@ -303,7 +303,7 @@
                         <td class="py-2 px-3 text-gray-900 dark:text-white" title="${user.email || ''}">${user.email || '-'}</td>
                         <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.name || '-'}</td>
                         <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.nickname || '-'}</td>
-                        <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs ${bgClass} text-gray-700 dark:text-gray-300 rounded">${user.provider || '-'}</span></td>
+                        <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs ${badgeClass} rounded">${user.provider || '-'}</span></td>
                         <td class="py-2 px-3">${user.marketingPolicyAgreement ? '<i data-lucide="check" class="w-4 h-4 text-green-600 dark:text-green-400"></i>' : '<i data-lucide="x" class="w-4 h-4 text-red-500 dark:text-red-400"></i>'}</td>
                         <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.createdDate ? new Date(user.createdDate).toLocaleDateString() : '-'}</td>
                         <td class="py-2 px-3">${extra}</td>
@@ -316,7 +316,7 @@
 
     function renderEventTable(events) {
         const isDark = document.documentElement.classList.contains('dark');
-        const bgClass = isDark ? 'bg-gray-800' : 'bg-gray-100';
+        const badgeClass = isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700';
 
         const thead = `
             <tr class="border-b border-gray-200 dark:border-gray-700">
@@ -340,7 +340,7 @@
                     <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
                         <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${event.eventId || '-'}</td>
                         <td class="py-2 px-3 text-gray-900 dark:text-white" title="${event.title || ''}">${event.title || '-'}</td>
-                        <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs ${bgClass} text-gray-700 dark:text-gray-300 rounded">${event.category || '-'}</span></td>
+                        <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs ${badgeClass} rounded">${event.category || '-'}</span></td>
                         <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${event.creatorNickname || event.creatorName || '-'}</td>
                         <td class="py-2 px-3 text-gray-600 dark:text-gray-400" title="${event.creatorEmail || ''}">${event.creatorEmail || '-'}</td>
                         <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${event.createdDate ? new Date(event.createdDate).toLocaleDateString() : '-'}</td>
