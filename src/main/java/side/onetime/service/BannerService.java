@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
@@ -42,6 +41,7 @@ public class BannerService {
     private final BannerRepository bannerRepository;
     private final AdminRepository adminRepository;
     private final BannerStagingRepository bannerStagingRepository;
+    private final RestClient bannerClient;
     private final S3Util s3Util;
 
     /**
@@ -210,16 +210,14 @@ public class BannerService {
 
         validateSyncEnabled();
         try {
-            RestClient.create()
-                    .post()
-                    .uri(targetUrl + "/api/v1/banners/staging")
+            bannerClient.post()
+                    .uri( "/api/v1/banners/staging")
                     .header("X-API-KEY", apiKey)
-                    .contentType(MediaType.APPLICATION_JSON)
                     .body(exportBannerRequests)
                     .retrieve()
                     .toBodilessEntity();
         } catch (Exception e) {
-            log.error("❌ 배너 내보내기 중 서버 통신 오류 발생: {}", e.getMessage());
+            log.error("❌ 배너 내보내기 중 서버 통신 오류 발생: {}", e.getMessage(), e);
             throw new CustomException(AdminErrorStatus._FAILED_EXPORT_TRANSMISSION);
         }
     }
