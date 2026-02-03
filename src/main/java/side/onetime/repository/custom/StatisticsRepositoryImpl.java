@@ -1,5 +1,6 @@
 package side.onetime.repository.custom;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Repository;
@@ -50,14 +51,16 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<Object[]> findDormantUserDetailsWithSortAndSearch(int days, int limit, String sort, String search) {
+    public List<Object[]> findDormantUserDetailsWithSortAndSearch(int days, int limit, String sort, String search,
+                                                                   LocalDateTime startDate, LocalDateTime endDate) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT ").append(USER_SELECT_COLUMNS);
-        sql.append(", MAX(rt.last_used_at) AS last_login");
-        sql.append(", COALESCE(DATEDIFF(NOW(), MAX(rt.last_used_at)), 999) AS days_inactive");
+        sql.append(", COALESCE(MAX(COALESCE(rt.last_used_at, rt.issued_at)), u.created_date) AS last_login");
+        sql.append(", DATEDIFF(NOW(), COALESCE(MAX(COALESCE(rt.last_used_at, rt.issued_at)), u.created_date)) AS days_inactive");
         sql.append(" FROM users u");
-        sql.append(" LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.status = 'ACTIVE'");
+        sql.append(" LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'");
         sql.append(" WHERE u.status = 'ACTIVE' AND u.marketing_policy_agreement = 1");
+        sql.append(" AND u.created_date >= :startDate AND u.created_date < :endDate");
 
         if (search != null && !search.isBlank()) {
             sql.append(" AND (u.name LIKE :search OR u.email LIKE :search OR u.nickname LIKE :search)");
@@ -66,7 +69,7 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
         sql.append(" GROUP BY u.users_id, u.email, u.name, u.nickname, u.provider, u.provider_id,");
         sql.append(" u.service_policy_agreement, u.privacy_policy_agreement, u.marketing_policy_agreement,");
         sql.append(" u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date");
-        sql.append(" HAVING days_inactive > :days OR MAX(rt.last_used_at) IS NULL");
+        sql.append(" HAVING days_inactive >= :days");
         sql.append(" ORDER BY ").append(getSortClause(sort, "u", SortContext.USER));
         sql.append(" LIMIT :limit");
 
@@ -76,6 +79,8 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
         }
         query.setParameter("days", days);
         query.setParameter("limit", limit);
+        query.setParameter("startDate", startDate);
+        query.setParameter("endDate", endDate);
 
         return query.getResultList();
     }

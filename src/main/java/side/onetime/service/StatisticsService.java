@@ -582,14 +582,18 @@ public class StatisticsService {
 
     /**
      * 휴면 유저 상세 목록 (마케팅 동의자만)
-     * 정렬, 검색 지원
+     * 정렬, 검색, 기간 필터 지원
      */
     @Transactional(readOnly = true)
-    public MarketingTargetDetailResponse getDormantUsers(int days, int limit, String sort, String search) {
-        List<Object[]> countRows = statisticsRepository.countDormantUsersWithMarketing(days);
+    public MarketingTargetDetailResponse getDormantUsers(int days, int limit, String sort, String search,
+                                                          LocalDate startDate, LocalDate endDate) {
+        DateTimeRange range = DateTimeRange.of(startDate, endDate);
+
+        List<Object[]> countRows = statisticsRepository.countDormantUsersWithMarketing(days, range.start(), range.end());
         long totalCount = countRows.size();
 
-        List<Object[]> rows = statisticsRepositoryCustom.findDormantUserDetailsWithSortAndSearch(days, limit, sort, search);
+        List<Object[]> rows = statisticsRepositoryCustom.findDormantUserDetailsWithSortAndSearch(
+                days, limit, sort, search, range.start(), range.end());
         List<MarketingTargetDetailResponse.UserDetail> users = rows.stream()
                 .map(row -> MarketingTargetDetailResponse.UserDetail.fromRow(row, "dormant"))
                 .toList();

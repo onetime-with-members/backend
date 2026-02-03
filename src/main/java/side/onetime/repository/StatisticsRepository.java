@@ -87,7 +87,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
 
     /**
      * 휴면 유저 수 (마케팅 동의자만, 기간별 필터)
-     * refresh_token 기준: last_used_at이 NULL이면 issued_at 사용
+     * refresh_token 기준: last_used_at이 NULL이면 issued_at 사용, 둘 다 NULL이면 created_date 사용
      */
     @Query(value = """
         SELECT COUNT(DISTINCT u.users_id) AS dormant_count
@@ -95,16 +95,21 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
         WHERE u.status = 'ACTIVE'
           AND u.marketing_policy_agreement = 1
+          AND u.created_date >= :startDate AND u.created_date < :endDate
         GROUP BY u.users_id
-        HAVING DATEDIFF(NOW(), MAX(COALESCE(rt.last_used_at, rt.issued_at))) >= :days
+        HAVING DATEDIFF(NOW(), COALESCE(MAX(COALESCE(rt.last_used_at, rt.issued_at)), u.created_date)) >= :days
         """, nativeQuery = true)
-    List<Object[]> countDormantUsersWithMarketing(@Param("days") int days);
+    List<Object[]> countDormantUsersWithMarketing(
+            @Param("days") int days,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
 
     /**
      * 휴면 기간별 분포 (대시보드용)
      * 7일+, 30일+, 90일+ 기준
      * 기간 내 가입한 유저 기준
-     * last_used_at이 NULL이면 issued_at 사용
+     * last_used_at이 NULL이면 issued_at 사용, 둘 다 NULL이면 created_date 사용
      */
     @Query(value = """
         SELECT
@@ -117,12 +122,12 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             COUNT(*) AS user_count
         FROM (
             SELECT u.users_id,
-                   COALESCE(DATEDIFF(NOW(), MAX(COALESCE(rt.last_used_at, rt.issued_at))), 999) AS days_inactive
+                   DATEDIFF(NOW(), COALESCE(MAX(COALESCE(rt.last_used_at, rt.issued_at)), u.created_date)) AS days_inactive
             FROM users u
             LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
             WHERE u.status = 'ACTIVE'
               AND u.created_date >= :startDate AND u.created_date < :endDate
-            GROUP BY u.users_id
+            GROUP BY u.users_id, u.created_date
         ) sub
         GROUP BY dormant_group
         ORDER BY
@@ -141,7 +146,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     /**
      * 기간 내 가입 유저의 휴면율 (60일+ 미접속)
      * 반환: [dormant_count, total_count]
-     * last_used_at이 NULL이면 issued_at 사용
+     * last_used_at이 NULL이면 issued_at 사용, 둘 다 NULL이면 created_date 사용
      */
     @Query(value = """
         SELECT
@@ -149,12 +154,12 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             COUNT(*) AS total_count
         FROM (
             SELECT u.users_id,
-                   COALESCE(DATEDIFF(NOW(), MAX(COALESCE(rt.last_used_at, rt.issued_at))), 999) AS days_inactive
+                   DATEDIFF(NOW(), COALESCE(MAX(COALESCE(rt.last_used_at, rt.issued_at)), u.created_date)) AS days_inactive
             FROM users u
             LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
             WHERE u.status = 'ACTIVE'
               AND u.created_date >= :startDate AND u.created_date < :endDate
-            GROUP BY u.users_id
+            GROUP BY u.users_id, u.created_date
         ) sub
         """, nativeQuery = true)
     List<Object[]> countDormantRateByDateRange(
@@ -163,19 +168,20 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     );
 
     /**
-     * 휴면 유저 상세 리스트 (마케팅 동의자만)
-     * last_used_at이 NULL이면 issued_at 사용
+     * 휴면 유저 상세 리스트 (마케팅 동의자만, 기간 필터)
+     * last_used_at이 NULL이면 issued_at 사용, 둘 다 NULL이면 created_date 사용
      */
     @Query(value = """
         SELECT u.users_id, u.email, u.name, u.nickname, u.provider, u.provider_id,
                u.service_policy_agreement, u.privacy_policy_agreement, u.marketing_policy_agreement,
                u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date,
-               MAX(COALESCE(rt.last_used_at, rt.issued_at)) AS last_login,
-               COALESCE(DATEDIFF(NOW(), MAX(COALESCE(rt.last_used_at, rt.issued_at))), 999) AS days_inactive
+               COALESCE(MAX(COALESCE(rt.last_used_at, rt.issued_at)), u.created_date) AS last_login,
+               DATEDIFF(NOW(), COALESCE(MAX(COALESCE(rt.last_used_at, rt.issued_at)), u.created_date)) AS days_inactive
         FROM users u
         LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
         WHERE u.status = 'ACTIVE'
           AND u.marketing_policy_agreement = 1
+          AND u.created_date >= :startDate AND u.created_date < :endDate
         GROUP BY u.users_id, u.email, u.name, u.nickname, u.provider, u.provider_id,
                  u.service_policy_agreement, u.privacy_policy_agreement, u.marketing_policy_agreement,
                  u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date
@@ -185,7 +191,9 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         """, nativeQuery = true)
     List<Object[]> findDormantUserDetails(
             @Param("days") int days,
-            @Param("limit") int limit
+            @Param("limit") int limit,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
     );
 
     // ==================== 마케팅 타겟 ====================

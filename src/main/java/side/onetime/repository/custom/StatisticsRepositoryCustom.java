@@ -1,5 +1,6 @@
 package side.onetime.repository.custom;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -14,9 +15,10 @@ public interface StatisticsRepositoryCustom {
     List<Object[]> findMarketingAgreedUserDetailsWithSortAndSearch(int limit, String sort, String search);
 
     /**
-     * 휴면 유저 목록 (정렬, 검색 지원)
+     * 휴면 유저 목록 (정렬, 검색, 기간 필터 지원)
      */
-    List<Object[]> findDormantUserDetailsWithSortAndSearch(int days, int limit, String sort, String search);
+    List<Object[]> findDormantUserDetailsWithSortAndSearch(int days, int limit, String sort, String search,
+                                                           LocalDateTime startDate, LocalDateTime endDate);
 
     /**
      * 이벤트 미생성 유저 목록 (정렬, 검색 지원)

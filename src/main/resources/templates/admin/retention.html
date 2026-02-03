@@ -413,12 +413,20 @@
         document.getElementById('retentionContent').classList.add('hidden');
         document.getElementById('retentionModal').classList.remove('hidden');
 
-        let url = config.endpoint + '&limit=100';
-        // For returning endpoint, add date params
-        if (type === 'returning') {
-            const dateParams = getDateParams();
-            url = config.endpoint + (dateParams || '?') + '&limit=100';
+        // Get date params from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const startDate = urlParams.get('startDate') || '';
+        const endDate = urlParams.get('endDate') || '';
+
+        // Build URL with date params for all types
+        let url = config.endpoint;
+        if (url.includes('?')) {
+            url += '&limit=100';
+        } else {
+            url += '?limit=100';
         }
+        if (startDate) url += '&startDate=' + startDate;
+        if (endDate) url += '&endDate=' + endDate;
 
         fetch(url)
             .then(response => response.json())

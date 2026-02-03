@@ -25,9 +25,11 @@ public class ExportService {
      * 마케팅 타겟 데이터 조회
      */
     public MarketingTargetDetailResponse getMarketingData(String type, int limit) {
+        LocalDate defaultStart = LocalDate.of(2020, 1, 1);
+        LocalDate defaultEnd = LocalDate.now();
         return switch (type) {
             case "agreed" -> statisticsService.getMarketingAgreedUsers(limit, "created_date_desc", null);
-            case "dormant" -> statisticsService.getDormantUsers(30, limit, "created_date_desc", null);
+            case "dormant" -> statisticsService.getDormantUsers(30, limit, "created_date_desc", null, defaultStart, defaultEnd);
             case "noEvent" -> statisticsService.getNoEventUsers(7, limit, "created_date_desc", null);
             case "oneTime" -> statisticsService.getOneTimeUsers(limit, "created_date_desc", null);
             case "vip" -> statisticsService.getVipUsers(limit, "created_date_desc", null);

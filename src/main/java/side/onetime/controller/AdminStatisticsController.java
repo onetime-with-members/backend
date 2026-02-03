@@ -227,14 +227,19 @@ public class AdminStatisticsController {
 
     /**
      * 휴면 유저 목록 (마케팅 동의자만)
+     * 기간 필터 지원: startDate, endDate (가입일 기준)
      */
     @GetMapping("/marketing/dormant")
     public ResponseEntity<ApiResponse<MarketingTargetDetailResponse>> getDormantUsers(
             @RequestParam(defaultValue = "30") int days,
             @RequestParam(defaultValue = "100") int limit,
             @RequestParam(defaultValue = "created_date_desc") String sort,
-            @RequestParam(required = false) String search) {
-        MarketingTargetDetailResponse response = statisticsService.getDormantUsers(days, limit, sort, search);
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        LocalDate start = startDate != null ? startDate : LocalDate.of(2020, 1, 1);
+        LocalDate end = endDate != null ? endDate : LocalDate.now();
+        MarketingTargetDetailResponse response = statisticsService.getDormantUsers(days, limit, sort, search, start, end);
         return ApiResponse.onSuccess(SuccessStatus._GET_MARKETING_TARGET_DETAIL, response);
     }
 
