@@ -36,6 +36,7 @@
                     <p class="text-sm text-gray-500 dark:text-gray-400">총 가입 유저</p>
                     <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
                        th:text="${#numbers.formatInteger(summary.totalUsers, 0, 'COMMA')}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">선택 기간 내 가입자 수</p>
                 </div>
                 <div class="w-10 h-10 bg-accent-50 dark:bg-accent-900/30 rounded-lg flex items-center justify-center">
                     <i data-lucide="users" class="w-5 h-5 text-accent-600 dark:text-accent-400"></i>
@@ -50,6 +51,7 @@
                     <p class="text-sm text-gray-500 dark:text-gray-400">총 생성 이벤트</p>
                     <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
                        th:text="${#numbers.formatInteger(summary.totalEvents, 0, 'COMMA')}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">선택 기간 내 생성된 이벤트</p>
                 </div>
                 <div class="w-10 h-10 bg-accent-50 dark:bg-accent-900/30 rounded-lg flex items-center justify-center">
                     <i data-lucide="calendar" class="w-5 h-5 text-accent-600 dark:text-accent-400"></i>
@@ -64,6 +66,7 @@
                     <p class="text-sm text-gray-500 dark:text-gray-400">MAU (최근 30일)</p>
                     <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
                        th:text="${#numbers.formatInteger(summary.mau, 0, 'COMMA')}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">월간 로그인한 고유 사용자</p>
                 </div>
                 <div class="w-10 h-10 bg-accent-50 dark:bg-accent-900/30 rounded-lg flex items-center justify-center">
                     <i data-lucide="trending-up" class="w-5 h-5 text-accent-600 dark:text-accent-400"></i>
@@ -78,6 +81,7 @@
                     <p class="text-sm text-gray-500 dark:text-gray-400">휴면율 (60일+)</p>
                     <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
                        th:text="${#numbers.formatDecimal(summary.dormantRate, 1, 1) + '%'}">0%</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">60일+ 미접속 유저 비율</p>
                 </div>
                 <div class="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
                     <i data-lucide="moon" class="w-5 h-5 text-gray-600 dark:text-gray-400"></i>
@@ -95,6 +99,7 @@
                     <p class="text-sm text-gray-500 dark:text-gray-400">평균 참여자/이벤트</p>
                     <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
                        th:text="${#numbers.formatDecimal(summary.avgParticipantsPerEvent, 1, 2)}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">이벤트당 평균 참여 인원</p>
                 </div>
                 <div class="w-10 h-10 bg-accent-50 dark:bg-accent-900/30 rounded-lg flex items-center justify-center">
                     <i data-lucide="user-plus" class="w-5 h-5 text-accent-600 dark:text-accent-400"></i>
@@ -109,6 +114,7 @@
                     <p class="text-sm text-gray-500 dark:text-gray-400">마케팅 타겟</p>
                     <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
                        th:text="${#numbers.formatInteger(summary.marketingTargetUsers, 0, 'COMMA')}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">마케팅 수신 동의 유저</p>
                 </div>
                 <div class="w-10 h-10 bg-accent-50 dark:bg-accent-900/30 rounded-lg flex items-center justify-center">
                     <i data-lucide="target" class="w-5 h-5 text-accent-600 dark:text-accent-400"></i>
@@ -121,7 +127,8 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <!-- Monthly Signups Chart -->
         <div class="lg:col-span-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
-            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">월별 신규 가입</h3>
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">월별 신규 가입</h3>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">매월 새로 가입한 사용자 수 추이</p>
             <div class="h-64">
                 <canvas id="signupsChart"></canvas>
             </div>
@@ -129,7 +136,8 @@
 
         <!-- OAuth Provider Chart -->
         <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
-            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">OAuth 제공자 비율</h3>
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">OAuth 제공자 비율</h3>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">소셜 로그인 제공자 분포</p>
             <div class="h-48">
                 <canvas id="providersChart"></canvas>
             </div>
@@ -141,7 +149,8 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Weekday Chart -->
         <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
-            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">요일별 이벤트</h3>
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">요일별 이벤트</h3>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">이벤트 생성이 많은 요일 분석</p>
             <div class="h-64">
                 <canvas id="weekdayChart"></canvas>
             </div>
@@ -149,7 +158,8 @@
 
         <!-- Top Keywords Table -->
         <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
-            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">이벤트 제목 키워드 TOP 10</h3>
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">이벤트 제목 키워드 TOP 10</h3>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">이벤트 제목에 자주 등장하는 키워드</p>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>

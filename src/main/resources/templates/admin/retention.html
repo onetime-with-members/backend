@@ -24,14 +24,10 @@
         <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                        휴면 30일+
-                        <span class="cursor-help" title="30일 이상 미접속 사용자">
-                            <i data-lucide="info" class="w-3 h-3 text-gray-400"></i>
-                        </span>
-                    </p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">휴면 30일+</p>
                     <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
                        th:text="${#numbers.formatInteger(data.dormantUsers30Days, 0, 'COMMA')}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">30일 이상 미접속</p>
                 </div>
                 <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
                     <i data-lucide="user-x" class="w-5 h-5 text-amber-600 dark:text-amber-400"></i>
@@ -43,14 +39,10 @@
         <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                        휴면 60일+
-                        <span class="cursor-help" title="60일 이상 미접속 사용자">
-                            <i data-lucide="info" class="w-3 h-3 text-gray-400"></i>
-                        </span>
-                    </p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">휴면 60일+</p>
                     <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
                        th:text="${#numbers.formatInteger(data.dormantUsers60Days, 0, 'COMMA')}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">60일 이상 미접속</p>
                 </div>
                 <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
                     <i data-lucide="user-x" class="w-5 h-5 text-amber-600 dark:text-amber-400"></i>
@@ -62,14 +54,10 @@
         <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                        휴면 90일+
-                        <span class="cursor-help" title="90일 이상 미접속 사용자">
-                            <i data-lucide="info" class="w-3 h-3 text-gray-400"></i>
-                        </span>
-                    </p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">휴면 90일+</p>
                     <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
                        th:text="${#numbers.formatInteger(data.dormantUsers90Days, 0, 'COMMA')}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">90일 이상 미접속 (이탈 위험)</p>
                 </div>
                 <div class="w-10 h-10 bg-red-50 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
                     <i data-lucide="user-minus" class="w-5 h-5 text-red-600 dark:text-red-400"></i>
@@ -81,14 +69,10 @@
         <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                        복귀율
-                        <span class="cursor-help" title="재접속한 사용자 비율">
-                            <i data-lucide="info" class="w-3 h-3 text-gray-400"></i>
-                        </span>
-                    </p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">복귀율</p>
                     <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
                        th:text="${#numbers.formatDecimal(data.returningUserRate, 1, 1) + '%'}">0%</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">이벤트 2회+ 생성 유저 비율</p>
                 </div>
                 <div class="w-10 h-10 bg-green-50 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
                     <i data-lucide="rotate-ccw" class="w-5 h-5 text-green-600 dark:text-green-400"></i>
@@ -99,12 +83,8 @@
 
     <!-- Monthly MAU Chart -->
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
-        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            월간 활성 사용자 (MAU)
-            <span class="cursor-help" title="월별 로그인한 고유 사용자 수">
-                <i data-lucide="info" class="w-3 h-3 text-gray-400"></i>
-            </span>
-        </h3>
+        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">월간 활성 사용자 (MAU)</h3>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">매월 로그인한 고유 사용자 수 추이</p>
         <div class="h-64">
             <canvas id="mauChart"></canvas>
         </div>
@@ -112,12 +92,8 @@
 
     <!-- Conversion Funnel -->
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
-        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            전환 퍼널
-            <span class="cursor-help" title="가입 → 이벤트 생성 → 참여자 확보 전환율">
-                <i data-lucide="info" class="w-3 h-3 text-gray-400"></i>
-            </span>
-        </h3>
+        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">전환 퍼널</h3>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">가입 → 첫 이벤트 → 참여자 확보 → 재생성 단계별 전환율</p>
         <div id="funnelLoading" class="flex justify-center py-8">
             <div class="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 dark:border-gray-600 border-t-accent-500"></div>
         </div>
@@ -128,12 +104,8 @@
 
     <!-- TTV Distribution -->
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
-        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            Time to Value (TTV)
-            <span class="cursor-help" title="가입 후 첫 이벤트 생성까지 걸린 시간">
-                <i data-lucide="info" class="w-3 h-3 text-gray-400"></i>
-            </span>
-        </h3>
+        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">Time to Value (TTV)</h3>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">가입 후 첫 이벤트 생성까지 걸린 시간 분포</p>
         <div id="ttvLoading" class="flex justify-center py-8">
             <div class="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 dark:border-gray-600 border-t-accent-500"></div>
         </div>
@@ -166,12 +138,8 @@
 
     <!-- WAU/MAU Stickiness -->
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
-        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            Stickiness (WAU/MAU)
-            <span class="cursor-help" title="주간 활성 사용자 / 월간 활성 사용자 비율">
-                <i data-lucide="info" class="w-3 h-3 text-gray-400"></i>
-            </span>
-        </h3>
+        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">Stickiness (WAU/MAU)</h3>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">서비스 중독성 지표 - 높을수록 유저가 자주 방문</p>
         <div id="stickinessLoading" class="flex justify-center py-8">
             <div class="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 dark:border-gray-600 border-t-accent-500"></div>
         </div>
@@ -201,12 +169,10 @@
     <!-- Cohort Retention Table -->
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                코호트 리텐션 분석
-                <span class="cursor-help" title="가입 월별 사용자 유지율">
-                    <i data-lucide="info" class="w-3 h-3 text-gray-400"></i>
-                </span>
-            </h3>
+            <div>
+                <h3 class="text-sm font-medium text-gray-900 dark:text-white">코호트 리텐션 분석</h3>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">가입월 기준 코호트별 월간 잔존율 - 시간에 따른 유저 유지 추적</p>
+            </div>
             <select id="cohortMonths"
                     class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
                 <option value="6">6개월</option>

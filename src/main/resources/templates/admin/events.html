@@ -22,23 +22,27 @@
             <p class="text-sm text-gray-500 dark:text-gray-400">총 생성 이벤트</p>
             <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
                th:text="${#numbers.formatInteger(data.totalEvents, 0, 'COMMA')}">0</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">선택 기간 내 생성된 이벤트</p>
         </div>
         <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
             <p class="text-sm text-gray-500 dark:text-gray-400">활성 이벤트</p>
             <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
                th:text="${#numbers.formatInteger(data.activeEvents, 0, 'COMMA')}">0</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">삭제되지 않은 활성 상태 이벤트</p>
         </div>
         <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
             <p class="text-sm text-gray-500 dark:text-gray-400">평균 참여자</p>
             <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
                th:text="${#numbers.formatDecimal(data.avgParticipants, 1, 2)}">0</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">이벤트당 평균 참여 인원</p>
         </div>
     </div>
 
     <!-- Distribution Tables -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
-            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">카테고리 분포</h3>
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">카테고리 분포</h3>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">날짜 기반 vs 요일 기반 이벤트</p>
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-gray-700">
@@ -56,7 +60,8 @@
         </div>
 
         <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
-            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">요일별 분포</h3>
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">요일별 분포</h3>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">이벤트 생성이 많은 요일 분석</p>
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-gray-700">
@@ -76,7 +81,8 @@
 
     <!-- Heatmap -->
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
-        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">시간대 x 요일 히트맵</h3>
+        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">시간대 x 요일 히트맵</h3>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">이벤트 생성이 활발한 시간대와 요일 조합</p>
         <div id="heatmapLoading" class="text-center py-8">
             <div class="inline-block w-6 h-6 border-2 border-gray-200 dark:border-gray-600 border-t-accent-500 rounded-full animate-spin"></div>
         </div>
@@ -99,7 +105,8 @@
 
     <!-- Top Keywords -->
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
-        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">제목 키워드 TOP</h3>
+        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">제목 키워드 TOP</h3>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">이벤트 제목에 자주 등장하는 키워드 (회의, 스터디, 밥 등)</p>
         <table class="w-full text-sm">
             <thead>
                 <tr class="border-b border-gray-200 dark:border-gray-700">
