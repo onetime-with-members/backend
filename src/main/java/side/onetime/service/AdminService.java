@@ -85,7 +85,7 @@ public class AdminService {
         Long adminId = adminUser.getId();
 
         // 기존 브라우저의 ACTIVE 토큰 revoke
-        refreshTokenRepository.revokeByUserIdAndBrowserId(adminId, browserId);
+        refreshTokenRepository.revokeByUserIdAndBrowserId(adminId, "ADMIN", browserId);
 
         // 새 토큰 생성
         String jti = UUID.randomUUID().toString();

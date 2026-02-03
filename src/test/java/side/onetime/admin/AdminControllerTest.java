@@ -95,10 +95,11 @@ public class AdminControllerTest extends AdminControllerTestConfig {
         );
         String requestContent = objectMapper.writeValueAsString(request);
         String tempAccessToken = "temp.jwt.access.token";
+        String tempRefreshToken = "temp.jwt.refresh.token";
 
         // when
-        Mockito.when(adminService.loginAdminUser(any(LoginAdminUserRequest.class)))
-                .thenReturn(LoginAdminUserResponse.of(tempAccessToken));
+        Mockito.when(adminService.loginAdminUser(Mockito.any(LoginAdminUserRequest.class), Mockito.any(), Mockito.any(), Mockito.any()))
+                .thenReturn(LoginAdminUserResponse.of(tempAccessToken, tempRefreshToken));
 
         // then
         mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/admin/login")
@@ -109,6 +110,7 @@ public class AdminControllerTest extends AdminControllerTestConfig {
                 .andExpect(jsonPath("$.code").value("200"))
                 .andExpect(jsonPath("$.message").value("관리자 계정 로그인에 성공했습니다."))
                 .andExpect(jsonPath("$.payload.access_token").value(tempAccessToken))
+                .andExpect(jsonPath("$.payload.refresh_token").value(tempRefreshToken))
                 .andDo(MockMvcRestDocumentationWrapper.document("admin/login",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
@@ -125,7 +127,8 @@ public class AdminControllerTest extends AdminControllerTestConfig {
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
                                                 fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
                                                 fieldWithPath("payload").type(JsonFieldType.OBJECT).description("응답 데이터"),
-                                                fieldWithPath("payload.access_token").type(JsonFieldType.STRING).description("액세스 토큰")
+                                                fieldWithPath("payload.access_token").type(JsonFieldType.STRING).description("액세스 토큰"),
+                                                fieldWithPath("payload.refresh_token").type(JsonFieldType.STRING).description("리프레시 토큰")
                                         )
                                         .requestSchema(Schema.schema("LoginAdminUserRequest"))
                                         .responseSchema(Schema.schema("LoginAdminUserResponse"))

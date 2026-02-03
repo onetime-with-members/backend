@@ -150,7 +150,7 @@ public class OAuthLoginSuccessHandler extends SimpleUrlAuthenticationSuccessHand
         String userAgent = clientInfoExtractor.extractUserAgent(request);
 
         // 기존 브라우저의 ACTIVE 토큰 revoke
-        refreshTokenRepository.revokeByUserIdAndBrowserId(userId, browserId);
+        refreshTokenRepository.revokeByUserIdAndBrowserId(userId, "USER", browserId);
 
         // 새 토큰 생성
         String jti = UUID.randomUUID().toString();

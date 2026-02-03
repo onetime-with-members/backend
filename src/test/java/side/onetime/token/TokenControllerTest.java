@@ -29,9 +29,6 @@ import side.onetime.service.TokenService;
 @WebMvcTest(TokenController.class)
 public class TokenControllerTest extends ControllerTestConfig {
 
-    @MockBean
-    private TokenService tokenService;
-
     @Test
     @DisplayName("액세스 토큰을 재발행한다.")
     public void reissueTokenSuccess() throws Exception {

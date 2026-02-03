@@ -230,7 +230,7 @@ public class UserService {
         jwtUtil.validateToken(refreshToken);
         Long userId = jwtUtil.getClaimFromToken(refreshToken, "userId", Long.class);
         String browserId = jwtUtil.getClaimFromToken(refreshToken, "browserId", String.class);
-        refreshTokenRepository.revokeByUserIdAndBrowserId(userId, browserId);
+        refreshTokenRepository.revokeByUserIdAndBrowserId(userId, "USER", browserId);
     }
 
     /**

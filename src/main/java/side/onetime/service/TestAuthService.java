@@ -48,7 +48,7 @@ public class TestAuthService {
         String browserId = jwtUtil.hashUserAgent("E2E-Test-Agent");
 
         // 기존 브라우저의 ACTIVE 토큰 revoke
-        refreshTokenRepository.revokeByUserIdAndBrowserId(testUserId, browserId);
+        refreshTokenRepository.revokeByUserIdAndBrowserId(testUserId, "USER", browserId);
 
         // 새 토큰 생성
         String jti = UUID.randomUUID().toString();
