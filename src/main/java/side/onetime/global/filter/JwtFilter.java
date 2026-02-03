@@ -1,7 +1,6 @@
 package side.onetime.global.filter;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -12,7 +11,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -36,11 +34,6 @@ public class JwtFilter extends OncePerRequestFilter {
     private final CustomAdminDetailsService customAdminDetailsService;
     private final TokenService tokenService;
     private final ClientInfoExtractor clientInfoExtractor;
-
-    private static final String ADMIN_ACCESS_TOKEN_COOKIE = "admin_token";
-    private static final String ADMIN_REFRESH_TOKEN_COOKIE = "admin_refresh_token";
-    private static final int ACCESS_COOKIE_MAX_AGE = 60 * 60; // 1 hour
-    private static final int REFRESH_COOKIE_MAX_AGE = 60 * 60 * 24 * 14; // 14 days
 
     /**
      * 요청을 처리하며 JWT 검증 및 인증 설정을 수행합니다.
@@ -71,14 +64,12 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         // 2. Check cookie for admin pages
-        if (token == null && request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if (ADMIN_ACCESS_TOKEN_COOKIE.equals(cookie.getName())) {
-                    token = cookie.getValue();
-                    isAdminRequest = true;
-                } else if (ADMIN_REFRESH_TOKEN_COOKIE.equals(cookie.getName())) {
-                    refreshToken = cookie.getValue();
-                }
+        if (token == null) {
+            var adminAccessToken = jwtUtil.getAdminAccessToken(request);
+            if (adminAccessToken.isPresent()) {
+                token = adminAccessToken.get();
+                isAdminRequest = true;
+                refreshToken = jwtUtil.getAdminRefreshToken(request).orElse(null);
             }
         }
 
@@ -103,7 +94,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     );
 
                     // 새 토큰으로 쿠키 갱신
-                    setAdminTokenCookies(response, reissued.accessToken(), reissued.refreshToken());
+                    jwtUtil.setAdminTokenCookies(response, reissued.accessToken(), reissued.refreshToken());
 
                     // 새 액세스 토큰으로 인증
                     authenticateUser(reissued.accessToken());
@@ -137,23 +128,6 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 어드민 토큰 쿠키 설정
-     */
-    private void setAdminTokenCookies(HttpServletResponse response, String accessToken, String newRefreshToken) {
-        Cookie accessCookie = new Cookie(ADMIN_ACCESS_TOKEN_COOKIE, accessToken);
-        accessCookie.setHttpOnly(true);
-        accessCookie.setPath("/");
-        accessCookie.setMaxAge(ACCESS_COOKIE_MAX_AGE);
-        response.addCookie(accessCookie);
-
-        Cookie refreshCookie = new Cookie(ADMIN_REFRESH_TOKEN_COOKIE, newRefreshToken);
-        refreshCookie.setHttpOnly(true);
-        refreshCookie.setPath("/");
-        refreshCookie.setMaxAge(REFRESH_COOKIE_MAX_AGE);
-        response.addCookie(refreshCookie);
-    }
-
-    /**
      * 인증 정보를 SecurityContext에 설정합니다.
      *
      * @param userDetails 인증된 사용자
@@ -184,7 +158,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 path.startsWith("/favicon.ico") ||
                 path.equals("/api/v1/tokens/action-reissue") ||
                 path.equals("/api/v1/users/logout") ||
-                path.equals("/api/v1/admin/reissue") ||
+                path.equals("/api/v1/admin/action-reissue") ||
                 path.equals("/admin/login") ||
                 path.startsWith("/admin/css") ||
                 path.startsWith("/admin/js") ||

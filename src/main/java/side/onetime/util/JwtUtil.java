@@ -4,11 +4,16 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Optional;
 
 import javax.crypto.SecretKey;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -260,5 +265,70 @@ public class JwtUtil {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 해싱 실패", e);
         }
+    }
+
+    // ==================== Admin Cookie Handling ====================
+
+    public static final String ADMIN_ACCESS_TOKEN_COOKIE = "admin_token";
+    public static final String ADMIN_REFRESH_TOKEN_COOKIE = "admin_refresh_token";
+    public static final int ADMIN_ACCESS_COOKIE_MAX_AGE = 60 * 60; // 1 hour
+    public static final int ADMIN_REFRESH_COOKIE_MAX_AGE = 60 * 60 * 24 * 14; // 14 days
+
+    /**
+     * 어드민 액세스 토큰 쿠키 조회
+     */
+    public Optional<String> getAdminAccessToken(HttpServletRequest request) {
+        return getCookieValue(request, ADMIN_ACCESS_TOKEN_COOKIE);
+    }
+
+    /**
+     * 어드민 리프레시 토큰 쿠키 조회
+     */
+    public Optional<String> getAdminRefreshToken(HttpServletRequest request) {
+        return getCookieValue(request, ADMIN_REFRESH_TOKEN_COOKIE);
+    }
+
+    /**
+     * 어드민 토큰 쿠키 설정
+     */
+    public void setAdminTokenCookies(HttpServletResponse response, String accessToken, String refreshToken) {
+        Cookie accessCookie = new Cookie(ADMIN_ACCESS_TOKEN_COOKIE, accessToken);
+        accessCookie.setHttpOnly(true);
+        accessCookie.setPath("/");
+        accessCookie.setMaxAge(ADMIN_ACCESS_COOKIE_MAX_AGE);
+        response.addCookie(accessCookie);
+
+        Cookie refreshCookie = new Cookie(ADMIN_REFRESH_TOKEN_COOKIE, refreshToken);
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge(ADMIN_REFRESH_COOKIE_MAX_AGE);
+        response.addCookie(refreshCookie);
+    }
+
+    /**
+     * 어드민 토큰 쿠키 삭제
+     */
+    public void clearAdminTokenCookies(HttpServletResponse response) {
+        Cookie accessCookie = new Cookie(ADMIN_ACCESS_TOKEN_COOKIE, null);
+        accessCookie.setHttpOnly(true);
+        accessCookie.setPath("/");
+        accessCookie.setMaxAge(0);
+        response.addCookie(accessCookie);
+
+        Cookie refreshCookie = new Cookie(ADMIN_REFRESH_TOKEN_COOKIE, null);
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge(0);
+        response.addCookie(refreshCookie);
+    }
+
+    private Optional<String> getCookieValue(HttpServletRequest request, String name) {
+        if (request.getCookies() == null) {
+            return Optional.empty();
+        }
+        return Arrays.stream(request.getCookies())
+                .filter(c -> name.equals(c.getName()))
+                .findFirst()
+                .map(Cookie::getValue);
     }
 }

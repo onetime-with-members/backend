@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -39,11 +38,6 @@ public class AdminPageController {
     private final StatisticsService statisticsService;
     private final JwtUtil jwtUtil;
     private final ClientInfoExtractor clientInfoExtractor;
-
-    private static final String ADMIN_ACCESS_TOKEN_COOKIE = "admin_token";
-    private static final String ADMIN_REFRESH_TOKEN_COOKIE = "admin_refresh_token";
-    private static final int ACCESS_COOKIE_MAX_AGE = 60 * 60; // 1 hour
-    private static final int REFRESH_COOKIE_MAX_AGE = 60 * 60 * 24 * 14; // 14 days
 
     // ==================== Model Attributes ====================
 
@@ -85,19 +79,7 @@ public class AdminPageController {
                     new LoginAdminUserRequest(email, password), browserId, userIp, userAgent
             );
 
-            // Access Token 쿠키
-            Cookie accessCookie = new Cookie(ADMIN_ACCESS_TOKEN_COOKIE, result.accessToken());
-            accessCookie.setHttpOnly(true);
-            accessCookie.setPath("/");
-            accessCookie.setMaxAge(ACCESS_COOKIE_MAX_AGE);
-            response.addCookie(accessCookie);
-
-            // Refresh Token 쿠키
-            Cookie refreshCookie = new Cookie(ADMIN_REFRESH_TOKEN_COOKIE, result.refreshToken());
-            refreshCookie.setHttpOnly(true);
-            refreshCookie.setPath("/");
-            refreshCookie.setMaxAge(REFRESH_COOKIE_MAX_AGE);
-            response.addCookie(refreshCookie);
+            jwtUtil.setAdminTokenCookies(response, result.accessToken(), result.refreshToken());
 
             return "redirect:/admin/dashboard";
         } catch (CustomException e) {
@@ -109,20 +91,7 @@ public class AdminPageController {
 
     @GetMapping("/logout")
     public String logout(HttpServletResponse response) {
-        // Access Token 쿠키 삭제
-        Cookie accessCookie = new Cookie(ADMIN_ACCESS_TOKEN_COOKIE, null);
-        accessCookie.setHttpOnly(true);
-        accessCookie.setPath("/");
-        accessCookie.setMaxAge(0);
-        response.addCookie(accessCookie);
-
-        // Refresh Token 쿠키 삭제
-        Cookie refreshCookie = new Cookie(ADMIN_REFRESH_TOKEN_COOKIE, null);
-        refreshCookie.setHttpOnly(true);
-        refreshCookie.setPath("/");
-        refreshCookie.setMaxAge(0);
-        response.addCookie(refreshCookie);
-
+        jwtUtil.clearAdminTokenCookies(response);
         return "redirect:/admin/login";
     }
 

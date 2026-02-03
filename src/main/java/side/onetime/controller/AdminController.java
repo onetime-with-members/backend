@@ -83,7 +83,7 @@ public class AdminController {
      * @param httpRequest HTTP 요청 객체
      * @return 새 액세스 토큰, 리프레시 토큰 응답
      */
-    @PostMapping("/reissue")
+    @PostMapping("/action-reissue")
     public ResponseEntity<ApiResponse<ReissueTokenResponse>> reissueAdminToken(
             @Valid @RequestBody ReissueTokenRequest request,
             HttpServletRequest httpRequest) {
