@@ -841,6 +841,42 @@
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
         loadTemplates();
+
+        // Check for preselected users from localStorage (from retention page)
+        const preselectedData = localStorage.getItem('preselectedEmailUsers');
+        if (preselectedData) {
+            try {
+                const users = JSON.parse(preselectedData);
+                if (Array.isArray(users) && users.length > 0) {
+                    // Add users to selectedUsers
+                    users.forEach(user => {
+                        if (user.email) {
+                            selectedUsers.set(user.email, {
+                                name: user.name || user.nickname || '',
+                                email: user.email
+                            });
+                        }
+                    });
+
+                    // Update UI
+                    updateSelectedUI();
+
+                    // Switch to individual send tab
+                    const individualTabBtn = document.querySelector('[data-tab="individualSend"]');
+                    if (individualTabBtn) {
+                        individualTabBtn.click();
+                    }
+
+                    // Show notification
+                    showAlert(`${users.length}명의 사용자가 선택되었습니다`, 'info');
+                }
+            } catch (e) {
+                console.error('Error parsing preselected users:', e);
+            }
+
+            // Clear localStorage
+            localStorage.removeItem('preselectedEmailUsers');
+        }
     });
 
     // Close modals on Escape key

@@ -348,9 +348,12 @@
                     <div class="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 dark:border-gray-600 border-t-accent-500"></div>
                 </div>
                 <div id="retentionContent" class="hidden">
-                    <div class="flex gap-2 mb-4">
-                        <span class="px-3 py-1 text-xs bg-accent-500 text-white rounded-full" id="retentionTotalBadge">Total: 0</span>
-                        <span class="px-3 py-1 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full" id="retentionShowingBadge">Showing: 0</span>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex gap-2">
+                            <span class="px-3 py-1 text-xs bg-accent-500 text-white rounded-full" id="retentionTotalBadge">Total: 0</span>
+                            <span class="px-3 py-1 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full" id="retentionShowingBadge">Showing: 0</span>
+                            <span class="px-3 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full hidden" id="retentionSelectedBadge">Selected: 0</span>
+                        </div>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm" id="retentionTable">
@@ -360,7 +363,13 @@
                     </div>
                 </div>
             </div>
-            <div class="flex items-center justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" onclick="sendEmailToSelected()" id="btnSendEmailToSelected"
+                        class="px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled>
+                    <i data-lucide="mail" class="w-4 h-4"></i>
+                    이메일 전송
+                </button>
                 <button type="button" onclick="closeRetentionModal()"
                         class="px-4 py-2 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                     닫기
@@ -448,8 +457,84 @@
             });
     }
 
+    // Selected users state for retention modal
+    const selectedRetentionUsers = new Map();
+
     function closeRetentionModal() {
         document.getElementById('retentionModal').classList.add('hidden');
+        // Clear selection when closing modal
+        selectedRetentionUsers.clear();
+        updateRetentionSelectionUI();
+    }
+
+    function toggleRetentionUser(userId, email, name, nickname) {
+        const key = `${userId}`;
+        if (selectedRetentionUsers.has(key)) {
+            selectedRetentionUsers.delete(key);
+        } else {
+            selectedRetentionUsers.set(key, { userId, email, name, nickname });
+        }
+        updateRetentionSelectionUI();
+    }
+
+    function toggleAllRetentionUsers(checked, users) {
+        if (checked) {
+            users.forEach(user => {
+                if (user.email) {
+                    selectedRetentionUsers.set(`${user.userId}`, {
+                        userId: user.userId,
+                        email: user.email,
+                        name: user.name,
+                        nickname: user.nickname
+                    });
+                }
+            });
+        } else {
+            selectedRetentionUsers.clear();
+        }
+        updateRetentionSelectionUI();
+    }
+
+    function updateRetentionSelectionUI() {
+        const count = selectedRetentionUsers.size;
+        const badge = document.getElementById('retentionSelectedBadge');
+        const btn = document.getElementById('btnSendEmailToSelected');
+
+        if (count > 0) {
+            badge.textContent = 'Selected: ' + count;
+            badge.classList.remove('hidden');
+            btn.disabled = false;
+        } else {
+            badge.classList.add('hidden');
+            btn.disabled = true;
+        }
+
+        // Update checkboxes
+        document.querySelectorAll('.retention-user-checkbox').forEach(cb => {
+            cb.checked = selectedRetentionUsers.has(cb.dataset.userId);
+        });
+
+        // Update header checkbox
+        const headerCb = document.getElementById('retentionSelectAllCheckbox');
+        if (headerCb) {
+            const allCbs = document.querySelectorAll('.retention-user-checkbox');
+            headerCb.checked = allCbs.length > 0 && count === allCbs.length;
+            headerCb.indeterminate = count > 0 && count < allCbs.length;
+        }
+    }
+
+    function sendEmailToSelected() {
+        if (selectedRetentionUsers.size === 0) {
+            showAlert('사용자를 선택해주세요', 'warning');
+            return;
+        }
+
+        // Store selected users in localStorage
+        const usersArray = Array.from(selectedRetentionUsers.values());
+        localStorage.setItem('preselectedEmailUsers', JSON.stringify(usersArray));
+
+        // Navigate to email page
+        window.location.href = '/admin/email';
     }
 
     // Close modal on backdrop click
@@ -464,9 +549,17 @@
         }
     });
 
+    // Store users for select all functionality
+    let currentRetentionUsers = [];
+
     function renderRetentionUsers(data, type) {
         const users = data.users || [];
         const count = users.length;
+        currentRetentionUsers = users;
+
+        // Clear selection when rendering new data
+        selectedRetentionUsers.clear();
+        updateRetentionSelectionUI();
 
         document.getElementById('retentionTotalBadge').textContent = 'Total: ' + data.totalCount.toLocaleString();
         document.getElementById('retentionShowingBadge').textContent = 'Showing: ' + count;
@@ -479,6 +572,11 @@
         if (type === 'returning') {
             thead = `
                 <tr class="border-b border-gray-200 dark:border-gray-700">
+                    <th class="w-10 py-2 px-3">
+                        <input type="checkbox" id="retentionSelectAllCheckbox"
+                               class="rounded border-gray-300 dark:border-gray-600 text-accent-500 focus:ring-accent-500"
+                               onchange="toggleAllRetentionUsers(this.checked, currentRetentionUsers)">
+                    </th>
                     <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">ID</th>
                     <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">Email</th>
                     <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">이름</th>
@@ -491,6 +589,11 @@
         } else {
             thead = `
                 <tr class="border-b border-gray-200 dark:border-gray-700">
+                    <th class="w-10 py-2 px-3">
+                        <input type="checkbox" id="retentionSelectAllCheckbox"
+                               class="rounded border-gray-300 dark:border-gray-600 text-accent-500 focus:ring-accent-500"
+                               onchange="toggleAllRetentionUsers(this.checked, currentRetentionUsers)">
+                    </th>
                     <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">ID</th>
                     <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">Email</th>
                     <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">이름</th>
@@ -506,7 +609,7 @@
 
         let tbody = '';
         if (!users || users.length === 0) {
-            const colspan = type === 'returning' ? 7 : 8;
+            const colspan = type === 'returning' ? 8 : 9;
             tbody = `<tr><td colspan="${colspan}" class="py-12">
                 <div class="flex flex-col items-center justify-center text-center">
                     <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
@@ -517,9 +620,20 @@
             </td></tr>`;
         } else {
             users.forEach(user => {
+                const escapedEmail = (user.email || '').replace(/'/g, "\\'");
+                const escapedName = (user.name || '').replace(/'/g, "\\'");
+                const escapedNickname = (user.nickname || '').replace(/'/g, "\\'");
+                const hasEmail = user.email && user.email.trim() !== '';
+
                 if (type === 'returning') {
                     tbody += `
-                        <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 ${hasEmail ? 'cursor-pointer' : ''}"
+                            ${hasEmail ? `onclick="toggleRetentionUser('${user.userId}', '${escapedEmail}', '${escapedName}', '${escapedNickname}')"` : ''}>
+                            <td class="py-2 px-3" onclick="event.stopPropagation()">
+                                ${hasEmail ? `<input type="checkbox" class="retention-user-checkbox rounded border-gray-300 dark:border-gray-600 text-accent-500 focus:ring-accent-500"
+                                       data-user-id="${user.userId}"
+                                       onchange="toggleRetentionUser('${user.userId}', '${escapedEmail}', '${escapedName}', '${escapedNickname}')">` : '-'}
+                            </td>
                             <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.userId || '-'}</td>
                             <td class="py-2 px-3 text-gray-900 dark:text-white">${user.email || '-'}</td>
                             <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.name || '-'}</td>
@@ -531,7 +645,13 @@
                     `;
                 } else {
                     tbody += `
-                        <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 ${hasEmail ? 'cursor-pointer' : ''}"
+                            ${hasEmail ? `onclick="toggleRetentionUser('${user.userId}', '${escapedEmail}', '${escapedName}', '${escapedNickname}')"` : ''}>
+                            <td class="py-2 px-3" onclick="event.stopPropagation()">
+                                ${hasEmail ? `<input type="checkbox" class="retention-user-checkbox rounded border-gray-300 dark:border-gray-600 text-accent-500 focus:ring-accent-500"
+                                       data-user-id="${user.userId}"
+                                       onchange="toggleRetentionUser('${user.userId}', '${escapedEmail}', '${escapedName}', '${escapedNickname}')">` : '-'}
+                            </td>
                             <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.userId || '-'}</td>
                             <td class="py-2 px-3 text-gray-900 dark:text-white">${user.email || '-'}</td>
                             <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.name || '-'}</td>
