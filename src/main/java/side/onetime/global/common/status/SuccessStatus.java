@@ -1,10 +1,8 @@
 package side.onetime.global.common.status;
 
-import org.json.HTTP;
-import org.springframework.http.HttpStatus;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 import side.onetime.global.common.code.BaseCode;
 import side.onetime.global.common.dto.ReasonDto;
 
