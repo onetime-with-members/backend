@@ -144,6 +144,54 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     );
 
     /**
+     * 휴면 유저 상세 리스트 (리텐션용 - 모든 유저)
+     * last_used_at이 NULL이면 issued_at 사용, 둘 다 NULL이면 created_date 사용
+     */
+    @Query(value = """
+        SELECT u.users_id, u.email, u.name, u.nickname, u.provider, u.provider_id,
+               u.service_policy_agreement, u.privacy_policy_agreement, u.marketing_policy_agreement,
+               u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date,
+               COALESCE(MAX(COALESCE(rt.last_used_at, rt.issued_at)), u.created_date) AS last_login,
+               DATEDIFF(NOW(), COALESCE(MAX(COALESCE(rt.last_used_at, rt.issued_at)), u.created_date)) AS days_inactive
+        FROM users u
+        LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
+        WHERE u.status = 'ACTIVE'
+          AND u.created_date >= :startDate AND u.created_date < :endDate
+        GROUP BY u.users_id, u.email, u.name, u.nickname, u.provider, u.provider_id,
+                 u.service_policy_agreement, u.privacy_policy_agreement, u.marketing_policy_agreement,
+                 u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date
+        HAVING days_inactive >= :days
+        ORDER BY days_inactive DESC
+        LIMIT :limit
+        """, nativeQuery = true)
+    List<Object[]> findDormantUserDetailsForRetention(
+            @Param("days") int days,
+            @Param("limit") int limit,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * 휴면 유저 수 (리텐션용 - 모든 유저)
+     */
+    @Query(value = """
+        SELECT COUNT(*) FROM (
+            SELECT u.users_id
+            FROM users u
+            LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
+            WHERE u.status = 'ACTIVE'
+              AND u.created_date >= :startDate AND u.created_date < :endDate
+            GROUP BY u.users_id, u.created_date
+            HAVING DATEDIFF(NOW(), COALESCE(MAX(COALESCE(rt.last_used_at, rt.issued_at)), u.created_date)) >= :days
+        ) sub
+        """, nativeQuery = true)
+    Long countDormantUsersForRetention(
+            @Param("days") int days,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
      * 기간 내 가입 유저의 휴면율 (60일+ 미접속)
      * 반환: [dormant_count, total_count]
      * last_used_at이 NULL이면 issued_at 사용, 둘 다 NULL이면 created_date 사용

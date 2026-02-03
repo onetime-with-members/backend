@@ -306,4 +306,20 @@ public class AdminStatisticsController {
         MarketingTargetDetailResponse response = statisticsService.getReturningUsers(start, end, limit);
         return ApiResponse.onSuccess(SuccessStatus._GET_MARKETING_TARGET_DETAIL, response);
     }
+
+    /**
+     * 휴면 유저 목록 (리텐션용 - 모든 유저)
+     * 리텐션 분석 페이지에서 사용
+     */
+    @GetMapping("/retention/dormant")
+    public ResponseEntity<ApiResponse<MarketingTargetDetailResponse>> getDormantUsersForRetention(
+            @RequestParam(defaultValue = "7") int days,
+            @RequestParam(defaultValue = "100") int limit,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        LocalDate start = startDate != null ? startDate : LocalDate.of(2020, 1, 1);
+        LocalDate end = endDate != null ? endDate : LocalDate.now();
+        MarketingTargetDetailResponse response = statisticsService.getDormantUsersForRetention(days, limit, start, end);
+        return ApiResponse.onSuccess(SuccessStatus._GET_MARKETING_TARGET_DETAIL, response);
+    }
 }

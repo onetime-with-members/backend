@@ -683,6 +683,25 @@ public class StatisticsService {
         return MarketingTargetDetailResponse.ofUsers("returning", totalCount, users);
     }
 
+    /**
+     * 휴면 유저 상세 목록 (리텐션용 - 모든 유저)
+     * 기간 필터 지원
+     */
+    @Transactional(readOnly = true)
+    public MarketingTargetDetailResponse getDormantUsersForRetention(int days, int limit,
+                                                                      LocalDate startDate, LocalDate endDate) {
+        DateTimeRange range = DateTimeRange.of(startDate, endDate);
+
+        long totalCount = nullToZero(statisticsRepository.countDormantUsersForRetention(days, range.start(), range.end()));
+
+        List<Object[]> rows = statisticsRepository.findDormantUserDetailsForRetention(days, limit, range.start(), range.end());
+        List<MarketingTargetDetailResponse.UserDetail> users = rows.stream()
+                .map(row -> MarketingTargetDetailResponse.UserDetail.fromRow(row, "dormant"))
+                .toList();
+
+        return MarketingTargetDetailResponse.ofUsers("dormant", totalCount, users);
+    }
+
     // ==================== Native Query 기반 헬퍼 메서드 ====================
 
     private DashboardChartsResponse.ChartData getMonthlySignupsFromNativeQuery(
