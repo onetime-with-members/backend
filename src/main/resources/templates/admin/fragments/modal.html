@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- Alert/Confirm 모달 -->
+<div th:fragment="modal">
+    <!-- Alert Modal -->
+    <div id="alertModal" class="fixed inset-0 z-50 hidden items-center justify-center">
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="closeAlert()"></div>
+        <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 transform transition-all">
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div id="alertIcon" class="w-10 h-10 rounded-full flex items-center justify-center">
+                        <!-- Icon will be set dynamically -->
+                    </div>
+                    <h3 id="alertTitle" class="text-lg font-semibold text-gray-900 dark:text-white"></h3>
+                </div>
+                <p id="alertMessage" class="text-gray-600 dark:text-gray-300 mb-6"></p>
+                <div class="flex justify-end">
+                    <button onclick="closeAlert()"
+                            class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-colors">
+                        확인
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirmModal" class="fixed inset-0 z-50 hidden items-center justify-center">
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="closeConfirm(false)"></div>
+        <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 transform transition-all">
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <h3 id="confirmTitle" class="text-lg font-semibold text-gray-900 dark:text-white">확인</h3>
+                </div>
+                <p id="confirmMessage" class="text-gray-600 dark:text-gray-300 mb-6"></p>
+                <div class="flex justify-end gap-3">
+                    <button onclick="closeConfirm(false)"
+                            class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-xl transition-colors">
+                        취소
+                    </button>
+                    <button onclick="closeConfirm(true)"
+                            class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-colors">
+                        확인
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Alert Modal
+        let alertResolve = null;
+
+        function showAlert(message, type = 'info', title = null) {
+            return new Promise((resolve) => {
+                alertResolve = resolve;
+                const modal = document.getElementById('alertModal');
+                const titleEl = document.getElementById('alertTitle');
+                const messageEl = document.getElementById('alertMessage');
+                const iconEl = document.getElementById('alertIcon');
+
+                // Set content
+                messageEl.textContent = message;
+
+                // Set type-specific styles
+                const types = {
+                    success: {
+                        title: title || '완료',
+                        bgColor: 'bg-green-100 dark:bg-green-900/30',
+                        iconColor: 'text-green-600 dark:text-green-400',
+                        icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
+                    },
+                    error: {
+                        title: title || '오류',
+                        bgColor: 'bg-red-100 dark:bg-red-900/30',
+                        iconColor: 'text-red-600 dark:text-red-400',
+                        icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>'
+                    },
+                    warning: {
+                        title: title || '경고',
+                        bgColor: 'bg-amber-100 dark:bg-amber-900/30',
+                        iconColor: 'text-amber-600 dark:text-amber-400',
+                        icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>'
+                    },
+                    info: {
+                        title: title || '알림',
+                        bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+                        iconColor: 'text-blue-600 dark:text-blue-400',
+                        icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+                    }
+                };
+
+                const config = types[type] || types.info;
+                titleEl.textContent = config.title;
+                iconEl.className = `w-10 h-10 rounded-full flex items-center justify-center ${config.bgColor}`;
+                iconEl.innerHTML = `<span class="${config.iconColor}">${config.icon}</span>`;
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            });
+        }
+
+        function closeAlert() {
+            const modal = document.getElementById('alertModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            if (alertResolve) {
+                alertResolve();
+                alertResolve = null;
+            }
+        }
+
+        // Confirm Modal
+        let confirmResolve = null;
+
+        function showConfirm(message, title = '확인') {
+            return new Promise((resolve) => {
+                confirmResolve = resolve;
+                const modal = document.getElementById('confirmModal');
+                document.getElementById('confirmTitle').textContent = title;
+                document.getElementById('confirmMessage').textContent = message;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            });
+        }
+
+        function closeConfirm(result) {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            if (confirmResolve) {
+                confirmResolve(result);
+                confirmResolve = null;
+            }
+        }
+
+        // ESC key to close modals
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeAlert();
+                closeConfirm(false);
+            }
+        });
+    </script>
+</div>
+
+</html>

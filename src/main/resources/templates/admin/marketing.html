@@ -223,12 +223,12 @@
                 if (data.is_success && data.payload) {
                     renderDetail(data.payload, config.isEvent);
                 } else {
-                    alert('Failed to load data');
+                    showAlert('데이터를 불러오는데 실패했습니다', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Failed to load data');
+                showAlert('데이터를 불러오는데 실패했습니다', 'error');
             })
             .finally(() => {
                 document.getElementById('detailLoading').classList.add('hidden');

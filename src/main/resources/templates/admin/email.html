@@ -457,18 +457,19 @@
     });
 
     // ==================== Group Send ====================
-    document.getElementById('btnGroupSend').addEventListener('click', function() {
+    document.getElementById('btnGroupSend').addEventListener('click', async function() {
         const targetGroup = document.getElementById('groupTargetGroup').value;
         const subject = document.getElementById('groupSubject').value.trim();
         const content = document.getElementById('groupContent').value.trim();
         const contentType = document.getElementById('groupContentType').value;
         const limit = parseInt(document.getElementById('groupLimit').value) || 100;
 
-        if (!targetGroup) { alert('대상 그룹을 선택해주세요'); return; }
-        if (!subject) { alert('제목을 입력해주세요'); return; }
-        if (!content) { alert('내용을 입력해주세요'); return; }
+        if (!targetGroup) { showAlert('대상 그룹을 선택해주세요', 'warning'); return; }
+        if (!subject) { showAlert('제목을 입력해주세요', 'warning'); return; }
+        if (!content) { showAlert('내용을 입력해주세요', 'warning'); return; }
 
-        if (!confirm(`"${targetGroup}" 그룹에 이메일을 발송하시겠습니까? (최대 ${limit}명)`)) return;
+        const confirmed = await showConfirm(`"${targetGroup}" 그룹에 이메일을 발송하시겠습니까? (최대 ${limit}명)`, '이메일 발송');
+        if (!confirmed) return;
 
         const btn = this;
         btn.disabled = true;
@@ -483,14 +484,14 @@
         .then(data => {
             if (data.is_success && data.payload) {
                 const r = data.payload;
-                alert(`발송: ${r.sentCount}, 실패: ${r.failedCount}`);
+                showAlert(`발송: ${r.sentCount}명, 실패: ${r.failedCount}명`, 'success', '발송 완료');
                 loadEmailLogs();
                 loadEmailStats();
             } else {
-                alert(data.message || '이메일 발송 실패');
+                showAlert(data.message || '이메일 발송 실패', 'error');
             }
         })
-        .catch(error => { console.error(error); alert('이메일 발송 실패'); })
+        .catch(error => { console.error(error); showAlert('이메일 발송 실패', 'error'); })
         .finally(() => {
             btn.disabled = false;
             btn.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i> 발송';
@@ -499,18 +500,19 @@
     });
 
     // ==================== Individual Send ====================
-    document.getElementById('btnIndividualSend').addEventListener('click', function() {
-        if (selectedUsers.size === 0) { alert('사용자를 선택해주세요'); return; }
+    document.getElementById('btnIndividualSend').addEventListener('click', async function() {
+        if (selectedUsers.size === 0) { showAlert('사용자를 선택해주세요', 'warning'); return; }
 
         const subject = document.getElementById('indSubject').value.trim();
         const content = document.getElementById('indContent').value.trim();
         const contentType = document.getElementById('indContentType').value;
 
-        if (!subject) { alert('제목을 입력해주세요'); return; }
-        if (!content) { alert('내용을 입력해주세요'); return; }
+        if (!subject) { showAlert('제목을 입력해주세요', 'warning'); return; }
+        if (!content) { showAlert('내용을 입력해주세요', 'warning'); return; }
 
         const emails = Array.from(selectedUsers.keys());
-        if (!confirm(`${emails.length}명에게 이메일을 발송하시겠습니까?`)) return;
+        const confirmed = await showConfirm(`${emails.length}명에게 이메일을 발송하시겠습니까?`, '이메일 발송');
+        if (!confirmed) return;
 
         const btn = this;
         btn.disabled = true;
@@ -525,7 +527,7 @@
         .then(data => {
             if (data.is_success && data.payload) {
                 const r = data.payload;
-                alert(`발송: ${r.sentCount}, 실패: ${r.failedCount}`);
+                showAlert(`발송: ${r.sentCount}명, 실패: ${r.failedCount}명`, 'success', '발송 완료');
                 if (r.sentCount > 0) {
                     selectedUsers.clear();
                     updateSelectedUI();
@@ -533,10 +535,10 @@
                     loadEmailStats();
                 }
             } else {
-                alert(data.message || '이메일 발송 실패');
+                showAlert(data.message || '이메일 발송 실패', 'error');
             }
         })
-        .catch(error => { console.error(error); alert('이메일 발송 실패'); })
+        .catch(error => { console.error(error); showAlert('이메일 발송 실패', 'error'); })
         .finally(() => {
             btn.disabled = false;
             btn.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i> 발송';
@@ -656,7 +658,7 @@
         };
 
         if (!data.name || !data.subject || !data.content) {
-            alert('모든 필드를 입력해주세요');
+            showAlert('모든 필드를 입력해주세요', 'warning');
             return;
         }
 
@@ -673,28 +675,29 @@
             if (data.is_success) {
                 closeTemplateModal();
                 loadTemplates();
-                alert(id ? '템플릿이 수정되었습니다' : '템플릿이 생성되었습니다');
+                showAlert(id ? '템플릿이 수정되었습니다' : '템플릿이 생성되었습니다', 'success');
             } else {
-                alert(data.message || '템플릿 저장 실패');
+                showAlert(data.message || '템플릿 저장 실패', 'error');
             }
         })
-        .catch(error => { console.error(error); alert('템플릿 저장 실패'); });
+        .catch(error => { console.error(error); showAlert('템플릿 저장 실패', 'error'); });
     }
 
-    function deleteTemplate(id) {
-        if (!confirm('이 템플릿을 삭제하시겠습니까?')) return;
+    async function deleteTemplate(id) {
+        const confirmed = await showConfirm('이 템플릿을 삭제하시겠습니까?', '템플릿 삭제');
+        if (!confirmed) return;
 
         fetch(`/api/v1/admin/email/templates/${id}`, { method: 'DELETE' })
             .then(response => response.json())
             .then(data => {
                 if (data.is_success) {
                     loadTemplates();
-                    alert('템플릿이 삭제되었습니다');
+                    showAlert('템플릿이 삭제되었습니다', 'success');
                 } else {
-                    alert(data.message || '템플릿 삭제 실패');
+                    showAlert(data.message || '템플릿 삭제 실패', 'error');
                 }
             })
-            .catch(error => { console.error(error); alert('템플릿 삭제 실패'); });
+            .catch(error => { console.error(error); showAlert('템플릿 삭제 실패', 'error'); });
     }
 
     // Modal backdrop click
