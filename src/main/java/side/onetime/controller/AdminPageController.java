@@ -170,11 +170,19 @@ public class AdminPageController {
     }
 
     @GetMapping("/statistics/marketing")
-    public String marketingTargets(HttpServletRequest request, Model model) {
+    public String marketingTargets(
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+            HttpServletRequest request,
+            Model model) {
+        LocalDate[] dates = DateUtil.resolveDateRange(startDate, endDate);
+
+        model.addAttribute("startDate", DateUtil.formatToIsoDate(dates[0]));
+        model.addAttribute("endDate", DateUtil.formatToIsoDate(dates[1]));
         model.addAttribute("currentUri", request.getRequestURI());
         model.addAttribute("currentPage", "marketing");
         model.addAttribute("pageTitle", "Marketing Targets");
-        model.addAttribute("data", statisticsService.getMarketingTargets());
+        model.addAttribute("data", statisticsService.getMarketingTargets(dates[0], dates[1]));
         return "admin/marketing";
     }
 

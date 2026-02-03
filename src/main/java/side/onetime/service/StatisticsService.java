@@ -508,38 +508,39 @@ public class StatisticsService {
     }
 
     /**
-     * Get marketing targets
-     * 네이티브 쿼리 사용 (설계 문서 12.3 쿼리 적용)
-     * 모든 조회를 Native Query로 최적화
+     * Get marketing targets (전체 기간)
      */
     @Transactional(readOnly = true)
     public MarketingTargetsResponse getMarketingTargets() {
-        // Marketing agreed users - Native Query로 카운트만 조회
-        List<Object[]> userStatsList = statisticsRepository.getUserStatsByDateRange(
-                LocalDateTime.of(2000, 1, 1, 0, 0),  // 전체 기간
-                LocalDateTime.now().plusDays(1)
-        );
-        Object[] userStats = userStatsList.isEmpty() ? null : userStatsList.get(0);
-        long marketingAgreed = userStats != null && userStats[1] != null ? ((Number) userStats[1]).longValue() : 0;
+        return getMarketingTargets(LocalDate.of(2000, 1, 1), LocalDate.now().plusDays(1));
+    }
 
-        // Dormant users (30+ days) - refresh_token 기반
-        List<Object[]> dormantDistribution = statisticsRepository.findDormantUserDistribution();
-        long dormantUsers = dormantDistribution.stream()
-                .filter(row -> !"active".equals(row[0]))
-                .mapToLong(row -> ((Number) row[1]).longValue())
-                .sum();
+    /**
+     * Get marketing targets (날짜 범위 필터)
+     * 해당 기간 내 가입한 유저 / 생성된 이벤트 기준
+     */
+    @Transactional(readOnly = true)
+    public MarketingTargetsResponse getMarketingTargets(LocalDate startDate, LocalDate endDate) {
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
 
-        // Users with no events created (가입 7일 경과)
-        long noEventUsers = nullToZero(statisticsRepository.countNoEventUsers(7));
+        // 기간 내 가입한 유저 중 마케팅 동의 유저
+        long marketingAgreed = nullToZero(statisticsRepository.countMarketingAgreedUsersByDateRange(startDateTime, endDateTime));
 
-        // One-time users (created only 1 event)
-        long oneTimeUsers = nullToZero(statisticsRepository.countOneTimeUsers());
+        // 기간 내 가입한 유저 중 휴면 유저 (30일+ 미접속)
+        long dormantUsers = nullToZero(statisticsRepository.countDormantUsersByDateRange(startDateTime, endDateTime));
 
-        // VIP users (5+ events)
-        long vipUsers = nullToZero(statisticsRepository.countVipUsers());
+        // 기간 내 가입한 유저 중 이벤트 미생성 (가입 7일 경과)
+        long noEventUsers = nullToZero(statisticsRepository.countNoEventUsersByDateRange(startDateTime, endDateTime));
 
-        // Events with zero participants
-        long zeroParticipantEvents = nullToZero(statisticsRepository.countZeroParticipantEvents());
+        // 기간 내 가입한 유저 중 일회성 유저
+        long oneTimeUsers = nullToZero(statisticsRepository.countOneTimeUsersByDateRange(startDateTime, endDateTime));
+
+        // 기간 내 가입한 유저 중 VIP 유저
+        long vipUsers = nullToZero(statisticsRepository.countVipUsersByDateRange(startDateTime, endDateTime));
+
+        // 기간 내 생성된 이벤트 중 참여자 0명
+        long zeroParticipantEvents = nullToZero(statisticsRepository.countZeroParticipantEventsByDateRange(startDateTime, endDateTime));
 
         return MarketingTargetsResponse.of(
                 marketingAgreed, dormantUsers, noEventUsers,

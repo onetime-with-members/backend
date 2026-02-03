@@ -329,6 +329,128 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         """, nativeQuery = true)
     Long countZeroParticipantEvents();
 
+    // ==================== 날짜 범위 필터 버전 (마케팅 타겟) ====================
+
+    /**
+     * 기간 내 가입한 유저 중 마케팅 동의 유저 수
+     */
+    @Query(value = """
+        SELECT COUNT(*)
+        FROM users u
+        WHERE u.status = 'ACTIVE'
+          AND u.marketing_policy_agreement = 1
+          AND u.created_date >= :startDate
+          AND u.created_date < :endDate
+        """, nativeQuery = true)
+    Long countMarketingAgreedUsersByDateRange(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * 기간 내 가입한 유저 중 휴면 유저 수 (30일+ 미접속)
+     */
+    @Query(value = """
+        SELECT COUNT(DISTINCT u.users_id)
+        FROM users u
+        LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
+        WHERE u.status = 'ACTIVE'
+          AND u.marketing_policy_agreement = 1
+          AND u.created_date >= :startDate
+          AND u.created_date < :endDate
+          AND (rt.last_used_at IS NULL OR rt.last_used_at < DATE_SUB(NOW(), INTERVAL 30 DAY))
+        """, nativeQuery = true)
+    Long countDormantUsersByDateRange(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * 기간 내 가입한 유저 중 이벤트 미생성 유저 수
+     */
+    @Query(value = """
+        SELECT COUNT(DISTINCT u.users_id)
+        FROM users u
+        LEFT JOIN event_participations ep ON u.users_id = ep.users_id
+            AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+        WHERE u.status = 'ACTIVE'
+          AND u.marketing_policy_agreement = 1
+          AND ep.users_id IS NULL
+          AND u.created_date >= :startDate
+          AND u.created_date < :endDate
+          AND u.created_date < DATE_SUB(NOW(), INTERVAL 7 DAY)
+        """, nativeQuery = true)
+    Long countNoEventUsersByDateRange(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * 기간 내 가입한 유저 중 일회성 유저 수
+     */
+    @Query(value = """
+        SELECT COUNT(*) FROM (
+            SELECT u.users_id
+            FROM users u
+            JOIN event_participations ep ON u.users_id = ep.users_id
+                AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+            WHERE u.status = 'ACTIVE'
+              AND u.marketing_policy_agreement = 1
+              AND u.created_date >= :startDate
+              AND u.created_date < :endDate
+            GROUP BY u.users_id
+            HAVING COUNT(ep.events_id) = 1
+        ) AS one_time_users
+        """, nativeQuery = true)
+    Long countOneTimeUsersByDateRange(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * 기간 내 가입한 유저 중 VIP 유저 수
+     */
+    @Query(value = """
+        SELECT COUNT(*) FROM (
+            SELECT u.users_id
+            FROM users u
+            JOIN event_participations ep ON u.users_id = ep.users_id
+                AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+            WHERE u.status = 'ACTIVE'
+              AND u.created_date >= :startDate
+              AND u.created_date < :endDate
+            GROUP BY u.users_id
+            HAVING COUNT(ep.events_id) >= 5
+        ) AS vip_users
+        """, nativeQuery = true)
+    Long countVipUsersByDateRange(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * 기간 내 생성된 이벤트 중 참여자 0명 이벤트 수
+     */
+    @Query(value = """
+        SELECT COUNT(*) FROM (
+            SELECT e.events_id
+            FROM events e
+            JOIN event_participations ep ON e.events_id = ep.events_id
+            LEFT JOIN members m ON e.events_id = m.events_id
+            WHERE ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+              AND e.status = 'ACTIVE'
+              AND e.created_date >= :startDate
+              AND e.created_date < :endDate
+              AND e.created_date < DATE_SUB(NOW(), INTERVAL 3 DAY)
+            GROUP BY e.events_id
+            HAVING COUNT(m.members_id) = 0
+        ) AS zero_participant_events
+        """, nativeQuery = true)
+    Long countZeroParticipantEventsByDateRange(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
     /**
      * 참여자 0명 이벤트 상세 리스트
      */
