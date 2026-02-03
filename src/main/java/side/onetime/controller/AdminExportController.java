@@ -122,7 +122,7 @@ public class AdminExportController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
-            @RequestParam(defaultValue = "1000") int limit,
+            @RequestParam(defaultValue = "10000") int limit,
             HttpServletResponse response) throws IOException {
 
         List<Object[]> events = exportService.getEventsForCsvExport(keyword, sorting, search, startDate, endDate, limit);
