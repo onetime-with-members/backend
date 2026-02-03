@@ -143,6 +143,7 @@
                     <div class="flex gap-2 mb-4">
                         <span class="px-3 py-1 text-xs bg-accent-500 text-white rounded-full" id="totalCountBadge">Total: 0</span>
                         <span class="px-3 py-1 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full" id="showingCountBadge">Showing: 0</span>
+                        <span class="px-3 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full hidden" id="selectedCountBadge">Selected: 0</span>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm" id="detailTable">
@@ -152,15 +153,13 @@
                     </div>
                 </div>
             </div>
-            <div class="flex items-center justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-700">
-                <button type="button" class="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
-                        id="btnDownloadCsv">
-                    <i data-lucide="download" class="w-4 h-4"></i> CSV
+            <div class="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" onclick="sendEmailToSelected()" id="btnSendEmailToSelected"
+                        class="px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled>
+                    <i data-lucide="mail" class="w-4 h-4"></i>
+                    이메일 전송
                 </button>
-                <a href="/admin/email" class="px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2"
-                   id="btnSendEmail">
-                    <i data-lucide="mail" class="w-4 h-4"></i> 이메일 발송
-                </a>
                 <button type="button" onclick="closeModal()"
                         class="px-4 py-2 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                     닫기
@@ -206,18 +205,34 @@
     };
 
     let currentType = null;
+    let currentUsers = [];
+    const selectedMarketingUsers = new Map();
+
+    function getDateParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const startDate = urlParams.get('startDate') || '';
+        const endDate = urlParams.get('endDate') || '';
+        let params = '';
+        if (startDate) params += '&startDate=' + startDate;
+        if (endDate) params += '&endDate=' + endDate;
+        return params;
+    }
 
     function showDetail(type) {
         const config = typeConfig[type];
         if (!config) return;
 
         currentType = type;
+        selectedMarketingUsers.clear();
+        updateSelectionUI();
+
         document.getElementById('detailModalLabel').textContent = config.title;
         document.getElementById('detailLoading').classList.remove('hidden');
         document.getElementById('detailContent').classList.add('hidden');
         document.getElementById('detailModal').classList.remove('hidden');
 
-        fetch(config.endpoint + '?limit=100')
+        const dateParams = getDateParams();
+        fetch(config.endpoint + '?limit=100' + dateParams)
             .then(response => response.json())
             .then(data => {
                 if (data.is_success && data.payload) {
@@ -239,6 +254,73 @@
 
     function closeModal() {
         document.getElementById('detailModal').classList.add('hidden');
+        selectedMarketingUsers.clear();
+        updateSelectionUI();
+    }
+
+    function toggleUser(userId, email, name, nickname) {
+        const key = `${userId}`;
+        if (selectedMarketingUsers.has(key)) {
+            selectedMarketingUsers.delete(key);
+        } else {
+            selectedMarketingUsers.set(key, { userId, email, name, nickname });
+        }
+        updateSelectionUI();
+    }
+
+    function toggleAllUsers(checked) {
+        if (checked) {
+            currentUsers.forEach(user => {
+                if (user.email) {
+                    selectedMarketingUsers.set(`${user.userId}`, {
+                        userId: user.userId,
+                        email: user.email,
+                        name: user.name,
+                        nickname: user.nickname
+                    });
+                }
+            });
+        } else {
+            selectedMarketingUsers.clear();
+        }
+        updateSelectionUI();
+    }
+
+    function updateSelectionUI() {
+        const count = selectedMarketingUsers.size;
+        const badge = document.getElementById('selectedCountBadge');
+        const btn = document.getElementById('btnSendEmailToSelected');
+
+        if (count > 0) {
+            badge.textContent = 'Selected: ' + count;
+            badge.classList.remove('hidden');
+            btn.disabled = false;
+        } else {
+            badge.classList.add('hidden');
+            btn.disabled = true;
+        }
+
+        document.querySelectorAll('.marketing-user-checkbox').forEach(cb => {
+            cb.checked = selectedMarketingUsers.has(cb.dataset.userId);
+        });
+
+        const headerCb = document.getElementById('selectAllCheckbox');
+        if (headerCb) {
+            const allCbs = document.querySelectorAll('.marketing-user-checkbox');
+            headerCb.checked = allCbs.length > 0 && count === allCbs.length;
+            headerCb.indeterminate = count > 0 && count < allCbs.length;
+        }
+    }
+
+    function sendEmailToSelected() {
+        if (selectedMarketingUsers.size === 0) {
+            showAlert('사용자를 선택해주세요', 'warning');
+            return;
+        }
+
+        const usersArray = Array.from(selectedMarketingUsers.values());
+        localStorage.setItem('preselectedEmailUsers', JSON.stringify(usersArray));
+        window.location.href = '/admin/email';
     }
 
     // Close modal on backdrop click
@@ -259,8 +341,16 @@
         document.getElementById('showingCountBadge').textContent = 'Showing: ' + count;
 
         if (isEvent) {
+            currentUsers = (items || []).map(e => ({
+                eventId: e.eventId,
+                userId: e.creatorUserId || e.eventId,
+                email: e.creatorEmail,
+                name: e.creatorName,
+                nickname: e.creatorNickname
+            }));
             renderEventTable(items);
         } else {
+            currentUsers = items || [];
             renderUserTable(items);
         }
     }
@@ -271,6 +361,10 @@
 
         const thead = `
             <tr class="border-b border-gray-200 dark:border-gray-700">
+                <th class="py-2 px-3 w-10">
+                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleAllUsers(this.checked)"
+                           class="w-4 h-4 text-accent-500 border-gray-300 dark:border-gray-600 rounded focus:ring-accent-500">
+                </th>
                 <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">ID</th>
                 <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">Email</th>
                 <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">이름</th>
@@ -285,7 +379,7 @@
 
         let tbody = '';
         if (!users || users.length === 0) {
-            tbody = `<tr><td colspan="8" class="py-12">
+            tbody = `<tr><td colspan="9" class="py-12">
                 <div class="flex flex-col items-center justify-center text-center">
                     <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
                         <i data-lucide="users" class="w-6 h-6 text-gray-400 dark:text-gray-500"></i>
@@ -305,8 +399,17 @@
                     extra = `<span class="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">${user.eventCount} events</span>`;
                 }
 
+                const hasEmail = !!user.email;
+                const checkboxDisabled = hasEmail ? '' : 'disabled';
+                const rowOpacity = hasEmail ? '' : 'opacity-50';
+
                 tbody += `
-                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 ${rowOpacity}">
+                        <td class="py-2 px-3">
+                            <input type="checkbox" class="marketing-user-checkbox w-4 h-4 text-accent-500 border-gray-300 dark:border-gray-600 rounded focus:ring-accent-500"
+                                   data-user-id="${user.userId}" ${checkboxDisabled}
+                                   onchange="toggleUser('${user.userId}', '${(user.email || '').replace(/'/g, "\\'")}', '${(user.name || '').replace(/'/g, "\\'")}', '${(user.nickname || '').replace(/'/g, "\\'")}')">
+                        </td>
                         <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.userId || '-'}</td>
                         <td class="py-2 px-3 text-gray-900 dark:text-white" title="${user.email || ''}">${user.email || '-'}</td>
                         <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.name || '-'}</td>
@@ -328,6 +431,10 @@
 
         const thead = `
             <tr class="border-b border-gray-200 dark:border-gray-700">
+                <th class="py-2 px-3 w-10">
+                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleAllUsers(this.checked)"
+                           class="w-4 h-4 text-accent-500 border-gray-300 dark:border-gray-600 rounded focus:ring-accent-500">
+                </th>
                 <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">Event ID</th>
                 <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">제목</th>
                 <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">카테고리</th>
@@ -341,7 +448,7 @@
 
         let tbody = '';
         if (!events || events.length === 0) {
-            tbody = `<tr><td colspan="7" class="py-12">
+            tbody = `<tr><td colspan="8" class="py-12">
                 <div class="flex flex-col items-center justify-center text-center">
                     <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
                         <i data-lucide="calendar-check" class="w-6 h-6 text-gray-400 dark:text-gray-500"></i>
@@ -352,8 +459,18 @@
             </td></tr>`;
         } else {
             events.forEach(event => {
+                const hasEmail = !!event.creatorEmail;
+                const checkboxDisabled = hasEmail ? '' : 'disabled';
+                const rowOpacity = hasEmail ? '' : 'opacity-50';
+                const uniqueId = event.creatorUserId || event.eventId;
+
                 tbody += `
-                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 ${rowOpacity}">
+                        <td class="py-2 px-3">
+                            <input type="checkbox" class="marketing-user-checkbox w-4 h-4 text-accent-500 border-gray-300 dark:border-gray-600 rounded focus:ring-accent-500"
+                                   data-user-id="${uniqueId}" ${checkboxDisabled}
+                                   onchange="toggleUser('${uniqueId}', '${(event.creatorEmail || '').replace(/'/g, "\\'")}', '${(event.creatorName || '').replace(/'/g, "\\'")}', '${(event.creatorNickname || '').replace(/'/g, "\\'")}')">
+                        </td>
                         <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${event.eventId || '-'}</td>
                         <td class="py-2 px-3 text-gray-900 dark:text-white" title="${event.title || ''}">${event.title || '-'}</td>
                         <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs ${badgeClass} rounded">${event.category || '-'}</span></td>
@@ -367,12 +484,6 @@
         }
         document.getElementById('detailTableBody').innerHTML = tbody;
     }
-
-    // CSV Download
-    document.getElementById('btnDownloadCsv').addEventListener('click', function() {
-        if (!currentType) return;
-        window.location.href = `/api/v1/admin/export/marketing/csv?type=${currentType}&limit=1000`;
-    });
 </script>
 </th:block>
 </body>
