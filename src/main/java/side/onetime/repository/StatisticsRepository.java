@@ -1093,8 +1093,41 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     // ==================== CSV 내보내기용 경량 쿼리 ====================
 
     /**
+     * CSV 내보내기용 유저 목록 (경량)
+     * 반환: [users_id, name, email, nickname, provider, language, marketing_policy_agreement, created_date, participation_count]
+     */
+    @Query(value = """
+        SELECT
+            u.users_id,
+            u.name,
+            u.email,
+            u.nickname,
+            u.provider,
+            u.language,
+            u.marketing_policy_agreement,
+            u.created_date,
+            COALESCE(p.participation_count, 0) AS participation_count
+        FROM users u
+        LEFT JOIN (
+            SELECT ep.users_id, COUNT(*) AS participation_count
+            FROM event_participations ep
+            WHERE ep.event_status NOT IN ('CREATOR')
+            GROUP BY ep.users_id
+        ) p ON u.users_id = p.users_id
+        WHERE u.status = 'ACTIVE'
+          AND (:search IS NULL OR u.name LIKE CONCAT('%', :search, '%') OR u.email LIKE CONCAT('%', :search, '%'))
+          AND (:startDate IS NULL OR u.created_date >= :startDate)
+          AND (:endDate IS NULL OR u.created_date < :endDate)
+        ORDER BY u.created_date DESC
+        """, nativeQuery = true)
+    List<Object[]> findUsersForCsvExport(
+            @Param("search") String search,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
      * CSV 내보내기용 이벤트 목록 (경량)
-     * 스케줄 조회 없이 기본 정보 + 참여자 수만 한 번에 조회
      * 반환: [events_id, events_uuid, title, category, start_time, end_time, created_date, participant_count]
      */
     @Query(value = """
@@ -1124,12 +1157,10 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
           AND (:startDate IS NULL OR e.created_date >= :startDate)
           AND (:endDate IS NULL OR e.created_date < :endDate)
         ORDER BY e.created_date DESC
-        LIMIT :limit
         """, nativeQuery = true)
     List<Object[]> findEventsForCsvExport(
             @Param("search") String search,
             @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate,
-            @Param("limit") int limit
+            @Param("endDate") LocalDateTime endDate
     );
 }

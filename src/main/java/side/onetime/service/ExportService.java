@@ -3,19 +3,12 @@ package side.onetime.service;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-
 import lombok.RequiredArgsConstructor;
-import side.onetime.dto.admin.response.DashboardEvent;
-import side.onetime.dto.admin.response.DashboardUser;
-import side.onetime.dto.admin.response.GetAllDashboardEventsResponse;
-import side.onetime.dto.admin.response.GetAllDashboardUsersResponse;
 import side.onetime.dto.admin.statistics.response.MarketingTargetDetailResponse;
 import side.onetime.repository.StatisticsRepository;
 
@@ -24,8 +17,9 @@ import side.onetime.repository.StatisticsRepository;
 public class ExportService {
 
     private final StatisticsService statisticsService;
-    private final AdminService adminService;
     private final StatisticsRepository statisticsRepository;
+
+    // ==================== 마케팅 CSV ====================
 
     /**
      * 마케팅 타겟 데이터 조회
@@ -43,9 +37,9 @@ public class ExportService {
     }
 
     /**
-     * 유저 목록 CSV 작성
+     * 마케팅 유저 CSV 작성
      */
-    public void writeUsersCsv(Writer writer, MarketingTargetDetailResponse data) throws IOException {
+    public void writeMarketingUsersCsv(Writer writer, MarketingTargetDetailResponse data) throws IOException {
         writer.write("User ID,Email,Name,Nickname,Provider,Language,Marketing Agreement,Created Date,Extra Info\n");
 
         if (data.users() == null) return;
@@ -75,9 +69,9 @@ public class ExportService {
     }
 
     /**
-     * 이벤트 목록 CSV 작성
+     * 마케팅 이벤트 CSV 작성
      */
-    public void writeEventsCsv(Writer writer, MarketingTargetDetailResponse data) throws IOException {
+    public void writeMarketingEventsCsv(Writer writer, MarketingTargetDetailResponse data) throws IOException {
         writer.write("Event ID,Title,Category,Creator Name,Creator Email,Created Date,Days Since Created\n");
 
         if (data.events() == null) return;
@@ -95,102 +89,65 @@ public class ExportService {
         }
     }
 
-    private String escapeCsv(Object value) {
-        if (value == null) return "";
-        String str = value.toString();
-        if (str.contains(",") || str.contains("\"") || str.contains("\n")) {
-            return "\"" + str.replace("\"", "\"\"") + "\"";
-        }
-        return str;
+    // ==================== 유저/이벤트 CSV (경량 쿼리) ====================
+
+    /**
+     * CSV 내보내기용 유저 목록 조회
+     */
+    public List<Object[]> getUsersForCsvExport(String search, LocalDate startDate, LocalDate endDate) {
+        LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
+        LocalDateTime endDateTime = endDate != null ? endDate.plusDays(1).atStartOfDay() : null;
+        return statisticsRepository.findUsersForCsvExport(search, startDateTime, endDateTime);
     }
 
     /**
-     * 유저 목록 데이터 조회 (페이지네이션 없이 전체)
+     * CSV 내보내기용 이벤트 목록 조회
      */
-    public List<DashboardUser> getAllUsersForExport(
-            String keyword, String sorting, String search,
-            LocalDate startDate, LocalDate endDate, int limit) {
-        Pageable pageable = PageRequest.of(0, limit);
-        GetAllDashboardUsersResponse response = adminService.getAllDashboardUsers(
-                pageable, keyword, sorting, search, startDate, endDate);
-        return response.dashboardUsers();
+    public List<Object[]> getEventsForCsvExport(String search, LocalDate startDate, LocalDate endDate) {
+        LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
+        LocalDateTime endDateTime = endDate != null ? endDate.plusDays(1).atStartOfDay() : null;
+        return statisticsRepository.findEventsForCsvExport(search, startDateTime, endDateTime);
     }
 
     /**
-     * 대시보드 유저 목록 CSV 작성
+     * 유저 CSV 작성
+     * Object[]: [users_id, name, email, nickname, provider, language, marketing_policy_agreement, created_date, participation_count]
      */
-    public void writeDashboardUsersCsv(Writer writer, List<DashboardUser> users) throws IOException {
+    public void writeUsersCsv(Writer writer, List<Object[]> users) throws IOException {
         writer.write("ID,Name,Email,Nickname,Provider,Language,Marketing Agreement,Participation Count,Created Date\n");
 
         if (users == null) return;
 
-        for (var user : users) {
+        for (var row : users) {
+            Long id = row[0] != null ? ((Number) row[0]).longValue() : null;
+            String name = row[1] != null ? row[1].toString() : "";
+            String email = row[2] != null ? row[2].toString() : "";
+            String nickname = row[3] != null ? row[3].toString() : "";
+            String provider = row[4] != null ? row[4].toString() : "";
+            String language = row[5] != null ? row[5].toString() : "";
+            Boolean marketingAgreement = row[6] != null && (Boolean) row[6];
+            Object createdDate = row[7];
+            Long participationCount = row[8] != null ? ((Number) row[8]).longValue() : 0L;
+
             writer.write(String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
-                    user.id(),
-                    escapeCsv(user.name()),
-                    escapeCsv(user.email()),
-                    escapeCsv(user.nickname()),
-                    escapeCsv(user.provider()),
-                    user.language() != null ? user.language().name() : "",
-                    user.marketingPolicyAgreement() != null && user.marketingPolicyAgreement() ? "Yes" : "No",
-                    user.participantCount(),
-                    escapeCsv(user.createdDate())
+                    id,
+                    escapeCsv(name),
+                    escapeCsv(email),
+                    escapeCsv(nickname),
+                    escapeCsv(provider),
+                    escapeCsv(language),
+                    marketingAgreement ? "Yes" : "No",
+                    participationCount,
+                    escapeCsv(createdDate)
             ));
         }
     }
 
     /**
-     * 이벤트 목록 데이터 조회 (페이지네이션 없이 전체)
+     * 이벤트 CSV 작성
+     * Object[]: [events_id, events_uuid, title, category, start_time, end_time, created_date, participant_count]
      */
-    public List<DashboardEvent> getAllEventsForExport(
-            String keyword, String sorting, String search,
-            LocalDate startDate, LocalDate endDate, int limit) {
-        Pageable pageable = PageRequest.of(0, limit);
-        GetAllDashboardEventsResponse response = adminService.getAllDashboardEvents(
-                pageable, keyword, sorting, search, startDate, endDate);
-        return response.dashboardEvents();
-    }
-
-    /**
-     * 대시보드 이벤트 목록 CSV 작성
-     */
-    public void writeDashboardEventsCsv(Writer writer, List<DashboardEvent> events) throws IOException {
-        writer.write("ID,Event ID,Title,Category,Date Range,Time Range,Participant Count,Created Date\n");
-
-        if (events == null) return;
-
-        for (var event : events) {
-            writer.write(String.format("%s,%s,%s,%s,%s,%s,%s,%s\n",
-                    event.id(),
-                    escapeCsv(event.eventId()),
-                    escapeCsv(event.title()),
-                    event.category() != null ? event.category().name() : "",
-                    escapeCsv(event.dateRange()),
-                    escapeCsv(event.timeRange()),
-                    event.participantCount(),
-                    escapeCsv(event.createdDate())
-            ));
-        }
-    }
-
-    /**
-     * CSV 내보내기용 이벤트 목록 조회 (경량 버전)
-     * 스케줄 조회 없이 기본 정보만 가져옴 - 훨씬 빠름
-     */
-    public List<Object[]> getEventsForCsvExport(
-            String keyword, String sorting, String search,
-            LocalDate startDate, LocalDate endDate, int limit) {
-        LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
-        LocalDateTime endDateTime = endDate != null ? endDate.plusDays(1).atStartOfDay() : null;
-
-        return statisticsRepository.findEventsForCsvExport(search, startDateTime, endDateTime, limit);
-    }
-
-    /**
-     * CSV 내보내기용 경량 이벤트 목록 작성
-     * Object[] 형식: [events_id, event_id, title, category, start_time, end_time, created_date, participant_count]
-     */
-    public void writeEventsCsvLightweight(Writer writer, List<Object[]> events) throws IOException {
+    public void writeEventsCsv(Writer writer, List<Object[]> events) throws IOException {
         writer.write("ID,Event ID,Title,Category,Time Range,Participant Count,Created Date\n");
 
         if (events == null) return;
@@ -216,5 +173,16 @@ public class ExportService {
                     escapeCsv(createdDate)
             ));
         }
+    }
+
+    // ==================== 유틸 ====================
+
+    private String escapeCsv(Object value) {
+        if (value == null) return "";
+        String str = value.toString();
+        if (str.contains(",") || str.contains("\"") || str.contains("\n")) {
+            return "\"" + str.replace("\"", "\"\"") + "\"";
+        }
+        return str;
     }
 }
