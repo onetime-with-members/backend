@@ -285,7 +285,15 @@
 
         let tbody = '';
         if (!users || users.length === 0) {
-            tbody = '<tr><td colspan="8" class="text-center text-gray-400 dark:text-gray-500 py-8">데이터 없음</td></tr>';
+            tbody = `<tr><td colspan="8" class="py-12">
+                <div class="flex flex-col items-center justify-center text-center">
+                    <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+                        <i data-lucide="users" class="w-6 h-6 text-gray-400 dark:text-gray-500"></i>
+                    </div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">해당하는 유저가 없습니다</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">조건에 맞는 마케팅 타겟이 없어요</p>
+                </div>
+            </td></tr>`;
         } else {
             users.forEach(user => {
                 let extra = '';
@@ -333,7 +341,15 @@
 
         let tbody = '';
         if (!events || events.length === 0) {
-            tbody = '<tr><td colspan="7" class="text-center text-gray-400 dark:text-gray-500 py-8">데이터 없음</td></tr>';
+            tbody = `<tr><td colspan="7" class="py-12">
+                <div class="flex flex-col items-center justify-center text-center">
+                    <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+                        <i data-lucide="calendar-check" class="w-6 h-6 text-gray-400 dark:text-gray-500"></i>
+                    </div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">해당하는 이벤트가 없습니다</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">모든 이벤트에 참여자가 있어요</p>
+                </div>
+            </td></tr>`;
         } else {
             events.forEach(event => {
                 tbody += `

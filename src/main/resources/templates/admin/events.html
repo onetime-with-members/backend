@@ -141,12 +141,19 @@
                 <h3 class="text-sm font-medium text-gray-900 dark:text-white">이벤트 목록</h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">모든 이벤트들의 목록을 보여줍니다</p>
             </div>
-            <select id="eventSort" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md">
-                <option value="created_date:desc">최신순</option>
-                <option value="created_date:asc">오래된순</option>
-                <option value="participant_count:desc">참여자 많은순</option>
-                <option value="participant_count:asc">참여자 적은순</option>
-            </select>
+            <div class="flex items-center gap-2">
+                <button onclick="exportEventsCsv()"
+                        class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-1">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    CSV
+                </button>
+                <select id="eventSort" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md">
+                    <option value="created_date:desc">최신순</option>
+                    <option value="created_date:asc">오래된순</option>
+                    <option value="participant_count:desc">참여자 많은순</option>
+                    <option value="participant_count:asc">참여자 적은순</option>
+                </select>
+            </div>
         </div>
 
         <!-- Search & Filters -->
@@ -173,9 +180,52 @@
             <span id="eventTotalCount" class="text-sm text-gray-500 dark:text-gray-400"></span>
         </div>
 
-        <!-- Loading -->
-        <div id="eventListLoading" class="text-center py-8">
-            <div class="inline-block w-6 h-6 border-2 border-gray-200 dark:border-gray-600 border-t-accent-500 rounded-full animate-spin"></div>
+        <!-- Loading Skeleton -->
+        <div id="eventListLoading">
+            <div class="animate-pulse">
+                <div class="space-y-3">
+                    <div class="flex gap-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-[8%]"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded flex-1"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-[15%]"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-[12%]"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-[10%]"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-[15%]"></div>
+                    </div>
+                    <div class="flex gap-4 py-3 border-b border-gray-100 dark:border-gray-800">
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[8%]"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded flex-1"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[15%]"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[12%]"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[10%]"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[15%]"></div>
+                    </div>
+                    <div class="flex gap-4 py-3 border-b border-gray-100 dark:border-gray-800">
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[8%]"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded flex-1"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[15%]"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[12%]"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[10%]"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[15%]"></div>
+                    </div>
+                    <div class="flex gap-4 py-3 border-b border-gray-100 dark:border-gray-800">
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[8%]"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded flex-1"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[15%]"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[12%]"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[10%]"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[15%]"></div>
+                    </div>
+                    <div class="flex gap-4 py-3 border-b border-gray-100 dark:border-gray-800">
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[8%]"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded flex-1"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[15%]"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[12%]"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[10%]"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-[15%]"></div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Content -->
@@ -250,7 +300,15 @@
 
         let tbody = '';
         if (events.length === 0) {
-            tbody = '<tr><td colspan="6" class="py-8 text-center text-gray-400 dark:text-gray-500">이벤트가 없습니다</td></tr>';
+            tbody = `<tr><td colspan="6" class="py-12">
+                <div class="flex flex-col items-center justify-center text-center">
+                    <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+                        <i data-lucide="calendar-x" class="w-6 h-6 text-gray-400 dark:text-gray-500"></i>
+                    </div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">이벤트가 없습니다</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">선택한 조건에 맞는 이벤트를 찾을 수 없어요</p>
+                </div>
+            </td></tr>`;
         } else {
             events.forEach(event => {
                 const category = event.category || '-';
@@ -401,6 +459,58 @@
 
         toggleText.textContent = keywordExpanded ? '접기' : '더보기';
         toggleIcon.style.transform = keywordExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
+
+    async function exportEventsCsv() {
+        const btn = event.target.closest('button');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<div class="w-4 h-4 border-2 border-gray-300 border-t-white rounded-full animate-spin"></div>';
+
+        const search = document.getElementById('eventSearch').value || '';
+        const startDate = document.getElementById('eventStartDate').value || '';
+        const endDate = document.getElementById('eventEndDate').value || '';
+
+        let url = `/api/v1/admin/export/events/csv?keyword=${currentEventSort}&sorting=${currentEventSorting}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        if (startDate) url += `&startDate=${startDate}`;
+        if (endDate) url += `&endDate=${endDate}`;
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `events_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+        } catch (error) {
+            console.error('CSV download failed:', error);
+            showToast('CSV 다운로드에 실패했습니다. 조건을 좁혀서 다시 시도해주세요.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+            lucide.createIcons();
+        }
+    }
+
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        const bgColor = type === 'error' ? 'bg-red-500' : 'bg-accent-500';
+        toast.className = `fixed bottom-4 right-4 ${bgColor} text-white px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2`;
+        toast.innerHTML = `
+            <i data-lucide="${type === 'error' ? 'alert-circle' : 'check-circle'}" class="w-5 h-5"></i>
+            <span>${message}</span>
+        `;
+        document.body.appendChild(toast);
+        lucide.createIcons();
+        setTimeout(() => toast.remove(), 5000);
     }
 
     document.addEventListener('DOMContentLoaded', () => {

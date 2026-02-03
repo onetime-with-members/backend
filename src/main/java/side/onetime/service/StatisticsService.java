@@ -114,11 +114,47 @@ public class StatisticsService {
      * Get dashboard summary statistics
      * refresh_token 기반 MAU 적용 (설계 문서 12.3 쿼리)
      * Native Query로 최적화됨
+     * 이전 기간 대비 증감률 포함
      */
     @Transactional(readOnly = true)
     public DashboardSummaryResponse getDashboardSummary(LocalDate startDate, LocalDate endDate) {
         DateTimeRange range = DateTimeRange.of(startDate, endDate);
 
+        // 현재 기간 통계 조회
+        SummaryData current = getSummaryDataForRange(range);
+
+        // 이전 기간 계산 (동일 길이의 이전 기간)
+        long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+        LocalDate prevEndDate = startDate.minusDays(1);
+        LocalDate prevStartDate = prevEndDate.minusDays(daysBetween);
+        DateTimeRange prevRange = DateTimeRange.of(prevStartDate, prevEndDate);
+
+        // 이전 기간 통계 조회
+        SummaryData previous = getSummaryDataForRange(prevRange);
+
+        // 비교 데이터 생성
+        DashboardSummaryResponse.ComparisonData comparison = DashboardSummaryResponse.ComparisonData.of(
+                current.totalUsers, previous.totalUsers,
+                current.totalEvents, previous.totalEvents,
+                current.mau, previous.mau,
+                current.avgParticipants, previous.avgParticipants,
+                current.dormantRate, previous.dormantRate,
+                current.marketingTargetUsers, previous.marketingTargetUsers
+        );
+
+        return DashboardSummaryResponse.of(
+                current.totalUsers, current.activeUsers, current.totalEvents, current.mau,
+                Math.round(current.avgParticipants * 100.0) / 100.0,
+                Math.round(current.dormantRate * 100.0) / 100.0,
+                current.marketingTargetUsers,
+                comparison
+        );
+    }
+
+    /**
+     * 기간별 요약 통계 데이터 조회 (내부 헬퍼)
+     */
+    private SummaryData getSummaryDataForRange(DateTimeRange range) {
         // Native Query로 유저 통계 조회 (totalUsers, marketingAgreed)
         Object[] userStats = getFirstRow(statisticsRepository.getUserStatsByDateRange(range.start(), range.end()));
         long totalUsers = extractLong(userStats, 0);
@@ -159,24 +195,40 @@ public class StatisticsService {
         long totalUsersInRange = extractLong(dormantData, 1);
         double dormantRate = totalUsersInRange > 0 ? (double) dormantUsers / totalUsersInRange * 100 : 0;
 
-        return DashboardSummaryResponse.of(
-                totalUsers, activeUsers, totalEvents, mau,
-                Math.round(avgParticipants * 100.0) / 100.0,
-                Math.round(dormantRate * 100.0) / 100.0,
-                marketingTargetUsers
-        );
+        return new SummaryData(totalUsers, activeUsers, totalEvents, mau, avgParticipants, dormantRate, marketingTargetUsers);
     }
+
+    /**
+     * 요약 통계 데이터 홀더
+     */
+    private record SummaryData(
+            long totalUsers,
+            long activeUsers,
+            long totalEvents,
+            long mau,
+            double avgParticipants,
+            double dormantRate,
+            long marketingTargetUsers
+    ) {}
 
     /**
      * Get dashboard chart data
      * Native Query로 최적화됨
+     * 이전 기간 비교 데이터 포함
      */
     @Transactional(readOnly = true)
     public DashboardChartsResponse getDashboardCharts(LocalDate startDate, LocalDate endDate) {
         DateTimeRange range = DateTimeRange.of(startDate, endDate);
 
-        // Monthly signups - Native Query 사용
-        DashboardChartsResponse.ChartData monthlySignups = getMonthlySignupsFromNativeQuery(range.start(), range.end(), startDate, endDate);
+        // 이전 기간 계산
+        long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+        LocalDate prevEndDate = startDate.minusDays(1);
+        LocalDate prevStartDate = prevEndDate.minusDays(daysBetween);
+        DateTimeRange prevRange = DateTimeRange.of(prevStartDate, prevEndDate);
+
+        // Monthly signups with comparison - Native Query 사용
+        DashboardChartsResponse.ChartDataWithComparison monthlySignups =
+                getMonthlySignupsWithComparisonFromNativeQuery(range, prevRange, startDate, endDate, prevStartDate, prevEndDate);
 
         // Provider distribution - Native Query 사용
         DashboardChartsResponse.ChartData providers = getProviderDistributionFromNativeQuery(range.start(), range.end());
@@ -624,6 +676,48 @@ public class StatisticsService {
         return DashboardChartsResponse.ChartData.of(
                 new ArrayList<>(monthlyData.keySet()),
                 new ArrayList<>(monthlyData.values())
+        );
+    }
+
+    /**
+     * 이전 기간 비교 데이터를 포함한 월별 가입자 조회
+     */
+    private DashboardChartsResponse.ChartDataWithComparison getMonthlySignupsWithComparisonFromNativeQuery(
+            DateTimeRange range, DateTimeRange prevRange,
+            LocalDate startDate, LocalDate endDate,
+            LocalDate prevStartDate, LocalDate prevEndDate) {
+
+        // 현재 기간 데이터
+        Map<String, Long> currentData = new TreeMap<>();
+        long monthsBetween = ChronoUnit.MONTHS.between(startDate.withDayOfMonth(1), endDate.withDayOfMonth(1)) + 1;
+        for (int i = 0; i < monthsBetween; i++) {
+            String month = startDate.plusMonths(i).format(MONTH_FORMATTER);
+            currentData.put(month, 0L);
+        }
+        statisticsRepository.findMonthlySignups(range.start(), range.end()).forEach(row -> {
+            String month = (String) row[0];
+            long count = ((Number) row[1]).longValue();
+            currentData.put(month, count);
+        });
+
+        // 이전 기간 데이터
+        Map<String, Long> previousData = new TreeMap<>();
+        long prevMonthsBetween = ChronoUnit.MONTHS.between(prevStartDate.withDayOfMonth(1), prevEndDate.withDayOfMonth(1)) + 1;
+        for (int i = 0; i < prevMonthsBetween; i++) {
+            String month = prevStartDate.plusMonths(i).format(MONTH_FORMATTER);
+            previousData.put(month, 0L);
+        }
+        statisticsRepository.findMonthlySignups(prevRange.start(), prevRange.end()).forEach(row -> {
+            String month = (String) row[0];
+            long count = ((Number) row[1]).longValue();
+            previousData.put(month, count);
+        });
+
+        return DashboardChartsResponse.ChartDataWithComparison.of(
+                new ArrayList<>(currentData.keySet()),
+                new ArrayList<>(currentData.values()),
+                new ArrayList<>(previousData.values()),
+                new ArrayList<>(previousData.keySet())
         );
     }
 

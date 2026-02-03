@@ -94,8 +94,38 @@
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
         <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">전환 퍼널</h3>
         <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">가입 → 첫 이벤트 → 참여자 확보 → 재생성 단계별 전환율</p>
-        <div id="funnelLoading" class="flex justify-center py-8">
-            <div class="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 dark:border-gray-600 border-t-accent-500"></div>
+        <div id="funnelLoading" class="animate-pulse space-y-4">
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                </div>
+                <div class="h-8 bg-gray-100 dark:bg-gray-800 rounded w-full"></div>
+            </div>
+            <div class="flex justify-center"><div class="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded"></div></div>
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-28"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                </div>
+                <div class="h-8 bg-gray-100 dark:bg-gray-800 rounded w-3/4"></div>
+            </div>
+            <div class="flex justify-center"><div class="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded"></div></div>
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                </div>
+                <div class="h-8 bg-gray-100 dark:bg-gray-800 rounded w-1/2"></div>
+            </div>
+            <div class="flex justify-center"><div class="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded"></div></div>
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-36"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-14"></div>
+                </div>
+                <div class="h-8 bg-gray-100 dark:bg-gray-800 rounded w-1/4"></div>
+            </div>
         </div>
         <div id="funnelContent" class="hidden">
             <div id="funnelChart"></div>
@@ -106,8 +136,35 @@
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
         <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">Time to Value (TTV)</h3>
         <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">가입 후 첫 이벤트 생성까지 걸린 시간 분포</p>
-        <div id="ttvLoading" class="flex justify-center py-8">
-            <div class="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 dark:border-gray-600 border-t-accent-500"></div>
+        <div id="ttvLoading" class="animate-pulse">
+            <!-- Summary Cards Skeleton -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-12 mx-auto mb-2"></div>
+                    <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-16 mx-auto"></div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-12 mx-auto mb-2"></div>
+                    <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-16 mx-auto"></div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 mx-auto mb-2"></div>
+                    <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-12 mx-auto"></div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20 mx-auto mb-2"></div>
+                    <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-24 mx-auto"></div>
+                </div>
+            </div>
+            <!-- Chart Skeleton -->
+            <div class="h-64 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-end justify-around p-4 gap-2">
+                <div class="w-12 bg-gray-200 dark:bg-gray-700 rounded-t" style="height: 60%"></div>
+                <div class="w-12 bg-gray-200 dark:bg-gray-700 rounded-t" style="height: 45%"></div>
+                <div class="w-12 bg-gray-200 dark:bg-gray-700 rounded-t" style="height: 30%"></div>
+                <div class="w-12 bg-gray-200 dark:bg-gray-700 rounded-t" style="height: 20%"></div>
+                <div class="w-12 bg-gray-200 dark:bg-gray-700 rounded-t" style="height: 15%"></div>
+                <div class="w-12 bg-gray-200 dark:bg-gray-700 rounded-t" style="height: 10%"></div>
+            </div>
         </div>
         <div id="ttvContent" class="hidden">
             <!-- TTV Summary Cards -->
@@ -140,8 +197,24 @@
     <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
         <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">Stickiness (WAU/MAU)</h3>
         <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">서비스 중독성 지표 - 높을수록 유저가 자주 방문</p>
-        <div id="stickinessLoading" class="flex justify-center py-8">
-            <div class="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 dark:border-gray-600 border-t-accent-500"></div>
+        <div id="stickinessLoading" class="animate-pulse">
+            <!-- Summary Cards Skeleton -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-accent-500/20 rounded-lg p-4">
+                    <div class="h-3 bg-accent-400/30 rounded w-20 mx-auto mb-2"></div>
+                    <div class="h-6 bg-accent-400/30 rounded w-16 mx-auto"></div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 mx-auto mb-2"></div>
+                    <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-12 mx-auto"></div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 mx-auto mb-2"></div>
+                    <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-12 mx-auto"></div>
+                </div>
+            </div>
+            <!-- Chart Skeleton -->
+            <div class="h-64 bg-gray-100 dark:bg-gray-800 rounded-lg"></div>
         </div>
         <div id="stickinessContent" class="hidden">
             <!-- Stickiness Summary Cards -->
@@ -179,8 +252,63 @@
                 <option value="12" selected>12개월</option>
             </select>
         </div>
-        <div id="cohortLoading" class="flex justify-center py-8">
-            <div class="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 dark:border-gray-600 border-t-accent-500"></div>
+        <div id="cohortLoading" class="animate-pulse">
+            <div class="overflow-x-auto">
+                <div class="space-y-2">
+                    <!-- Header -->
+                    <div class="flex gap-2 py-2 border-b border-gray-200 dark:border-gray-700">
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-12"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-10"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-10"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-10"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-10"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-10"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-10"></div>
+                    </div>
+                    <!-- Rows -->
+                    <div class="flex gap-2 py-2 border-b border-gray-100 dark:border-gray-800">
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-16"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-12"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                    </div>
+                    <div class="flex gap-2 py-2 border-b border-gray-100 dark:border-gray-800">
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-16"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-12"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                    </div>
+                    <div class="flex gap-2 py-2 border-b border-gray-100 dark:border-gray-800">
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-16"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-12"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                    </div>
+                    <div class="flex gap-2 py-2 border-b border-gray-100 dark:border-gray-800">
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-16"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-12"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div id="cohortContent" class="hidden">
             <div class="overflow-x-auto">
@@ -571,7 +699,16 @@
         const steps = funnelData.steps;
 
         if (!steps || steps.length === 0) {
-            container.innerHTML = '<p class="text-gray-400 dark:text-gray-500 text-center py-4">데이터 없음</p>';
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center text-center py-12">
+                    <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+                        <i data-lucide="git-merge" class="w-6 h-6 text-gray-400 dark:text-gray-500"></i>
+                    </div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">퍼널 데이터 없음</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">선택한 기간에 데이터가 부족해요</p>
+                </div>
+            `;
+            lucide.createIcons();
             return;
         }
 
@@ -645,7 +782,15 @@
 
         let bodyHtml = '';
         if (cohortData.cohorts.length === 0) {
-            bodyHtml = `<tr><td colspan="${cohortData.periods.length + 2}" class="text-center text-gray-400 dark:text-gray-500 py-8">데이터 없음</td></tr>`;
+            bodyHtml = `<tr><td colspan="${cohortData.periods.length + 2}" class="py-12">
+                <div class="flex flex-col items-center justify-center text-center">
+                    <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+                        <i data-lucide="table" class="w-6 h-6 text-gray-400 dark:text-gray-500"></i>
+                    </div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">코호트 데이터 없음</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">선택한 기간에 분석할 코호트가 없어요</p>
+                </div>
+            </td></tr>`;
         } else {
             cohortData.cohorts.forEach(row => {
                 bodyHtml += '<tr class="border-b border-gray-100 dark:border-gray-800">';

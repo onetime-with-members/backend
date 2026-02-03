@@ -1089,4 +1089,47 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
           AND ep.event_status = 'PARTICIPANT'
         """, nativeQuery = true)
     Long countUserParticipatedEvents(@Param("userId") Long userId);
+
+    // ==================== CSV 내보내기용 경량 쿼리 ====================
+
+    /**
+     * CSV 내보내기용 이벤트 목록 (경량)
+     * 스케줄 조회 없이 기본 정보 + 참여자 수만 한 번에 조회
+     * 반환: [events_id, events_uuid, title, category, start_time, end_time, created_date, participant_count]
+     */
+    @Query(value = """
+        SELECT
+            e.events_id,
+            HEX(e.events_uuid) AS events_uuid,
+            e.title,
+            e.category,
+            e.start_time,
+            e.end_time,
+            e.created_date,
+            COALESCE(ep_sub.ep_count, 0) + COALESCE(m_sub.m_count, 0) AS participant_count
+        FROM events e
+        LEFT JOIN (
+            SELECT events_id, COUNT(*) AS ep_count
+            FROM event_participations
+            WHERE event_status NOT IN ('CREATOR')
+            GROUP BY events_id
+        ) ep_sub ON e.events_id = ep_sub.events_id
+        LEFT JOIN (
+            SELECT events_id, COUNT(*) AS m_count
+            FROM members
+            GROUP BY events_id
+        ) m_sub ON e.events_id = m_sub.events_id
+        WHERE e.status = 'ACTIVE'
+          AND (:search IS NULL OR e.title LIKE CONCAT('%', :search, '%'))
+          AND (:startDate IS NULL OR e.created_date >= :startDate)
+          AND (:endDate IS NULL OR e.created_date < :endDate)
+        ORDER BY e.created_date DESC
+        LIMIT :limit
+        """, nativeQuery = true)
+    List<Object[]> findEventsForCsvExport(
+            @Param("search") String search,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            @Param("limit") int limit
+    );
 }

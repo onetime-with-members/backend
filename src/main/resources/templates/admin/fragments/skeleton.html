@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- Table Skeleton: 테이블 형태의 스켈레톤 로딩 -->
+<div th:fragment="tableSkeleton(rows)" class="animate-pulse">
+    <div class="space-y-3">
+        <!-- Header -->
+        <div class="flex gap-4 py-2 border-b border-gray-200 dark:border-gray-700">
+            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/6"></div>
+            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/6"></div>
+            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/6"></div>
+            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/6"></div>
+        </div>
+        <!-- Rows -->
+        <th:block th:each="i : ${#numbers.sequence(1, rows)}">
+            <div class="flex gap-4 py-3 border-b border-gray-100 dark:border-gray-800">
+                <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-1/6"></div>
+                <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-1/4"></div>
+                <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-1/6"></div>
+                <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-1/6"></div>
+                <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-1/6"></div>
+            </div>
+        </th:block>
+    </div>
+</div>
+
+<!-- Chart Skeleton: 차트 형태의 스켈레톤 로딩 -->
+<div th:fragment="chartSkeleton" class="animate-pulse">
+    <div class="h-64 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-end justify-around p-4 gap-2">
+        <div class="w-8 bg-gray-200 dark:bg-gray-700 rounded-t" style="height: 40%"></div>
+        <div class="w-8 bg-gray-200 dark:bg-gray-700 rounded-t" style="height: 65%"></div>
+        <div class="w-8 bg-gray-200 dark:bg-gray-700 rounded-t" style="height: 45%"></div>
+        <div class="w-8 bg-gray-200 dark:bg-gray-700 rounded-t" style="height: 80%"></div>
+        <div class="w-8 bg-gray-200 dark:bg-gray-700 rounded-t" style="height: 55%"></div>
+        <div class="w-8 bg-gray-200 dark:bg-gray-700 rounded-t" style="height: 70%"></div>
+        <div class="w-8 bg-gray-200 dark:bg-gray-700 rounded-t" style="height: 50%"></div>
+    </div>
+</div>
+
+<!-- Card Skeleton: 카드 형태의 스켈레톤 로딩 -->
+<div th:fragment="cardSkeleton" class="animate-pulse">
+    <div class="flex items-center justify-between">
+        <div class="space-y-2">
+            <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+            <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+            <div class="h-2 bg-gray-100 dark:bg-gray-800 rounded w-32"></div>
+        </div>
+        <div class="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+    </div>
+</div>
+
+<!-- Funnel Skeleton: 퍼널 차트 스켈레톤 -->
+<div th:fragment="funnelSkeleton" class="animate-pulse space-y-4">
+    <div th:each="i : ${#numbers.sequence(1, 4)}">
+        <div class="flex justify-between items-center mb-2">
+            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+        </div>
+        <div class="h-8 bg-gray-100 dark:bg-gray-800 rounded" th:style="'width: ' + (100 - (i * 20)) + '%'"></div>
+    </div>
+</div>
+
+<!-- Cohort Table Skeleton: 코호트 테이블 스켈레톤 -->
+<div th:fragment="cohortSkeleton" class="animate-pulse">
+    <div class="overflow-x-auto">
+        <div class="space-y-2">
+            <!-- Header -->
+            <div class="flex gap-2 py-2 border-b border-gray-200 dark:border-gray-700">
+                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-12"></div>
+                <th:block th:each="i : ${#numbers.sequence(1, 6)}">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-10"></div>
+                </th:block>
+            </div>
+            <!-- Rows -->
+            <th:block th:each="i : ${#numbers.sequence(1, 6)}">
+                <div class="flex gap-2 py-2 border-b border-gray-100 dark:border-gray-800">
+                    <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-16"></div>
+                    <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-12"></div>
+                    <th:block th:each="j : ${#numbers.sequence(1, 6)}">
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                    </th:block>
+                </div>
+            </th:block>
+        </div>
+    </div>
+</div>
+
+</html>
