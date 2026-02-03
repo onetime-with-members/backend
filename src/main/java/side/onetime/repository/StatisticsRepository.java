@@ -53,14 +53,16 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     );
 
     /**
-     * MAU 카운트 (기간 내 고유 사용자 수)
-     * status 무관하게 last_used_at이 기간 내에 있으면 활성 사용자로 카운트
+     * MAU 카운트 (기간 내 고유 활성 사용자 수)
+     * users.status = 'ACTIVE'인 유저만 카운트
      */
     @Query(value = """
-        SELECT COUNT(DISTINCT users_id)
-        FROM refresh_token
-        WHERE last_used_at >= :startDate AND last_used_at < :endDate
-          AND user_type = 'USER'
+        SELECT COUNT(DISTINCT rt.users_id)
+        FROM refresh_token rt
+        JOIN users u ON rt.users_id = u.users_id
+        WHERE rt.last_used_at >= :startDate AND rt.last_used_at < :endDate
+          AND rt.user_type = 'USER'
+          AND u.status = 'ACTIVE'
         """, nativeQuery = true)
     Long countMau(
             @Param("startDate") LocalDateTime startDate,
@@ -1213,13 +1215,15 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
 
     /**
      * 주간 활성 유저 수 (WAU)
-     * refresh_token.last_used_at 기준 (status 무관)
+     * users.status = 'ACTIVE'인 유저만 카운트
      */
     @Query(value = """
         SELECT COUNT(DISTINCT rt.users_id)
         FROM refresh_token rt
+        JOIN users u ON rt.users_id = u.users_id
         WHERE rt.last_used_at >= :startDate AND rt.last_used_at < :endDate
           AND rt.user_type = 'USER'
+          AND u.status = 'ACTIVE'
         """, nativeQuery = true)
     Long countWau(
             @Param("startDate") LocalDateTime startDate,
@@ -1228,6 +1232,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
 
     /**
      * 월별 WAU 트렌드 (각 월의 주 평균 WAU)
+     * users.status = 'ACTIVE'인 유저만 카운트
      * 반환: [month, avg_wau]
      */
     @Query(value = """
@@ -1237,8 +1242,10 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             SELECT DATE(DATE_SUB(rt.last_used_at, INTERVAL WEEKDAY(rt.last_used_at) DAY)) AS week_start,
                    COUNT(DISTINCT rt.users_id) AS weekly_users
             FROM refresh_token rt
+            JOIN users u ON rt.users_id = u.users_id
             WHERE rt.last_used_at >= :startDate AND rt.last_used_at < :endDate
               AND rt.user_type = 'USER'
+              AND u.status = 'ACTIVE'
             GROUP BY week_start
         ) AS weekly_data
         GROUP BY month
@@ -1251,14 +1258,17 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
 
     /**
      * 월별 MAU
+     * users.status = 'ACTIVE'인 유저만 카운트
      * 반환: [month, mau]
      */
     @Query(value = """
         SELECT DATE_FORMAT(rt.last_used_at, '%Y-%m') AS month,
                COUNT(DISTINCT rt.users_id) AS mau
         FROM refresh_token rt
+        JOIN users u ON rt.users_id = u.users_id
         WHERE rt.last_used_at >= :startDate AND rt.last_used_at < :endDate
           AND rt.user_type = 'USER'
+          AND u.status = 'ACTIVE'
         GROUP BY month
         ORDER BY month
         """, nativeQuery = true)
