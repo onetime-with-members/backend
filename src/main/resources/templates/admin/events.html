@@ -118,7 +118,9 @@
             <tbody id="keywordTableBody">
                 <tr th:each="item, stat : ${data.topKeywords}"
                     th:classappend="${stat.index >= 10} ? 'keyword-hidden hidden' : ''"
-                    class="border-b border-gray-100 dark:border-gray-800">
+                    class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                    th:data-keyword="${item.keyword}"
+                    onclick="filterByKeyword(this.dataset.keyword)">
                     <td class="py-2 text-gray-600 dark:text-gray-400" th:text="${stat.index + 1}">1</td>
                     <td class="py-2 text-gray-900 dark:text-white font-medium" th:text="${item.keyword}">Keyword</td>
                     <td class="py-2 text-accent-600 dark:text-accent-400 text-right" th:text="${item.count}">0</td>
@@ -135,7 +137,7 @@
     </div>
 
     <!-- Event List -->
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+    <div id="eventListSection" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
         <div class="flex items-center justify-between mb-4">
             <div>
                 <h3 class="text-sm font-medium text-gray-900 dark:text-white">이벤트 목록</h3>
@@ -511,6 +513,12 @@
         document.body.appendChild(toast);
         lucide.createIcons();
         setTimeout(() => toast.remove(), 5000);
+    }
+
+    function filterByKeyword(keyword) {
+        document.getElementById('eventSearch').value = keyword;
+        loadEventList(1);
+        document.getElementById('eventListSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     document.addEventListener('DOMContentLoaded', () => {

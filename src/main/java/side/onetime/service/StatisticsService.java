@@ -323,7 +323,7 @@ public class StatisticsService {
                 ));
 
         // Weekday distribution - Native Query (DAYOFWEEK: 1=SUN, 2=MON, ..., 7=SAT)
-        String[] dayNames = {"SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"};
+        String[] dayNames = {"일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"};
         Map<String, Long> weekdayDistribution = statisticsRepository.getEventWeekdayDistribution(range.start(), range.end()).stream()
                 .collect(Collectors.toMap(
                         row -> dayNames[((Number) row[0]).intValue() - 1],
@@ -739,7 +739,7 @@ public class StatisticsService {
     private DashboardChartsResponse.ChartData getWeekdayDistributionFromNativeQuery(
             LocalDateTime startDateTime, LocalDateTime endDateTime) {
         // DAYOFWEEK: 1=SUN, 2=MON, 3=TUE, 4=WED, 5=THU, 6=FRI, 7=SAT
-        String[] weekdays = {"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
+        String[] weekdays = {"월", "화", "수", "목", "금", "토", "일"};
         Map<String, Long> distribution = new LinkedHashMap<>();
         for (String day : weekdays) {
             distribution.put(day, 0L);
@@ -747,8 +747,8 @@ public class StatisticsService {
 
         // MySQL DAYOFWEEK을 요일명으로 변환
         Map<Integer, String> dayMap = Map.of(
-                1, "SUN", 2, "MON", 3, "TUE", 4, "WED",
-                5, "THU", 6, "FRI", 7, "SAT"
+                1, "일", 2, "월", 3, "화", 4, "수",
+                5, "목", 6, "금", 7, "토"
         );
 
         statisticsRepository.getEventWeekdayDistribution(startDateTime, endDateTime).forEach(row -> {
@@ -954,7 +954,7 @@ public class StatisticsService {
             hours.add(String.format("%02d", h));
         }
 
-        List<String> weekdays = List.of("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun");
+        List<String> weekdays = List.of("월", "화", "수", "목", "금", "토", "일");
 
         return TimeWeekdayHeatmapResponse.of(hours, weekdays, data, maxValue, totalEvents);
     }
