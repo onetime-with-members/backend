@@ -80,7 +80,7 @@ public class AdminPageController {
                     new LoginAdminUserRequest(email, password), browserId, userIp, userAgent
             );
 
-            CookieUtil.setAdminTokenCookies(response, result.accessToken(), result.refreshToken());
+            CookieUtil.setAdminTokenCookies(request, response, result.accessToken(), result.refreshToken());
 
             return "redirect:/admin/dashboard";
         } catch (CustomException e) {
@@ -91,8 +91,8 @@ public class AdminPageController {
     }
 
     @GetMapping("/logout")
-    public String logout(HttpServletResponse response) {
-        CookieUtil.clearAdminTokenCookies(response);
+    public String logout(HttpServletRequest request, HttpServletResponse response) {
+        CookieUtil.clearAdminTokenCookies(request, response);
         return "redirect:/admin/login";
     }
 

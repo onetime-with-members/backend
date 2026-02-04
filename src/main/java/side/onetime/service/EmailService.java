@@ -55,6 +55,9 @@ public class EmailService {
     @Value("${spring.cloud.aws.ses.from-email:noreply@onetime.com}")
     private String fromEmail;
 
+    @Value("${email.rate-limit.delay-ms:100}")
+    private long rateLimitDelayMs;
+
     /**
      * 단일/다중 이메일 발송
      */
@@ -114,6 +117,7 @@ public class EmailService {
 
     /**
      * 이메일 발송 (그룹 정보 포함)
+     * AWS SES Rate Limiting 적용 (기본 100ms 딜레이, 초당 10개)
      */
     private SendEmailResponse sendEmailWithGroup(SendEmailRequest request, String targetGroup) {
         List<String> failedEmails = new ArrayList<>();
@@ -141,9 +145,26 @@ public class EmailService {
                 saveEmailLog(userId, to, request.subject(), request.getContentType(),
                         EmailLogStatus.FAILED, e.getMessage(), targetGroup);
             }
+
+            // Rate limiting: 다음 발송 전 딜레이 적용
+            if (i < recipients.size() - 1 && rateLimitDelayMs > 0) {
+                applyRateLimitDelay();
+            }
         }
 
         return SendEmailResponse.of(sentCount, failedEmails.size(), failedEmails);
+    }
+
+    /**
+     * Rate limiting 딜레이 적용
+     */
+    private void applyRateLimitDelay() {
+        try {
+            Thread.sleep(rateLimitDelayMs);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Email rate limiting interrupted");
+        }
     }
 
     /**

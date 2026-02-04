@@ -95,7 +95,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     );
 
                     // 새 토큰으로 쿠키 갱신
-                    CookieUtil.setAdminTokenCookies(response, reissued.accessToken(), reissued.refreshToken());
+                    CookieUtil.setAdminTokenCookies(request, response, reissued.accessToken(), reissued.refreshToken());
 
                     // 새 액세스 토큰으로 인증
                     authenticateUser(reissued.accessToken());

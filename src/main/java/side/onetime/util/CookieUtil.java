@@ -36,25 +36,50 @@ public class CookieUtil {
     }
 
     /**
-     * 쿠키 설정
+     * 쿠키 설정 (Secure, SameSite 지원)
+     *
+     * @param request  요청 객체 (HTTPS 여부 감지용)
+     * @param response 응답 객체
+     * @param name     쿠키 이름
+     * @param value    쿠키 값
+     * @param maxAge   만료 시간 (초)
      */
-    public static void setCookie(HttpServletResponse response, String name, String value, int maxAge) {
-        Cookie cookie = new Cookie(name, value);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(maxAge);
-        response.addCookie(cookie);
+    public static void setCookie(HttpServletRequest request, HttpServletResponse response,
+                                 String name, String value, int maxAge) {
+        StringBuilder cookie = new StringBuilder();
+        cookie.append(name).append("=").append(value);
+        cookie.append("; Path=/");
+        cookie.append("; Max-Age=").append(maxAge);
+        cookie.append("; HttpOnly");
+
+        if (request.isSecure()) {
+            cookie.append("; Secure");
+        }
+        cookie.append("; SameSite=Lax");
+
+        response.addHeader("Set-Cookie", cookie.toString());
     }
 
     /**
-     * 쿠키 삭제
+     * 쿠키 삭제 (Secure, SameSite 지원)
+     *
+     * @param request  요청 객체 (HTTPS 여부 감지용)
+     * @param response 응답 객체
+     * @param name     쿠키 이름
      */
-    public static void deleteCookie(HttpServletResponse response, String name) {
-        Cookie cookie = new Cookie(name, null);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
+    public static void deleteCookie(HttpServletRequest request, HttpServletResponse response, String name) {
+        StringBuilder cookie = new StringBuilder();
+        cookie.append(name).append("=");
+        cookie.append("; Path=/");
+        cookie.append("; Max-Age=0");
+        cookie.append("; HttpOnly");
+
+        if (request.isSecure()) {
+            cookie.append("; Secure");
+        }
+        cookie.append("; SameSite=Lax");
+
+        response.addHeader("Set-Cookie", cookie.toString());
     }
 
     // ==================== Admin Cookie Methods ====================
@@ -76,16 +101,17 @@ public class CookieUtil {
     /**
      * 어드민 토큰 쿠키 설정
      */
-    public static void setAdminTokenCookies(HttpServletResponse response, String accessToken, String refreshToken) {
-        setCookie(response, ADMIN_ACCESS_TOKEN_COOKIE, accessToken, ADMIN_ACCESS_COOKIE_MAX_AGE);
-        setCookie(response, ADMIN_REFRESH_TOKEN_COOKIE, refreshToken, ADMIN_REFRESH_COOKIE_MAX_AGE);
+    public static void setAdminTokenCookies(HttpServletRequest request, HttpServletResponse response,
+                                            String accessToken, String refreshToken) {
+        setCookie(request, response, ADMIN_ACCESS_TOKEN_COOKIE, accessToken, ADMIN_ACCESS_COOKIE_MAX_AGE);
+        setCookie(request, response, ADMIN_REFRESH_TOKEN_COOKIE, refreshToken, ADMIN_REFRESH_COOKIE_MAX_AGE);
     }
 
     /**
      * 어드민 토큰 쿠키 삭제
      */
-    public static void clearAdminTokenCookies(HttpServletResponse response) {
-        deleteCookie(response, ADMIN_ACCESS_TOKEN_COOKIE);
-        deleteCookie(response, ADMIN_REFRESH_TOKEN_COOKIE);
+    public static void clearAdminTokenCookies(HttpServletRequest request, HttpServletResponse response) {
+        deleteCookie(request, response, ADMIN_ACCESS_TOKEN_COOKIE);
+        deleteCookie(request, response, ADMIN_REFRESH_TOKEN_COOKIE);
     }
 }
