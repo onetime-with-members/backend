@@ -20,18 +20,8 @@ public interface EmailLogRepository extends JpaRepository<EmailLog, Long> {
 
     Page<EmailLog> findByStatusOrderBySentAtDesc(EmailLogStatus status, Pageable pageable);
 
-    Page<EmailLog> findByTargetGroupOrderBySentAtDesc(String targetGroup, Pageable pageable);
-
-    @Query("SELECT e FROM EmailLog e WHERE e.sentAt BETWEEN :startDate AND :endDate ORDER BY e.sentAt DESC")
-    Page<EmailLog> findByDateRange(
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate,
-            Pageable pageable);
-
     @Query("SELECT e.status, COUNT(e) FROM EmailLog e WHERE e.sentAt >= :since GROUP BY e.status")
     List<Object[]> countByStatusSince(@Param("since") LocalDateTime since);
 
     long countByStatus(EmailLogStatus status);
-
-    long countBySentAtAfter(LocalDateTime since);
 }

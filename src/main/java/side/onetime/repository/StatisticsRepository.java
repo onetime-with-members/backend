@@ -69,43 +69,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             @Param("endDate") LocalDateTime endDate
     );
 
-    /**
-     * 시간대별 접속 분포
-     */
-    @Query(value = """
-        SELECT HOUR(last_used_at) AS hour, COUNT(*) AS count
-        FROM refresh_token
-        WHERE last_used_at >= :startDate AND last_used_at < :endDate
-          AND user_type = 'USER'
-        GROUP BY HOUR(last_used_at)
-        ORDER BY hour
-        """, nativeQuery = true)
-    List<Object[]> findHourlyAccessDistribution(
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate
-    );
-
     // ==================== 휴면 유저 분석 ====================
-
-    /**
-     * 휴면 유저 수 (마케팅 동의자만, 기간별 필터)
-     * refresh_token 기준: last_used_at이 NULL이면 issued_at 사용, 둘 다 NULL이면 created_date 사용
-     */
-    @Query(value = """
-        SELECT COUNT(DISTINCT u.users_id) AS dormant_count
-        FROM users u
-        LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
-        WHERE u.status = 'ACTIVE'
-          AND u.marketing_policy_agreement = 1
-          AND u.created_date >= :startDate AND u.created_date < :endDate
-        GROUP BY u.users_id, u.created_date
-        HAVING DATEDIFF(NOW(), COALESCE(MAX(COALESCE(rt.last_used_at, rt.issued_at)), u.created_date)) >= :days
-        """, nativeQuery = true)
-    List<Object[]> countDormantUsersWithMarketing(
-            @Param("days") int days,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate
-    );
 
     /**
      * 휴면 기간별 분포 (대시보드용)
@@ -172,26 +136,6 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     );
 
     /**
-     * 휴면 유저 수 (리텐션용 - 모든 유저)
-     */
-    @Query(value = """
-        SELECT COUNT(*) FROM (
-            SELECT u.users_id
-            FROM users u
-            LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
-            WHERE u.status = 'ACTIVE'
-              AND u.created_date >= :startDate AND u.created_date < :endDate
-            GROUP BY u.users_id, u.created_date
-            HAVING DATEDIFF(NOW(), COALESCE(MAX(COALESCE(rt.last_used_at, rt.issued_at)), u.created_date)) >= :days
-        ) sub
-        """, nativeQuery = true)
-    Long countDormantUsersForRetention(
-            @Param("days") int days,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate
-    );
-
-    /**
      * 기간 내 가입 유저의 휴면율 (30일+ 미접속)
      * 반환: [dormant_count, total_count]
      * last_used_at이 NULL이면 issued_at 사용, 둘 다 NULL이면 created_date 사용
@@ -214,184 +158,6 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
-
-    /**
-     * 휴면 유저 상세 리스트 (마케팅 동의자만, 기간 필터)
-     * last_used_at이 NULL이면 issued_at 사용, 둘 다 NULL이면 created_date 사용
-     */
-    @Query(value = """
-        SELECT u.users_id, u.email, u.name, u.nickname, u.provider, u.provider_id,
-               u.service_policy_agreement, u.privacy_policy_agreement, u.marketing_policy_agreement,
-               u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date,
-               COALESCE(MAX(COALESCE(rt.last_used_at, rt.issued_at)), u.created_date) AS last_login,
-               DATEDIFF(NOW(), COALESCE(MAX(COALESCE(rt.last_used_at, rt.issued_at)), u.created_date)) AS days_inactive
-        FROM users u
-        LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
-        WHERE u.status = 'ACTIVE'
-          AND u.marketing_policy_agreement = 1
-          AND u.created_date >= :startDate AND u.created_date < :endDate
-        GROUP BY u.users_id, u.email, u.name, u.nickname, u.provider, u.provider_id,
-                 u.service_policy_agreement, u.privacy_policy_agreement, u.marketing_policy_agreement,
-                 u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date
-        HAVING days_inactive >= :days
-        ORDER BY days_inactive DESC
-        LIMIT :limit
-        """, nativeQuery = true)
-    List<Object[]> findDormantUserDetails(
-            @Param("days") int days,
-            @Param("limit") int limit,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate
-    );
-
-    // ==================== 마케팅 타겟 ====================
-
-    /**
-     * 마케팅 동의 유저 상세 리스트
-     */
-    @Query(value = """
-        SELECT u.users_id, u.email, u.name, u.nickname, u.provider, u.provider_id,
-               u.service_policy_agreement, u.privacy_policy_agreement, u.marketing_policy_agreement,
-               u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date
-        FROM users u
-        WHERE u.status = 'ACTIVE'
-          AND u.marketing_policy_agreement = 1
-        ORDER BY u.created_date DESC
-        LIMIT :limit
-        """, nativeQuery = true)
-    List<Object[]> findMarketingAgreedUserDetails(@Param("limit") int limit);
-
-    /**
-     * 가입 후 이벤트 미생성 유저 수 (마케팅 동의자만)
-     * 가입 후 지정 일수 경과했지만 이벤트를 생성하지 않은 유저
-     */
-    @Query(value = """
-        SELECT COUNT(DISTINCT u.users_id)
-        FROM users u
-        LEFT JOIN event_participations ep ON u.users_id = ep.users_id
-            AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
-        WHERE u.status = 'ACTIVE'
-          AND u.marketing_policy_agreement = 1
-          AND ep.users_id IS NULL
-          AND u.created_date < DATE_SUB(NOW(), INTERVAL :daysAfterSignup DAY)
-        """, nativeQuery = true)
-    Long countNoEventUsers(@Param("daysAfterSignup") int daysAfterSignup);
-
-    /**
-     * 가입 후 이벤트 미생성 유저 상세 리스트
-     */
-    @Query(value = """
-        SELECT u.users_id, u.email, u.name, u.nickname, u.provider, u.provider_id,
-               u.service_policy_agreement, u.privacy_policy_agreement, u.marketing_policy_agreement,
-               u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date,
-               DATEDIFF(NOW(), u.created_date) AS days_since_signup
-        FROM users u
-        LEFT JOIN event_participations ep ON u.users_id = ep.users_id
-            AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
-        WHERE u.status = 'ACTIVE'
-          AND u.marketing_policy_agreement = 1
-          AND ep.users_id IS NULL
-          AND u.created_date < DATE_SUB(NOW(), INTERVAL :daysAfterSignup DAY)
-        ORDER BY u.created_date
-        LIMIT :limit
-        """, nativeQuery = true)
-    List<Object[]> findNoEventUserDetails(
-            @Param("daysAfterSignup") int daysAfterSignup,
-            @Param("limit") int limit
-    );
-
-    /**
-     * 1회성 유저 수 (이벤트 1개만 생성, 마케팅 동의자만)
-     */
-    @Query(value = """
-        SELECT COUNT(*) FROM (
-            SELECT u.users_id
-            FROM users u
-            JOIN event_participations ep ON u.users_id = ep.users_id
-                AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
-            WHERE u.status = 'ACTIVE'
-              AND u.marketing_policy_agreement = 1
-            GROUP BY u.users_id
-            HAVING COUNT(ep.events_id) = 1
-        ) AS one_time_users
-        """, nativeQuery = true)
-    Long countOneTimeUsers();
-
-    /**
-     * 1회성 유저 상세 리스트
-     */
-    @Query(value = """
-        SELECT u.users_id, u.email, u.name, u.nickname, u.provider, u.provider_id,
-               u.service_policy_agreement, u.privacy_policy_agreement, u.marketing_policy_agreement,
-               u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date,
-               COUNT(ep.events_id) AS event_count
-        FROM users u
-        JOIN event_participations ep ON u.users_id = ep.users_id
-            AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
-        WHERE u.status = 'ACTIVE'
-          AND u.marketing_policy_agreement = 1
-        GROUP BY u.users_id, u.email, u.name, u.nickname, u.provider, u.provider_id,
-                 u.service_policy_agreement, u.privacy_policy_agreement, u.marketing_policy_agreement,
-                 u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date
-        HAVING COUNT(ep.events_id) = 1
-        LIMIT :limit
-        """, nativeQuery = true)
-    List<Object[]> findOneTimeUserDetails(@Param("limit") int limit);
-
-    /**
-     * VIP 유저 수 (이벤트 5개+ 생성)
-     */
-    @Query(value = """
-        SELECT COUNT(*) FROM (
-            SELECT u.users_id
-            FROM users u
-            JOIN event_participations ep ON u.users_id = ep.users_id
-                AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
-            WHERE u.status = 'ACTIVE'
-            GROUP BY u.users_id
-            HAVING COUNT(ep.events_id) >= 5
-        ) AS vip_users
-        """, nativeQuery = true)
-    Long countVipUsers();
-
-    /**
-     * VIP 유저 상세 리스트
-     */
-    @Query(value = """
-        SELECT u.users_id, u.email, u.name, u.nickname, u.provider, u.provider_id,
-               u.service_policy_agreement, u.privacy_policy_agreement, u.marketing_policy_agreement,
-               u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date,
-               COUNT(ep.events_id) AS event_count
-        FROM users u
-        JOIN event_participations ep ON u.users_id = ep.users_id
-            AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
-        WHERE u.status = 'ACTIVE'
-        GROUP BY u.users_id, u.email, u.name, u.nickname, u.provider, u.provider_id,
-                 u.service_policy_agreement, u.privacy_policy_agreement, u.marketing_policy_agreement,
-                 u.sleep_start_time, u.sleep_end_time, u.language, u.created_date, u.updated_date
-        HAVING COUNT(ep.events_id) >= 5
-        ORDER BY event_count DESC
-        LIMIT :limit
-        """, nativeQuery = true)
-    List<Object[]> findVipUserDetails(@Param("limit") int limit);
-
-    /**
-     * 참여자 0명 이벤트 수 (3일 이상 경과)
-     */
-    @Query(value = """
-        SELECT COUNT(*) FROM (
-            SELECT e.events_id
-            FROM events e
-            JOIN event_participations ep ON e.events_id = ep.events_id
-            LEFT JOIN members m ON e.events_id = m.events_id
-            WHERE ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
-              AND e.status = 'ACTIVE'
-              AND e.created_date < DATE_SUB(NOW(), INTERVAL 3 DAY)
-            GROUP BY e.events_id
-            HAVING COUNT(m.members_id) = 0
-        ) AS zero_participant_events
-        """, nativeQuery = true)
-    Long countZeroParticipantEvents();
 
     // ==================== 날짜 범위 필터 버전 (마케팅 타겟) ====================
 
@@ -518,29 +284,6 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
-
-    /**
-     * 참여자 0명 이벤트 상세 리스트
-     */
-    @Query(value = """
-        SELECT e.events_id, e.title, e.category, e.start_time, e.end_time, e.created_date,
-               u.users_id, u.email, u.name, u.nickname,
-               DATEDIFF(NOW(), e.created_date) AS days_since_created
-        FROM users u
-        JOIN event_participations ep ON u.users_id = ep.users_id
-        JOIN events e ON ep.events_id = e.events_id
-        LEFT JOIN members m ON e.events_id = m.events_id
-        WHERE ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
-          AND e.status = 'ACTIVE'
-          AND u.marketing_policy_agreement = 1
-          AND e.created_date < DATE_SUB(NOW(), INTERVAL 3 DAY)
-        GROUP BY e.events_id, e.title, e.category, e.start_time, e.end_time, e.created_date,
-                 u.users_id, u.email, u.name, u.nickname
-        HAVING COUNT(m.members_id) = 0
-        ORDER BY e.created_date
-        LIMIT :limit
-        """, nativeQuery = true)
-    List<Object[]> findZeroParticipantEventDetails(@Param("limit") int limit);
 
     // ==================== 월별 가입자 (Native Query) ====================
 
@@ -786,62 +529,6 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     List<Object[]> countParticipantsByEventIds(@Param("eventIds") List<Long> eventIds);
 
     /**
-     * 참여자 수 기준 정렬된 이벤트 ID 목록 (페이징)
-     */
-    @Query(value = """
-        SELECT
-            e.events_id,
-            COALESCE(ep_sub.ep_count, 0) + COALESCE(m_sub.m_count, 0) AS participant_count
-        FROM events e
-        LEFT JOIN (
-            SELECT events_id, COUNT(*) AS ep_count
-            FROM event_participations
-            WHERE event_status NOT IN ('CREATOR')
-            GROUP BY events_id
-        ) ep_sub ON e.events_id = ep_sub.events_id
-        LEFT JOIN (
-            SELECT events_id, COUNT(*) AS m_count
-            FROM members
-            GROUP BY events_id
-        ) m_sub ON e.events_id = m_sub.events_id
-        WHERE e.status = 'ACTIVE'
-        ORDER BY participant_count DESC, e.events_id DESC
-        LIMIT :limit OFFSET :offset
-        """, nativeQuery = true)
-    List<Object[]> findEventIdsByParticipantCountDesc(
-            @Param("limit") int limit,
-            @Param("offset") int offset
-    );
-
-    /**
-     * 참여자 수 기준 정렬된 이벤트 ID 목록 (오름차순, 페이징)
-     */
-    @Query(value = """
-        SELECT
-            e.events_id,
-            COALESCE(ep_sub.ep_count, 0) + COALESCE(m_sub.m_count, 0) AS participant_count
-        FROM events e
-        LEFT JOIN (
-            SELECT events_id, COUNT(*) AS ep_count
-            FROM event_participations
-            WHERE event_status NOT IN ('CREATOR')
-            GROUP BY events_id
-        ) ep_sub ON e.events_id = ep_sub.events_id
-        LEFT JOIN (
-            SELECT events_id, COUNT(*) AS m_count
-            FROM members
-            GROUP BY events_id
-        ) m_sub ON e.events_id = m_sub.events_id
-        WHERE e.status = 'ACTIVE'
-        ORDER BY participant_count ASC, e.events_id ASC
-        LIMIT :limit OFFSET :offset
-        """, nativeQuery = true)
-    List<Object[]> findEventIdsByParticipantCountAsc(
-            @Param("limit") int limit,
-            @Param("offset") int offset
-    );
-
-    /**
      * 이벤트 키워드 분석 (타이틀에서 키워드 포함 여부)
      * 30개 키워드 지원
      */
@@ -925,19 +612,6 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     // ==================== 이메일 발송용 쿼리 ====================
 
     /**
-     * 마케팅 동의 유저 이메일 목록
-     */
-    @Query(value = """
-        SELECT email FROM users
-        WHERE status = 'ACTIVE'
-          AND marketing_policy_agreement = 1
-          AND email IS NOT NULL
-        ORDER BY created_date DESC
-        LIMIT :limit
-        """, nativeQuery = true)
-    List<String> findMarketingAgreedUserEmails(@Param("limit") int limit);
-
-    /**
      * 마케팅 동의 유저 이메일+userId 목록
      * 반환: [email, users_id]
      */
@@ -950,26 +624,6 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         LIMIT :limit
         """, nativeQuery = true)
     List<Object[]> findMarketingAgreedUserEmailsWithIds(@Param("limit") int limit);
-
-    /**
-     * 휴면 유저 이메일 목록 (마케팅 동의자만)
-     * last_used_at이 NULL이면 issued_at 사용
-     */
-    @Query(value = """
-        SELECT u.email
-        FROM users u
-        LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
-        WHERE u.status = 'ACTIVE'
-          AND u.marketing_policy_agreement = 1
-          AND u.email IS NOT NULL
-        GROUP BY u.users_id, u.email
-        HAVING DATEDIFF(NOW(), MAX(COALESCE(rt.last_used_at, rt.issued_at))) >= :days
-        LIMIT :limit
-        """, nativeQuery = true)
-    List<String> findDormantUserEmails(
-            @Param("days") int days,
-            @Param("limit") int limit
-    );
 
     /**
      * 휴면 유저 이메일+userId 목록
@@ -988,26 +642,6 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         """, nativeQuery = true)
     List<Object[]> findDormantUserEmailsWithIds(
             @Param("days") int days,
-            @Param("limit") int limit
-    );
-
-    /**
-     * 이벤트 미생성 유저 이메일 목록
-     */
-    @Query(value = """
-        SELECT u.email
-        FROM users u
-        LEFT JOIN event_participations ep ON u.users_id = ep.users_id
-            AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
-        WHERE u.status = 'ACTIVE'
-          AND u.marketing_policy_agreement = 1
-          AND u.email IS NOT NULL
-          AND ep.users_id IS NULL
-          AND u.created_date < DATE_SUB(NOW(), INTERVAL :daysAfterSignup DAY)
-        LIMIT :limit
-        """, nativeQuery = true)
-    List<String> findNoEventUserEmails(
-            @Param("daysAfterSignup") int daysAfterSignup,
             @Param("limit") int limit
     );
 
@@ -1033,23 +667,6 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     );
 
     /**
-     * 1회성 유저 이메일 목록
-     */
-    @Query(value = """
-        SELECT u.email
-        FROM users u
-        JOIN event_participations ep ON u.users_id = ep.users_id
-            AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
-        WHERE u.status = 'ACTIVE'
-          AND u.marketing_policy_agreement = 1
-          AND u.email IS NOT NULL
-        GROUP BY u.users_id, u.email
-        HAVING COUNT(ep.events_id) = 1
-        LIMIT :limit
-        """, nativeQuery = true)
-    List<String> findOneTimeUserEmails(@Param("limit") int limit);
-
-    /**
      * 1회성 유저 이메일+userId 목록
      * 반환: [email, users_id]
      */
@@ -1066,23 +683,6 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         LIMIT :limit
         """, nativeQuery = true)
     List<Object[]> findOneTimeUserEmailsWithIds(@Param("limit") int limit);
-
-    /**
-     * VIP 유저 이메일 목록 (이벤트 5개+ 생성)
-     */
-    @Query(value = """
-        SELECT u.email
-        FROM users u
-        JOIN event_participations ep ON u.users_id = ep.users_id
-            AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
-        WHERE u.status = 'ACTIVE'
-          AND u.email IS NOT NULL
-        GROUP BY u.users_id, u.email
-        HAVING COUNT(ep.events_id) >= 5
-        ORDER BY COUNT(ep.events_id) DESC
-        LIMIT :limit
-        """, nativeQuery = true)
-    List<String> findVipUserEmails(@Param("limit") int limit);
 
     /**
      * VIP 유저 이메일+userId 목록
