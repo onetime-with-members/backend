@@ -103,7 +103,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     return;
 
                 } catch (Exception reissueEx) {
-                    log.warn("Admin token reissue failed: {}", reissueEx.getMessage());
+                    log.warn("[Admin] 토큰 재발급 실패 - 사유: {}", reissueEx.getMessage());
                     // 재발급 실패 시 로그인 페이지로 리다이렉트
                     response.sendRedirect("/admin/login");
                     return;

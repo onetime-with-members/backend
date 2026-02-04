@@ -74,14 +74,12 @@ public class EmailService {
         List<UserEmailDto> users = getEmailsWithIdsByGroup(request.targetGroup(), request.getLimit());
 
         if (users.isEmpty()) {
-            log.warn("No emails found for target group: {}", request.targetGroup());
+            log.warn("[Email] 대상 그룹에 발송 가능한 이메일 없음 - 그룹: {}", request.targetGroup());
             return SendEmailResponse.success(0);
         }
 
         List<String> emails = users.stream().map(UserEmailDto::email).toList();
         List<Long> userIds = users.stream().map(UserEmailDto::userId).toList();
-
-        log.info("Sending emails to {} users in group: {}", emails.size(), request.targetGroup());
 
         SendEmailRequest emailRequest = new SendEmailRequest(
                 emails,
@@ -101,8 +99,6 @@ public class EmailService {
     public SendEmailResponse sendByTemplate(SendByTemplateRequest request) {
         EmailTemplate template = emailTemplateRepository.findByCode(request.templateCode())
                 .orElseThrow(() -> new CustomException(EmailErrorStatus._EMAIL_TEMPLATE_NOT_FOUND));
-
-        log.info("Sending emails using template: {} to {} users", request.templateCode(), request.to().size());
 
         SendEmailRequest emailRequest = new SendEmailRequest(
                 request.to(),
@@ -131,17 +127,14 @@ public class EmailService {
             try {
                 sendSingleEmail(to, request.subject(), request.content(), request.getContentType());
                 sentCount++;
-                log.info("Email sent successfully to: {}", to);
 
-                // 성공 로그 저장
                 saveEmailLog(userId, to, request.subject(), request.getContentType(),
                         EmailLogStatus.SENT, null, targetGroup);
 
             } catch (Exception e) {
-                log.error("Failed to send email to: {}, error: {}", to, e.getMessage());
+                log.error("[Email] 발송 실패 - 수신자: {}, 사유: {}", to, e.getMessage());
                 failedEmails.add(to);
 
-                // 실패 로그 저장
                 saveEmailLog(userId, to, request.subject(), request.getContentType(),
                         EmailLogStatus.FAILED, e.getMessage(), targetGroup);
             }
@@ -150,6 +143,13 @@ public class EmailService {
             if (i < recipients.size() - 1 && rateLimitDelayMs > 0) {
                 applyRateLimitDelay();
             }
+        }
+
+        // 발송 결과 요약 로그
+        if (failedEmails.isEmpty()) {
+            log.info("[Email] 발송 완료 - 총 {}건 성공", sentCount);
+        } else {
+            log.warn("[Email] 발송 완료 - 성공: {}건, 실패: {}건", sentCount, failedEmails.size());
         }
 
         return SendEmailResponse.of(sentCount, failedEmails.size(), failedEmails);
@@ -163,7 +163,7 @@ public class EmailService {
             Thread.sleep(rateLimitDelayMs);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.warn("Email rate limiting interrupted");
+            log.warn("[Email] Rate Limiting 인터럽트 발생");
         }
     }
 
@@ -224,7 +224,7 @@ public class EmailService {
             case "onetime" -> statisticsRepository.findOneTimeUserEmailsWithIds(limit);
             case "vip" -> statisticsRepository.findVipUserEmailsWithIds(limit);
             default -> {
-                log.warn("Unknown target group: {}", group);
+                log.warn("[Email] 알 수 없는 타겟 그룹 - 그룹: {}", group);
                 yield List.of();
             }
         };
@@ -317,7 +317,6 @@ public class EmailService {
         EmailTemplate template = request.toEntity();
         emailTemplateRepository.save(template);
 
-        log.info("Email template created: {}", template.getName());
         return EmailTemplateResponse.from(template);
     }
 
@@ -335,7 +334,6 @@ public class EmailService {
 
         template.update(request.name(), request.code(), request.subject(), request.content(), request.contentType());
 
-        log.info("Email template updated: {}", template.getName());
         return EmailTemplateResponse.from(template);
     }
 
@@ -348,6 +346,5 @@ public class EmailService {
                 .orElseThrow(() -> new CustomException(EmailErrorStatus._EMAIL_TEMPLATE_NOT_FOUND));
 
         emailTemplateRepository.delete(template);
-        log.info("Email template deleted: {}", template.getName());
     }
 }

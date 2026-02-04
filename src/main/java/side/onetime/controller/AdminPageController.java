@@ -53,7 +53,7 @@ public class AdminPageController {
                 }
             }
         } catch (Exception e) {
-            log.debug("Could not get admin name: {}", e.getMessage());
+            log.debug("[Admin] 어드민 이름 조회 실패 - 사유: {}", e.getMessage());
         }
         return "A";
     }
@@ -84,7 +84,7 @@ public class AdminPageController {
 
             return "redirect:/admin/dashboard";
         } catch (CustomException e) {
-            log.warn("Admin login failed: {}", e.getMessage());
+            log.warn("[Admin] 로그인 실패 - 사유: {}", e.getMessage());
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/admin/login";
         }
@@ -195,5 +195,4 @@ public class AdminPageController {
         model.addAttribute("pageTitle", "Send Email");
         return "admin/email";
     }
-
 }
