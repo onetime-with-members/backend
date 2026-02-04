@@ -29,6 +29,10 @@ import side.onetime.util.CookieUtil;
 import side.onetime.util.DateUtil;
 import side.onetime.util.JwtUtil;
 
+/**
+ * 어드민 페이지 컨트롤러 (SSR)
+ * Thymeleaf 템플릿 렌더링을 담당
+ */
 @Slf4j
 @Controller
 @RequestMapping("/admin")
@@ -42,6 +46,10 @@ public class AdminPageController {
 
     // ==================== Model Attributes ====================
 
+    /**
+     * 현재 로그인된 어드민의 이름(이메일 첫 글자) 반환
+     * 모든 페이지에서 공통으로 사용
+     */
     @ModelAttribute("adminName")
     public String getAdminName() {
         try {
@@ -60,11 +68,18 @@ public class AdminPageController {
 
     // ==================== Authentication ====================
 
+    /**
+     * 로그인 페이지 렌더링
+     */
     @GetMapping("/login")
     public String loginPage() {
         return "admin/login";
     }
 
+    /**
+     * 로그인 처리
+     * 성공 시 JWT 토큰을 쿠키에 저장하고 대시보드로 리다이렉트
+     */
     @PostMapping("/login")
     public String login(@RequestParam String email,
                         @RequestParam String password,
@@ -90,6 +105,10 @@ public class AdminPageController {
         }
     }
 
+    /**
+     * 로그아웃 처리
+     * 쿠키에서 토큰 삭제 후 로그인 페이지로 리다이렉트
+     */
     @GetMapping("/logout")
     public String logout(HttpServletRequest request, HttpServletResponse response) {
         CookieUtil.clearAdminTokenCookies(request, response);
@@ -98,6 +117,10 @@ public class AdminPageController {
 
     // ==================== Dashboard ====================
 
+    /**
+     * 대시보드 페이지 렌더링
+     * KPI 요약 및 차트 데이터 포함
+     */
     @GetMapping("/dashboard")
     public String dashboard(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
@@ -118,6 +141,9 @@ public class AdminPageController {
 
     // ==================== Statistics Pages ====================
 
+    /**
+     * 유저 통계 페이지 렌더링
+     */
     @GetMapping("/statistics/users")
     public String usersStatistics(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
@@ -135,6 +161,9 @@ public class AdminPageController {
         return "admin/users";
     }
 
+    /**
+     * 이벤트 통계 페이지 렌더링
+     */
     @GetMapping("/statistics/events")
     public String eventsStatistics(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
@@ -152,6 +181,9 @@ public class AdminPageController {
         return "admin/events";
     }
 
+    /**
+     * 리텐션 분석 페이지 렌더링
+     */
     @GetMapping("/statistics/retention")
     public String retentionStatistics(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
@@ -169,6 +201,9 @@ public class AdminPageController {
         return "admin/retention";
     }
 
+    /**
+     * 마케팅 타겟 페이지 렌더링
+     */
     @GetMapping("/statistics/marketing")
     public String marketingTargets(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
@@ -188,6 +223,9 @@ public class AdminPageController {
 
     // ==================== Email Page ====================
 
+    /**
+     * 이메일 발송 페이지 렌더링
+     */
     @GetMapping("/email")
     public String emailPage(HttpServletRequest request, Model model) {
         model.addAttribute("currentUri", request.getRequestURI());
