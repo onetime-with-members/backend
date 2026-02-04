@@ -2,7 +2,6 @@ package side.onetime.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -243,12 +242,8 @@ public class EmailService {
     @Transactional(readOnly = true)
     public EmailLogStatsResponse getEmailStats() {
         LocalDateTime todayStart = LocalDate.now().atStartOfDay();
-        LocalDateTime todayEnd = LocalDate.now().atTime(LocalTime.MAX);
-
         long totalSent = emailLogRepository.countByStatus(EmailLogStatus.SENT);
-        long sentToday = emailLogRepository.count(); // 임시: 오늘 발송 건수 계산
 
-        // 오늘 통계 계산
         List<Object[]> todayStats = emailLogRepository.countByStatusSince(todayStart);
         long sentTodayCount = 0;
         long failedTodayCount = 0;
