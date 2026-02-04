@@ -8,6 +8,7 @@ import side.onetime.domain.enums.EmailLogStatus;
 
 public record EmailLogResponse(
         Long id,
+        Long userId,
         String recipient,
         String subject,
         String contentType,
@@ -19,6 +20,7 @@ public record EmailLogResponse(
     public static EmailLogResponse from(EmailLog emailLog) {
         return new EmailLogResponse(
                 emailLog.getId(),
+                emailLog.getUserId(),
                 emailLog.getRecipient(),
                 emailLog.getSubject(),
                 emailLog.getContentType(),

@@ -27,6 +27,9 @@ public class EmailLog {
     @Column(name = "id")
     private Long id;
 
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
     @Column(name = "recipient", nullable = false)
     private String recipient;
 
@@ -50,14 +53,15 @@ public class EmailLog {
     private LocalDateTime sentAt;
 
     @Builder
-    public EmailLog(String recipient, String subject, String contentType,
+    public EmailLog(Long userId, String recipient, String subject, String contentType,
                     EmailLogStatus status, String errorMessage, String targetGroup) {
-        this.recipient = recipient;
-        this.subject = subject;
-        this.contentType = contentType;
-        this.status = status;
-        this.errorMessage = errorMessage;
-        this.targetGroup = targetGroup;
+		this.userId = userId;
+		this.recipient = recipient;
+		this.subject = subject;
+		this.contentType = contentType;
+		this.status = status;
+		this.errorMessage = errorMessage;
+		this.targetGroup = targetGroup;
         this.sentAt = LocalDateTime.now();
     }
 

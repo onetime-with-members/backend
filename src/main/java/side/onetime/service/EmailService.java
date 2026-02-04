@@ -26,6 +26,7 @@ import side.onetime.dto.admin.email.response.EmailLogPageResponse;
 import side.onetime.dto.admin.email.response.EmailLogStatsResponse;
 import side.onetime.dto.admin.email.response.EmailTemplateResponse;
 import side.onetime.dto.admin.email.response.SendEmailResponse;
+import side.onetime.dto.admin.email.response.UserEmailDto;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.EmailErrorStatus;
 import side.onetime.repository.EmailLogRepository;
@@ -67,12 +68,15 @@ public class EmailService {
      */
     @Transactional
     public SendEmailResponse sendToMarketingGroup(SendToGroupRequest request) {
-        List<String> emails = getEmailsByGroup(request.targetGroup(), request.getLimit());
+        List<UserEmailDto> users = getEmailsWithIdsByGroup(request.targetGroup(), request.getLimit());
 
-        if (emails.isEmpty()) {
+        if (users.isEmpty()) {
             log.warn("No emails found for target group: {}", request.targetGroup());
             return SendEmailResponse.success(0);
         }
+
+        List<String> emails = users.stream().map(UserEmailDto::email).toList();
+        List<Long> userIds = users.stream().map(UserEmailDto::userId).toList();
 
         log.info("Sending emails to {} users in group: {}", emails.size(), request.targetGroup());
 
@@ -80,7 +84,8 @@ public class EmailService {
                 emails,
                 request.subject(),
                 request.content(),
-                request.getContentType()
+                request.getContentType(),
+                userIds
         );
 
         return sendEmailWithGroup(emailRequest, request.targetGroup());
@@ -93,14 +98,18 @@ public class EmailService {
         List<String> failedEmails = new ArrayList<>();
         int sentCount = 0;
 
-        for (String to : request.to()) {
+        List<String> recipients = request.to();
+        for (int i = 0; i < recipients.size(); i++) {
+            String to = recipients.get(i);
+            Long userId = request.getUserIdAt(i);
+
             try {
                 sendSingleEmail(to, request.subject(), request.content(), request.getContentType());
                 sentCount++;
                 log.info("Email sent successfully to: {}", to);
 
                 // 성공 로그 저장
-                saveEmailLog(to, request.subject(), request.getContentType(),
+                saveEmailLog(userId, to, request.subject(), request.getContentType(),
                         EmailLogStatus.SENT, null, targetGroup);
 
             } catch (Exception e) {
@@ -108,7 +117,7 @@ public class EmailService {
                 failedEmails.add(to);
 
                 // 실패 로그 저장
-                saveEmailLog(to, request.subject(), request.getContentType(),
+                saveEmailLog(userId, to, request.subject(), request.getContentType(),
                         EmailLogStatus.FAILED, e.getMessage(), targetGroup);
             }
         }
@@ -119,9 +128,10 @@ public class EmailService {
     /**
      * 이메일 로그 저장
      */
-    private void saveEmailLog(String recipient, String subject, String contentType,
+    private void saveEmailLog(Long userId, String recipient, String subject, String contentType,
                               EmailLogStatus status, String errorMessage, String targetGroup) {
         EmailLog emailLog = EmailLog.builder()
+                .userId(userId)
                 .recipient(recipient)
                 .subject(subject)
                 .contentType(contentType)
@@ -162,20 +172,21 @@ public class EmailService {
     }
 
     /**
-     * 마케팅 그룹별 이메일 목록 조회
+     * 마케팅 그룹별 이메일 + userId 목록 조회
      */
-    private List<String> getEmailsByGroup(String group, int limit) {
-        return switch (group.toLowerCase()) {
-            case "agreed" -> statisticsRepository.findMarketingAgreedUserEmails(limit);
-            case "dormant" -> statisticsRepository.findDormantUserEmails(30, limit);
-            case "noevent" -> statisticsRepository.findNoEventUserEmails(7, limit);
-            case "onetime" -> statisticsRepository.findOneTimeUserEmails(limit);
-            case "vip" -> statisticsRepository.findVipUserEmails(limit);
+    private List<UserEmailDto> getEmailsWithIdsByGroup(String group, int limit) {
+        List<Object[]> rows = switch (group.toLowerCase()) {
+            case "agreed" -> statisticsRepository.findMarketingAgreedUserEmailsWithIds(limit);
+            case "dormant" -> statisticsRepository.findDormantUserEmailsWithIds(30, limit);
+            case "noevent" -> statisticsRepository.findNoEventUserEmailsWithIds(7, limit);
+            case "onetime" -> statisticsRepository.findOneTimeUserEmailsWithIds(limit);
+            case "vip" -> statisticsRepository.findVipUserEmailsWithIds(limit);
             default -> {
                 log.warn("Unknown target group: {}", group);
                 yield List.of();
             }
         };
+        return rows.stream().map(UserEmailDto::from).toList();
     }
 
     // ==================== 로그 조회 ====================

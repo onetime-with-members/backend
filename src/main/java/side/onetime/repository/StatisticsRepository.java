@@ -938,6 +938,20 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     List<String> findMarketingAgreedUserEmails(@Param("limit") int limit);
 
     /**
+     * 마케팅 동의 유저 이메일+userId 목록
+     * 반환: [email, users_id]
+     */
+    @Query(value = """
+        SELECT email, users_id FROM users
+        WHERE status = 'ACTIVE'
+          AND marketing_policy_agreement = 1
+          AND email IS NOT NULL
+        ORDER BY created_date DESC
+        LIMIT :limit
+        """, nativeQuery = true)
+    List<Object[]> findMarketingAgreedUserEmailsWithIds(@Param("limit") int limit);
+
+    /**
      * 휴면 유저 이메일 목록 (마케팅 동의자만)
      * last_used_at이 NULL이면 issued_at 사용
      */
@@ -953,6 +967,26 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         LIMIT :limit
         """, nativeQuery = true)
     List<String> findDormantUserEmails(
+            @Param("days") int days,
+            @Param("limit") int limit
+    );
+
+    /**
+     * 휴면 유저 이메일+userId 목록
+     * 반환: [email, users_id]
+     */
+    @Query(value = """
+        SELECT u.email, u.users_id
+        FROM users u
+        LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
+        WHERE u.status = 'ACTIVE'
+          AND u.marketing_policy_agreement = 1
+          AND u.email IS NOT NULL
+        GROUP BY u.users_id, u.email
+        HAVING DATEDIFF(NOW(), MAX(COALESCE(rt.last_used_at, rt.issued_at))) >= :days
+        LIMIT :limit
+        """, nativeQuery = true)
+    List<Object[]> findDormantUserEmailsWithIds(
             @Param("days") int days,
             @Param("limit") int limit
     );
@@ -978,6 +1012,27 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     );
 
     /**
+     * 이벤트 미생성 유저 이메일+userId 목록
+     * 반환: [email, users_id]
+     */
+    @Query(value = """
+        SELECT u.email, u.users_id
+        FROM users u
+        LEFT JOIN event_participations ep ON u.users_id = ep.users_id
+            AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+        WHERE u.status = 'ACTIVE'
+          AND u.marketing_policy_agreement = 1
+          AND u.email IS NOT NULL
+          AND ep.users_id IS NULL
+          AND u.created_date < DATE_SUB(NOW(), INTERVAL :daysAfterSignup DAY)
+        LIMIT :limit
+        """, nativeQuery = true)
+    List<Object[]> findNoEventUserEmailsWithIds(
+            @Param("daysAfterSignup") int daysAfterSignup,
+            @Param("limit") int limit
+    );
+
+    /**
      * 1회성 유저 이메일 목록
      */
     @Query(value = """
@@ -995,6 +1050,24 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     List<String> findOneTimeUserEmails(@Param("limit") int limit);
 
     /**
+     * 1회성 유저 이메일+userId 목록
+     * 반환: [email, users_id]
+     */
+    @Query(value = """
+        SELECT u.email, u.users_id
+        FROM users u
+        JOIN event_participations ep ON u.users_id = ep.users_id
+            AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+        WHERE u.status = 'ACTIVE'
+          AND u.marketing_policy_agreement = 1
+          AND u.email IS NOT NULL
+        GROUP BY u.users_id, u.email
+        HAVING COUNT(ep.events_id) = 1
+        LIMIT :limit
+        """, nativeQuery = true)
+    List<Object[]> findOneTimeUserEmailsWithIds(@Param("limit") int limit);
+
+    /**
      * VIP 유저 이메일 목록 (이벤트 5개+ 생성)
      */
     @Query(value = """
@@ -1010,6 +1083,24 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         LIMIT :limit
         """, nativeQuery = true)
     List<String> findVipUserEmails(@Param("limit") int limit);
+
+    /**
+     * VIP 유저 이메일+userId 목록
+     * 반환: [email, users_id]
+     */
+    @Query(value = """
+        SELECT u.email, u.users_id
+        FROM users u
+        JOIN event_participations ep ON u.users_id = ep.users_id
+            AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+        WHERE u.status = 'ACTIVE'
+          AND u.email IS NOT NULL
+        GROUP BY u.users_id, u.email
+        HAVING COUNT(ep.events_id) >= 5
+        ORDER BY COUNT(ep.events_id) DESC
+        LIMIT :limit
+        """, nativeQuery = true)
+    List<Object[]> findVipUserEmailsWithIds(@Param("limit") int limit);
 
     // ==================== 유저 검색 (이메일 발송용) ====================
 

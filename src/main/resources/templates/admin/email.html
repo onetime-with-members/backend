@@ -382,8 +382,8 @@
         });
     }
 
-    function addUser(email, name) {
-        selectedUsers.set(email, { name: name, email: email });
+    function addUser(email, name, userId) {
+        selectedUsers.set(email, { name: name, email: email, userId: userId });
         updateSelectedUI();
     }
 
@@ -392,11 +392,11 @@
         updateSelectedUI();
     }
 
-    function toggleUser(email, name) {
+    function toggleUser(email, name, userId) {
         if (selectedUsers.has(email)) {
             removeUser(email);
         } else {
-            addUser(email, name);
+            addUser(email, name, userId);
         }
     }
 
@@ -427,11 +427,11 @@
             users.forEach(user => {
                 const checked = selectedUsers.has(user.email) ? 'checked' : '';
                 tbody += `
-                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" onclick="toggleUser('${user.email}', '${user.name || ''}')">
+                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" onclick="toggleUser('${user.email}', '${user.name || ''}', ${user.userId})">
                         <td class="text-center py-2">
                             <input type="checkbox" class="user-checkbox rounded border-gray-300 dark:border-gray-600"
                                    data-email="${user.email}" ${checked}
-                                   onclick="event.stopPropagation(); toggleUser('${user.email}', '${user.name || ''}')">
+                                   onclick="event.stopPropagation(); toggleUser('${user.email}', '${user.name || ''}', ${user.userId})">
                         </td>
                         <td class="py-2 text-gray-900 dark:text-white">${user.name || '-'}</td>
                         <td class="py-2 text-gray-600 dark:text-gray-400">${user.email || '-'}</td>
@@ -510,6 +510,7 @@
         if (!content) { showAlert('내용을 입력해주세요', 'warning'); return; }
 
         const emails = Array.from(selectedUsers.keys());
+        const userIds = Array.from(selectedUsers.values()).map(u => u.userId);
         const confirmed = await showConfirm(`${emails.length}명에게 이메일을 발송하시겠습니까?`, '이메일 발송');
         if (!confirmed) return;
 
@@ -520,7 +521,7 @@
         fetch('/api/v1/admin/email/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ to: emails, subject, content, contentType })
+            body: JSON.stringify({ to: emails, subject, content, contentType, userIds })
         })
         .then(response => response.json())
         .then(data => {
@@ -852,7 +853,8 @@
                         if (user.email) {
                             selectedUsers.set(user.email, {
                                 name: user.name || user.nickname || '',
-                                email: user.email
+                                email: user.email,
+                                userId: user.userId
                             });
                         }
                     });
