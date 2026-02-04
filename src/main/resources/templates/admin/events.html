@@ -546,19 +546,6 @@
         }
     }
 
-    function showToast(message, type = 'info') {
-        const toast = document.createElement('div');
-        const bgColor = type === 'error' ? 'bg-red-500' : 'bg-accent-500';
-        toast.className = `fixed bottom-4 right-4 ${bgColor} text-white px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2`;
-        toast.innerHTML = `
-            <i data-lucide="${type === 'error' ? 'alert-circle' : 'check-circle'}" class="w-5 h-5"></i>
-            <span>${message}</span>
-        `;
-        document.body.appendChild(toast);
-        lucide.createIcons();
-        setTimeout(() => toast.remove(), 5000);
-    }
-
     function filterByKeyword(keyword) {
         document.getElementById('eventSearch').value = keyword;
         loadEventList(1);

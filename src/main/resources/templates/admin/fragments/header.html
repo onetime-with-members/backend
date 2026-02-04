@@ -165,6 +165,34 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
         }
 
+        /* Toast animations */
+        @keyframes toast-slide-in {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes toast-slide-out {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        .toast-enter {
+            animation: toast-slide-in 0.3s ease-out forwards;
+        }
+        .toast-exit {
+            animation: toast-slide-out 0.2s ease-in forwards;
+        }
+
         /* Scrollbar - Light */
         ::-webkit-scrollbar {
             width: 6px;
@@ -197,5 +225,63 @@
             filter: none;
         }
     </style>
+
+    <!-- Global Toast System -->
+    <script>
+        window.showToast = function(message, type = 'info', duration = 5000) {
+            // Create toast container if not exists
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = 'fixed bottom-4 right-4 z-50 flex flex-col gap-2';
+                document.body.appendChild(container);
+            }
+
+            // Determine colors based on type
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-amber-500',
+                info: 'bg-accent-500'
+            };
+            const icons = {
+                success: 'check-circle',
+                error: 'alert-circle',
+                warning: 'alert-triangle',
+                info: 'info'
+            };
+            const bgColor = colors[type] || colors.info;
+            const icon = icons[type] || icons.info;
+
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 toast-enter`;
+            toast.innerHTML = `
+                <i data-lucide="${icon}" class="w-5 h-5 flex-shrink-0"></i>
+                <span class="text-sm">${message}</span>
+                <button onclick="this.parentElement.classList.replace('toast-enter', 'toast-exit'); setTimeout(() => this.parentElement.remove(), 200);" class="ml-2 hover:opacity-80">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            `;
+
+            container.appendChild(toast);
+
+            // Initialize lucide icons for this toast
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons({ nodes: [toast] });
+            }
+
+            // Auto remove after duration
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.classList.replace('toast-enter', 'toast-exit');
+                    setTimeout(() => toast.remove(), 200);
+                }
+            }, duration);
+
+            return toast;
+        };
+    </script>
 </head>
 </html>
