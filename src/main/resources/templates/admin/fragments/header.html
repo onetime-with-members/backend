@@ -132,6 +132,39 @@
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
 
+        /* Tabular Numbers for consistent digit widths */
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Button hover micro-interactions */
+        .btn-hover {
+            transition: all 0.15s ease-out;
+        }
+        .btn-hover:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .btn-hover:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .dark .btn-hover:hover:not(:disabled) {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Card hover effects */
+        .card-hover {
+            transition: all 0.2s ease-out;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+        }
+        .dark .card-hover:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+        }
+
         /* Scrollbar - Light */
         ::-webkit-scrollbar {
             width: 6px;

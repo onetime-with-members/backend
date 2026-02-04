@@ -18,7 +18,7 @@
                 데이터 기준: 12:00:00
             </span>
             <button onclick="location.reload()"
-                    class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 btn-hover">
                 <i data-lucide="refresh-cw" class="w-4 h-4 inline"></i>
             </button>
         </div>
@@ -30,12 +30,12 @@
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <!-- Total Users -->
-        <a href="/admin/statistics/users" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors hover:border-accent-300 dark:hover:border-accent-600 hover:shadow-sm cursor-pointer block">
+        <a href="/admin/statistics/users" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">총 가입 유저</p>
                     <div class="flex items-center gap-2 mt-1">
-                        <p class="text-2xl font-semibold text-gray-900 dark:text-white"
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-white tabular-nums"
                            th:text="${#numbers.formatInteger(summary.totalUsers, 0, 'COMMA')}">0</p>
                         <th:block th:if="${summary.comparison != null and summary.comparison.totalUsersChange != null}">
                             <span th:class="${summary.comparison.totalUsersChange >= 0 ? 'text-green-500' : 'text-red-500'}"
@@ -54,12 +54,12 @@
         </a>
 
         <!-- Total Events -->
-        <a href="/admin/statistics/events" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors hover:border-accent-300 dark:hover:border-accent-600 hover:shadow-sm cursor-pointer block">
+        <a href="/admin/statistics/events" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">총 생성 이벤트</p>
                     <div class="flex items-center gap-2 mt-1">
-                        <p class="text-2xl font-semibold text-gray-900 dark:text-white"
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-white tabular-nums"
                            th:text="${#numbers.formatInteger(summary.totalEvents, 0, 'COMMA')}">0</p>
                         <th:block th:if="${summary.comparison != null and summary.comparison.totalEventsChange != null}">
                             <span th:class="${summary.comparison.totalEventsChange >= 0 ? 'text-green-500' : 'text-red-500'}"
@@ -78,12 +78,12 @@
         </a>
 
         <!-- MAU -->
-        <a href="/admin/statistics/retention" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors hover:border-accent-300 dark:hover:border-accent-600 hover:shadow-sm cursor-pointer block">
+        <a href="/admin/statistics/retention" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">MAU (최근 30일)</p>
                     <div class="flex items-center gap-2 mt-1">
-                        <p class="text-2xl font-semibold text-gray-900 dark:text-white"
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-white tabular-nums"
                            th:text="${#numbers.formatInteger(summary.mau, 0, 'COMMA')}">0</p>
                         <th:block th:if="${summary.comparison != null and summary.comparison.mauChange != null}">
                             <span th:class="${summary.comparison.mauChange >= 0 ? 'text-green-500' : 'text-red-500'}"
@@ -102,12 +102,12 @@
         </a>
 
         <!-- Dormant Rate -->
-        <a href="/admin/statistics/retention" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors hover:border-accent-300 dark:hover:border-accent-600 hover:shadow-sm cursor-pointer block">
+        <a href="/admin/statistics/retention" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">휴면율 (60일+)</p>
                     <div class="flex items-center gap-2 mt-1">
-                        <p class="text-2xl font-semibold text-gray-900 dark:text-white"
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-white tabular-nums"
                            th:text="${#numbers.formatDecimal(summary.dormantRate, 1, 1) + '%'}">0%</p>
                         <th:block th:if="${summary.comparison != null and summary.comparison.dormantRateChange != null and summary.comparison.dormantRateChange != 0}">
                             <!-- 휴면율은 낮아지면 좋은 것이므로 색상 반대 -->
@@ -130,11 +130,11 @@
     <!-- Additional Stats -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <!-- Avg Participants -->
-        <a href="/admin/statistics/events" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors hover:border-accent-300 dark:hover:border-accent-600 hover:shadow-sm cursor-pointer block">
+        <a href="/admin/statistics/events" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">평균 참여자/이벤트</p>
-                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                        th:text="${#numbers.formatDecimal(summary.avgParticipantsPerEvent, 1, 2)}">0</p>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">이벤트당 평균 참여 인원</p>
                 </div>
@@ -145,11 +145,11 @@
         </a>
 
         <!-- Marketing Targets -->
-        <a href="/admin/statistics/marketing" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors hover:border-accent-300 dark:hover:border-accent-600 hover:shadow-sm cursor-pointer block">
+        <a href="/admin/statistics/marketing" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">마케팅 타겟</p>
-                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                        th:text="${#numbers.formatInteger(summary.marketingTargetUsers, 0, 'COMMA')}">0</p>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">마케팅 수신 동의 유저</p>
                 </div>

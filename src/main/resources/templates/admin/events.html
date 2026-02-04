@@ -18,21 +18,21 @@
 
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover">
             <p class="text-sm text-gray-500 dark:text-gray-400">총 생성 이벤트</p>
-            <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+            <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                th:text="${#numbers.formatInteger(data.totalEvents, 0, 'COMMA')}">0</p>
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">선택 기간 내 생성된 이벤트</p>
         </div>
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover">
             <p class="text-sm text-gray-500 dark:text-gray-400">활성 이벤트</p>
-            <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+            <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                th:text="${#numbers.formatInteger(data.activeEvents, 0, 'COMMA')}">0</p>
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">삭제되지 않은 활성 상태 이벤트</p>
         </div>
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover">
             <p class="text-sm text-gray-500 dark:text-gray-400">평균 참여자</p>
-            <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+            <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                th:text="${#numbers.formatDecimal(data.avgParticipants, 1, 2)}">0</p>
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">이벤트당 평균 참여 인원</p>
         </div>
@@ -145,7 +145,7 @@
             </div>
             <div class="flex items-center gap-2">
                 <button onclick="exportEventsCsv()"
-                        class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-1">
+                        class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 btn-hover flex items-center gap-1">
                     <i data-lucide="download" class="w-4 h-4"></i>
                     CSV
                 </button>

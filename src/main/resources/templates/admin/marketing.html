@@ -27,12 +27,12 @@
     <!-- Summary Cards Row 1 -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <!-- Marketing Agreed -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer hover:border-accent-400 dark:hover:border-accent-600 hover:shadow-sm transition-all"
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
              onclick="showDetail('agreed')">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">마케팅 동의</p>
-                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                        th:text="${#numbers.formatInteger(data.marketingAgreedUsers, 0, 'COMMA')}">0</p>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">마케팅 수신 동의한 유저</p>
                 </div>
@@ -43,12 +43,12 @@
         </div>
 
         <!-- Dormant Users -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer hover:border-accent-400 dark:hover:border-accent-600 hover:shadow-sm transition-all"
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
              onclick="showDetail('dormant')">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">휴면 유저</p>
-                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                        th:text="${#numbers.formatInteger(data.dormantUsers, 0, 'COMMA')}">0</p>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">30일+ 미접속</p>
                 </div>
@@ -59,12 +59,12 @@
         </div>
 
         <!-- No Event Users -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer hover:border-accent-400 dark:hover:border-accent-600 hover:shadow-sm transition-all"
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
              onclick="showDetail('noEvent')">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">이벤트 미생성</p>
-                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                        th:text="${#numbers.formatInteger(data.noEventUsers, 0, 'COMMA')}">0</p>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">가입 7일+ 경과, 이벤트 0개</p>
                 </div>
@@ -78,12 +78,12 @@
     <!-- Summary Cards Row 2 -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <!-- One-time Users -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer hover:border-accent-400 dark:hover:border-accent-600 hover:shadow-sm transition-all"
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
              onclick="showDetail('oneTime')">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">일회성 유저</p>
-                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                        th:text="${#numbers.formatInteger(data.oneTimeUsers, 0, 'COMMA')}">0</p>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">이벤트 1회만 생성</p>
                 </div>
@@ -94,12 +94,12 @@
         </div>
 
         <!-- VIP Users -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer hover:border-accent-400 dark:hover:border-accent-600 hover:shadow-sm transition-all"
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
              onclick="showDetail('vip')">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">VIP 유저</p>
-                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                        th:text="${#numbers.formatInteger(data.vipUsers, 0, 'COMMA')}">0</p>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">이벤트 5회 이상 생성</p>
                 </div>
@@ -110,12 +110,12 @@
         </div>
 
         <!-- Zero Participant Events -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer hover:border-accent-400 dark:hover:border-accent-600 hover:shadow-sm transition-all"
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
              onclick="showDetail('zeroParticipant')">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">참여자 0명 이벤트</p>
-                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                        th:text="${#numbers.formatInteger(data.zeroParticipantEvents, 0, 'COMMA')}">0</p>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">아무도 참여 안 한 이벤트</p>
                 </div>

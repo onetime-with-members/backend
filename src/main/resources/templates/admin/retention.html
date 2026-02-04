@@ -27,12 +27,12 @@
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <!-- Dormant 7d+ -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer hover:border-accent-400 dark:hover:border-accent-600 hover:shadow-sm transition-all"
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
              onclick="showRetentionDetail('dormant7')">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">휴면 7일+</p>
-                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                        th:text="${#numbers.formatInteger(data.dormantUsers7Days, 0, 'COMMA')}">0</p>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">7일 이상 미접속</p>
                 </div>
@@ -43,12 +43,12 @@
         </div>
 
         <!-- Dormant 30d+ -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer hover:border-accent-400 dark:hover:border-accent-600 hover:shadow-sm transition-all"
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
              onclick="showRetentionDetail('dormant30')">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">휴면 30일+</p>
-                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                        th:text="${#numbers.formatInteger(data.dormantUsers30Days, 0, 'COMMA')}">0</p>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">30일 이상 미접속</p>
                 </div>
@@ -59,12 +59,12 @@
         </div>
 
         <!-- Dormant 90d+ -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer hover:border-accent-400 dark:hover:border-accent-600 hover:shadow-sm transition-all"
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
              onclick="showRetentionDetail('dormant90')">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">휴면 90일+</p>
-                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                        th:text="${#numbers.formatInteger(data.dormantUsers90Days, 0, 'COMMA')}">0</p>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">90일 이상 미접속 (이탈 위험)</p>
                 </div>
@@ -75,12 +75,12 @@
         </div>
 
         <!-- Returning Rate -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer hover:border-accent-400 dark:hover:border-accent-600 hover:shadow-sm transition-all"
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
              onclick="showRetentionDetail('returning')">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">복귀율</p>
-                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                        th:text="${#numbers.formatDecimal(data.returningUserRate, 1, 1) + '%'}">0%</p>
                     <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">이벤트 2회+ 참여 유저 (생성/참여 포함)</p>
                 </div>
@@ -369,7 +369,7 @@
             </div>
             <div class="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
                 <button type="button" onclick="sendEmailToSelected()" id="btnSendEmailToSelected"
-                        class="px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 btn-hover flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled>
                     <i data-lucide="mail" class="w-4 h-4"></i>
                     이메일 전송

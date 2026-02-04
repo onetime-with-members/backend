@@ -18,21 +18,21 @@
 
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover">
             <p class="text-sm text-gray-500 dark:text-gray-400">총 가입 유저</p>
-            <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+            <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                th:text="${#numbers.formatInteger(data.totalUsers, 0, 'COMMA')}">0</p>
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">선택 기간 내 가입자 수</p>
         </div>
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover">
             <p class="text-sm text-gray-500 dark:text-gray-400">활성 유저</p>
-            <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+            <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                th:text="${#numbers.formatInteger(data.activeUsers, 0, 'COMMA')}">0</p>
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">선택 기간 내 로그인한 유저</p>
         </div>
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover">
             <p class="text-sm text-gray-500 dark:text-gray-400">마케팅 동의율</p>
-            <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1"
+            <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                th:text="${#numbers.formatDecimal(data.marketingAgreementRate, 1, 1) + '%'}">0%</p>
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">마케팅 수신 동의한 비율</p>
         </div>
@@ -99,7 +99,7 @@
             </div>
             <div class="flex items-center gap-2">
                 <button onclick="exportUsersCsv()"
-                        class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-1">
+                        class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 btn-hover flex items-center gap-1">
                     <i data-lucide="download" class="w-4 h-4"></i>
                     CSV
                 </button>
