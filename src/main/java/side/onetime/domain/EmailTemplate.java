@@ -29,6 +29,9 @@ public class EmailTemplate {
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
+    @Column(name = "code", length = 50, unique = true)
+    private String code;
+
     @Column(name = "subject", nullable = false, length = 500)
     private String subject;
 
@@ -45,8 +48,9 @@ public class EmailTemplate {
     private LocalDateTime updatedAt;
 
     @Builder
-    public EmailTemplate(String name, String subject, String content, String contentType) {
+    public EmailTemplate(String name, String code, String subject, String content, String contentType) {
         this.name = name;
+        this.code = code;
         this.subject = subject;
         this.content = content;
         this.contentType = contentType != null ? contentType : "TEXT";
@@ -63,8 +67,9 @@ public class EmailTemplate {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void update(String name, String subject, String content, String contentType) {
+    public void update(String name, String code, String subject, String content, String contentType) {
         this.name = name;
+        this.code = code;
         this.subject = subject;
         this.content = content;
         this.contentType = contentType;

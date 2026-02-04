@@ -9,6 +9,7 @@ import side.onetime.domain.EmailTemplate;
 public record EmailTemplateResponse(
         Long id,
         String name,
+        String code,
         String subject,
         String content,
         String contentType,
@@ -21,6 +22,7 @@ public record EmailTemplateResponse(
         return new EmailTemplateResponse(
                 template.getId(),
                 template.getName(),
+                template.getCode(),
                 template.getSubject(),
                 template.getContent(),
                 template.getContentType(),

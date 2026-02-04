@@ -15,18 +15,16 @@ public record SendEmailRequest(
         @NotBlank(message = "내용은 필수입니다.")
         String content,
 
-        String contentType, // TEXT or HTML (기본값: TEXT)
+        String contentType,
 
-        List<Long> userIds // 선택: to 리스트와 동일 인덱스로 매핑되는 userId 목록
+        @NotEmpty(message = "수신자 userId는 필수입니다.")
+        List<Long> userIds
 ) {
     public String getContentType() {
         return contentType != null ? contentType : "TEXT";
     }
 
     public Long getUserIdAt(int index) {
-        if (userIds == null || index >= userIds.size()) {
-            return null;
-        }
         return userIds.get(index);
     }
 }

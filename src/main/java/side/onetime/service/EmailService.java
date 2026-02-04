@@ -19,6 +19,7 @@ import side.onetime.domain.EmailLog;
 import side.onetime.domain.EmailTemplate;
 import side.onetime.domain.enums.EmailLogStatus;
 import side.onetime.dto.admin.email.request.CreateEmailTemplateRequest;
+import side.onetime.dto.admin.email.request.SendByTemplateRequest;
 import side.onetime.dto.admin.email.request.SendEmailRequest;
 import side.onetime.dto.admin.email.request.SendToGroupRequest;
 import side.onetime.dto.admin.email.request.UpdateEmailTemplateRequest;
@@ -89,6 +90,27 @@ public class EmailService {
         );
 
         return sendEmailWithGroup(emailRequest, request.targetGroup());
+    }
+
+    /**
+     * 템플릿 코드로 이메일 발송 (배치용)
+     */
+    @Transactional
+    public SendEmailResponse sendByTemplate(SendByTemplateRequest request) {
+        EmailTemplate template = emailTemplateRepository.findByCode(request.templateCode())
+                .orElseThrow(() -> new CustomException(EmailErrorStatus._EMAIL_TEMPLATE_NOT_FOUND));
+
+        log.info("Sending emails using template: {} to {} users", request.templateCode(), request.to().size());
+
+        SendEmailRequest emailRequest = new SendEmailRequest(
+                request.to(),
+                template.getSubject(),
+                template.getContent(),
+                template.getContentType(),
+                request.userIds()
+        );
+
+        return sendEmailWithGroup(emailRequest, request.templateCode());
     }
 
     /**
@@ -295,7 +317,7 @@ public class EmailService {
             throw new CustomException(EmailErrorStatus._EMAIL_TEMPLATE_NAME_DUPLICATED);
         }
 
-        template.update(request.name(), request.subject(), request.content(), request.contentType());
+        template.update(request.name(), request.code(), request.subject(), request.content(), request.contentType());
 
         log.info("Email template updated: {}", template.getName());
         return EmailTemplateResponse.from(template);

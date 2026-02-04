@@ -13,4 +13,6 @@ public interface EmailTemplateRepository extends JpaRepository<EmailTemplate, Lo
     boolean existsByName(String name);
 
     boolean existsByNameAndIdNot(String name, Long id);
+
+    java.util.Optional<EmailTemplate> findByCode(String code);
 }
