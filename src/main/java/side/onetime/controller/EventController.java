@@ -1,20 +1,37 @@
 package side.onetime.controller;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import side.onetime.dto.event.request.ConfirmEventRequest;
 import side.onetime.dto.event.request.CreateEventRequest;
 import side.onetime.dto.event.request.ModifyEventRequest;
-import side.onetime.dto.event.response.*;
+import side.onetime.dto.event.response.ConfirmEventResponse;
+import side.onetime.dto.event.response.CreateEventResponse;
+import side.onetime.dto.event.response.GetEventQrCodeResponse;
+import side.onetime.dto.event.response.GetEventResponse;
+import side.onetime.dto.event.response.GetMostPossibleTime;
+import side.onetime.dto.event.response.GetParticipantsResponse;
+import side.onetime.dto.event.response.GetParticipatedEventsResponse;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.EventService;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/events")
@@ -177,6 +194,27 @@ public class EventController {
 
         eventService.modifyEvent(eventId, modifyEventRequest);
         return ApiResponse.onSuccess(SuccessStatus._MODIFY_EVENT);
+    }
+
+    /**
+     * 이벤트 확정 API.
+     *
+     * 이 API는 이벤트를 확정합니다. 확정 후에는 이벤트 수정/삭제, 스케줄 수정이 불가합니다.
+     * 인증된 유저와 비회원 모두 확정할 수 있습니다.
+     *
+     * @param eventId 확정할 이벤트의 ID
+     * @param confirmEventRequest 확정 요청 데이터 (날짜/요일, 시간, 선택 방식)
+     * @param authorizationHeader 인증된 유저의 토큰 (선택 사항)
+     * @return 확정된 이벤트 정보
+     */
+    @PostMapping("/{event_id}/confirm")
+    public ResponseEntity<ApiResponse<ConfirmEventResponse>> confirmEvent(
+            @PathVariable("event_id") String eventId,
+            @Valid @RequestBody ConfirmEventRequest confirmEventRequest,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+
+        ConfirmEventResponse confirmEventResponse = eventService.confirmEvent(eventId, confirmEventRequest, authorizationHeader);
+        return ApiResponse.onSuccess(SuccessStatus._CONFIRM_EVENT, confirmEventResponse);
     }
 
     /**
