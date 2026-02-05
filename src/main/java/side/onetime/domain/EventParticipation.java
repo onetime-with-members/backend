@@ -1,11 +1,22 @@
 package side.onetime.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import side.onetime.domain.enums.EventStatus;
+import side.onetime.domain.enums.ParticipationRole;
 import side.onetime.global.common.dao.BaseEntity;
 
 @Entity
@@ -27,17 +38,17 @@ public class EventParticipation extends BaseEntity {
     private User user;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "event_status", nullable = false)
-    private EventStatus eventStatus;
+    @Column(name = "participation_role", nullable = false)
+    private ParticipationRole participationRole;
 
     @Builder
-    public EventParticipation(Event event, User user, EventStatus eventStatus) {
+    public EventParticipation(Event event, User user, ParticipationRole participationRole) {
         this.event = event;
         this.user = user;
-        this.eventStatus = eventStatus;
+        this.participationRole = participationRole;
     }
 
-    public void updateEventStatus(EventStatus eventStatus) {
-        this.eventStatus = eventStatus;
+    public void updateParticipationRole(ParticipationRole participationRole) {
+        this.participationRole = participationRole;
     }
 }

@@ -26,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import side.onetime.domain.User;
 import side.onetime.domain.enums.EventStatus;
 import side.onetime.domain.enums.Language;
+import side.onetime.domain.enums.ParticipationRole;
 import side.onetime.domain.enums.Status;
 import side.onetime.domain.enums.TokenStatus;
 import side.onetime.exception.CustomException;
@@ -59,7 +60,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
                 .from(eventParticipation)
                 .where(
                         eventParticipation.user.eq(activeUser)
-                                .and(eventParticipation.eventStatus.ne(EventStatus.PARTICIPANT))
+                                .and(eventParticipation.participationRole.ne(ParticipationRole.PARTICIPANT))
                 )
                 .fetch();
         LocalDateTime deletedTime = LocalDateTime.now();
@@ -82,7 +83,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
                     .execute();
 
             queryFactory.update(event)
-                    .set(event.status, Status.DELETED)
+                    .set(event.status, EventStatus.DELETED)
                     .set(event.deletedAt, deletedTime)
                     .where(event.id.in(eventIds))
                     .execute();

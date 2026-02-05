@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import side.onetime.domain.Event;
 import side.onetime.domain.enums.Category;
-import side.onetime.domain.enums.EventStatus;
+import side.onetime.domain.enums.ParticipationRole;
 
 import java.util.List;
 
@@ -18,9 +18,9 @@ public record GetEventResponse(
         String endTime,
         Category category,
         List<String> ranges,
-        EventStatus eventStatus
+        ParticipationRole participationRole
 ) {
-    public static GetEventResponse of(Event event, List<String> ranges, EventStatus eventStatus) {
+    public static GetEventResponse of(Event event, List<String> ranges, ParticipationRole participationRole) {
         return new GetEventResponse(
                 String.valueOf(event.getEventId()),
                 event.getTitle(),
@@ -28,7 +28,7 @@ public record GetEventResponse(
                 event.getEndTime(),
                 event.getCategory(),
                 ranges,
-                EventStatus.PARTICIPANT == eventStatus || eventStatus == null ? eventStatus : EventStatus.CREATOR
+                ParticipationRole.PARTICIPANT == participationRole || participationRole == null ? participationRole : ParticipationRole.CREATOR
         );
     }
 }

@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import side.onetime.domain.*;
-import side.onetime.domain.enums.EventStatus;
+import side.onetime.domain.enums.ParticipationRole;
 import side.onetime.dto.schedule.request.CreateDateScheduleRequest;
 import side.onetime.dto.schedule.request.CreateDayScheduleRequest;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
@@ -94,12 +94,12 @@ public class ScheduleService {
                     EventParticipation.builder()
                             .user(user)
                             .event(event)
-                            .eventStatus(EventStatus.PARTICIPANT)
+                            .participationRole(ParticipationRole.PARTICIPANT)
                             .build()
             );
-        } else if (EventStatus.CREATOR == eventParticipation.getEventStatus()) {
+        } else if (ParticipationRole.CREATOR == eventParticipation.getParticipationRole()) {
             // 생성자인 경우 생성자 & 참여자로 변경
-            eventParticipation.updateEventStatus(EventStatus.CREATOR_AND_PARTICIPANT);
+            eventParticipation.updateParticipationRole(ParticipationRole.CREATOR_AND_PARTICIPANT);
         }
 
         List<DaySchedule> daySchedules = createDayScheduleRequest.daySchedules();
@@ -180,12 +180,12 @@ public class ScheduleService {
                     EventParticipation.builder()
                             .user(user)
                             .event(event)
-                            .eventStatus(EventStatus.PARTICIPANT)
+                            .participationRole(ParticipationRole.PARTICIPANT)
                             .build()
             );
-        } else if (EventStatus.CREATOR == eventParticipation.getEventStatus()) {
+        } else if (ParticipationRole.CREATOR == eventParticipation.getParticipationRole()) {
             // 생성자인 경우 생성자 & 참여자로 변경
-            eventParticipation.updateEventStatus(EventStatus.CREATOR_AND_PARTICIPANT);
+            eventParticipation.updateParticipationRole(ParticipationRole.CREATOR_AND_PARTICIPANT);
         }
 
         List<DateSchedule> dateSchedules = createDateScheduleRequest.dateSchedules();
@@ -226,7 +226,7 @@ public class ScheduleService {
         List<Member> members = memberRepository.findAllByEvent(event);
 
         List<User> users = eventParticipationRepository.findAllByEvent(event).stream()
-                .filter(p -> p.getEventStatus() != EventStatus.CREATOR)
+                .filter(p -> p.getParticipationRole() != ParticipationRole.CREATOR)
                 .map(EventParticipation::getUser)
                 .toList();
 
@@ -327,7 +327,7 @@ public class ScheduleService {
         List<Member> members = memberRepository.findAllByEvent(event);
 
         List<User> users = eventParticipationRepository.findAllByEvent(event).stream()
-                .filter(p -> p.getEventStatus() != EventStatus.CREATOR)
+                .filter(p -> p.getParticipationRole() != ParticipationRole.CREATOR)
                 .map(EventParticipation::getUser)
                 .toList();
 

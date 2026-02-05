@@ -1,29 +1,31 @@
 package side.onetime.repository.custom;
 
+import static side.onetime.domain.QEvent.*;
+import static side.onetime.domain.QEventParticipation.*;
+import static side.onetime.domain.QMember.*;
+import static side.onetime.domain.QSchedule.*;
+import static side.onetime.domain.QSelection.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.data.domain.Pageable;
+
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
 import side.onetime.domain.Event;
 import side.onetime.domain.QEvent;
 import side.onetime.domain.QEventParticipation;
 import side.onetime.domain.enums.Category;
-import side.onetime.domain.enums.Status;
+import side.onetime.domain.enums.EventStatus;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.AdminErrorStatus;
 import side.onetime.util.NamingUtil;
-
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static side.onetime.domain.QEvent.event;
-import static side.onetime.domain.QEventParticipation.eventParticipation;
-import static side.onetime.domain.QMember.member;
-import static side.onetime.domain.QSchedule.schedule;
-import static side.onetime.domain.QSelection.selection;
 
 @RequiredArgsConstructor
 public class EventRepositoryImpl implements EventRepositoryCustom {
@@ -58,7 +60,7 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
                 .execute();
 
         queryFactory.update(event)
-                .set(event.status, Status.DELETED)
+                .set(event.status, EventStatus.DELETED)
                 .set(event.deletedAt, LocalDateTime.now())
                 .where(event.eq(e))
                 .execute();

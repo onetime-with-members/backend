@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import side.onetime.domain.*;
 import side.onetime.domain.enums.Category;
 import side.onetime.domain.enums.EventStatus;
+import side.onetime.domain.enums.ParticipationRole;
 import side.onetime.dto.event.request.CreateEventRequest;
 import side.onetime.dto.event.request.ModifyEventRequest;
 import side.onetime.dto.event.response.*;
@@ -71,7 +72,7 @@ public class EventService {
         EventParticipation eventParticipation = EventParticipation.builder()
                 .user(user)
                 .event(savedEvent)
-                .eventStatus(EventStatus.CREATOR)
+                .participationRole(ParticipationRole.CREATOR)
                 .build();
         eventParticipationRepository.save(eventParticipation);
 
@@ -193,16 +194,16 @@ public class EventService {
                 ? DateUtil.getSortedDateRanges(schedules.stream().map(Schedule::getDate).toList(), "yyyy.MM.dd")
                 : DateUtil.getSortedDayRanges(schedules.stream().map(Schedule::getDay).toList());
 
-        EventStatus eventStatus = null;
+        ParticipationRole participationRole = null;
         if (authorizationHeader != null) {
             User user = jwtUtil.getUserFromHeader(authorizationHeader);
             EventParticipation eventParticipation = eventParticipationRepository.findByUserAndEvent(user, event);
             if (eventParticipation != null) {
-                eventStatus = eventParticipation.getEventStatus();
+                participationRole = eventParticipation.getParticipationRole();
             }
         }
 
-        return GetEventResponse.of(event, ranges, eventStatus);
+        return GetEventResponse.of(event, ranges, participationRole);
     }
 
     /**
@@ -220,7 +221,7 @@ public class EventService {
 
         // 이벤트 참여 상태가 CREATOR가 아닌 유저만 필터링하여 가져오기
         List<User> users = eventParticipationRepository.findAllByEvent(event).stream()
-                .filter(eventParticipation -> eventParticipation.getEventStatus() != EventStatus.CREATOR)
+                .filter(eventParticipation -> eventParticipation.getParticipationRole() != ParticipationRole.CREATOR)
                 .map(EventParticipation::getUser)
                 .toList();
 
@@ -237,7 +238,7 @@ public class EventService {
      */
     private GetParticipantsResponse getParticipants(Event event, List<EventParticipation> eventParticipations) {
         List<User> users = eventParticipations.stream()
-                .filter(eventParticipation -> eventParticipation.getEventStatus() != EventStatus.CREATOR)
+                .filter(eventParticipation -> eventParticipation.getParticipationRole() != ParticipationRole.CREATOR)
                 .map(EventParticipation::getUser)
                 .toList();
 
@@ -265,7 +266,7 @@ public class EventService {
 
         // 3. 참여자(user) 조회 (CREATOR 제외)
         List<String> userNicknames = eventParticipationRepository.findAllByEvent(event).stream()
-                .filter(ep -> ep.getEventStatus() != EventStatus.CREATOR)
+                .filter(ep -> ep.getParticipationRole() != ParticipationRole.CREATOR)
                 .map(ep -> ep.getUser().getNickname())
                 .toList();
 
@@ -300,7 +301,7 @@ public class EventService {
                 .toList();
 
         List<String> userNicknames = eventParticipations.stream()
-                .filter(ep -> ep.getEventStatus() != EventStatus.CREATOR)
+                .filter(ep -> ep.getParticipationRole() != ParticipationRole.CREATOR)
                 .map(ep -> ep.getUser().getNickname())
                 .toList();
 
@@ -349,7 +350,7 @@ public class EventService {
         // 3. 참여자(user) 조회 (CREATOR 제외, 요청된 유저 ID에 해당하는 이름만 추출)
         List<String> userNicknames = eventParticipationRepository.findAllByEvent(event).stream()
                 .filter(ep -> userIds.contains(ep.getUser().getId()))
-                .filter(ep -> ep.getEventStatus() != EventStatus.CREATOR)
+                .filter(ep -> ep.getParticipationRole() != ParticipationRole.CREATOR)
                 .map(ep -> ep.getUser().getNickname())
                 .toList();
 
@@ -726,7 +727,7 @@ public class EventService {
         if (eventParticipation == null) {
             throw new CustomException(EventParticipationErrorStatus._NOT_FOUND_EVENT_PARTICIPATION);
         }
-        if (EventStatus.PARTICIPANT.equals(eventParticipation.getEventStatus())) {
+        if (ParticipationRole.PARTICIPANT.equals(eventParticipation.getParticipationRole())) {
             throw new CustomException(EventParticipationErrorStatus._IS_NOT_AUTHORIZED_EVENT_PARTICIPATION);
         }
 
