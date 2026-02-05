@@ -31,8 +31,8 @@ public class EventConfirmation extends BaseEntity {
     @Column(name = "events_id", nullable = false)
     private Long eventId;
 
-    @Column(name = "confirmed_by")
-    private Long confirmedBy;
+    @Column(name = "users_id")
+    private Long userId;
 
     @Column(name = "start_date", length = 10)
     private String startDate;
@@ -64,12 +64,12 @@ public class EventConfirmation extends BaseEntity {
     private LocalDateTime confirmedAt;
 
     @Builder
-    public EventConfirmation(Long eventId, Long confirmedBy, String startDate, String endDate,
+    public EventConfirmation(Long eventId, Long userId, String startDate, String endDate,
                              String startDay, String endDay, String startTime, String endTime,
                              ParticipationRole confirmerRole, SelectionSource selectionSource,
                              LocalDateTime confirmedAt) {
         this.eventId = eventId;
-        this.confirmedBy = confirmedBy;
+        this.userId = userId;
         this.startDate = startDate;
         this.endDate = endDate;
         this.startDay = startDay;

@@ -1,6 +1,9 @@
 package side.onetime.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -66,6 +69,11 @@ import side.onetime.util.UserAuthorizationUtil;
 @RequiredArgsConstructor
 public class EventService {
     private static final int MAX_MOST_POSSIBLE_TIMES_SIZE = 10;
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+    private static final Map<String, Integer> DAY_ORDER = Map.of(
+            "일", 0, "월", 1, "화", 2, "수", 3, "목", 4, "금", 5, "토", 6
+    );
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
     private final EventParticipationRepository eventParticipationRepository;
@@ -141,11 +149,11 @@ public class EventService {
         validateConfirmationRequest(event.getCategory(), confirmEventRequest);
 
         // 확정자 정보 결정
-        Long confirmedBy = null;
+        Long userId = null;
         ParticipationRole confirmerRole = ParticipationRole.GUEST;
         if (authorizationHeader != null) {
             User user = jwtUtil.getUserFromHeader(authorizationHeader);
-            confirmedBy = user.getId();
+            userId = user.getId();
             EventParticipation eventParticipation = eventParticipationRepository.findByUserAndEvent(user, event);
             if (eventParticipation != null) {
                 ParticipationRole role = eventParticipation.getParticipationRole();
@@ -161,7 +169,7 @@ public class EventService {
         // EventConfirmation 저장
         EventConfirmation confirmation = EventConfirmation.builder()
                 .eventId(event.getId())
-                .confirmedBy(confirmedBy)
+                .userId(userId)
                 .startDate(confirmEventRequest.startDate())
                 .endDate(confirmEventRequest.endDate())
                 .startDay(confirmEventRequest.startDay())
@@ -195,10 +203,26 @@ public class EventService {
             if (request.startDate() == null || request.endDate() == null) {
                 throw new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST);
             }
+            LocalDate startDate = LocalDate.parse(request.startDate(), DATE_FORMATTER);
+            LocalDate endDate = LocalDate.parse(request.endDate(), DATE_FORMATTER);
+            if (startDate.isAfter(endDate)) {
+                throw new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST);
+            }
         } else {
             if (request.startDay() == null || request.endDay() == null) {
                 throw new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST);
             }
+            Integer startOrder = DAY_ORDER.get(request.startDay());
+            Integer endOrder = DAY_ORDER.get(request.endDay());
+            if (startOrder == null || endOrder == null || startOrder > endOrder) {
+                throw new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST);
+            }
+        }
+
+        LocalTime startTime = LocalTime.parse(request.startTime(), TIME_FORMATTER);
+        LocalTime endTime = LocalTime.parse(request.endTime(), TIME_FORMATTER);
+        if (!startTime.isBefore(endTime)) {
+            throw new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST);
         }
     }
 
