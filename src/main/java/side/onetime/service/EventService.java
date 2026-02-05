@@ -172,7 +172,11 @@ public class EventService {
                 .selectionSource(confirmEventRequest.selectionSource())
                 .confirmedAt(confirmedAt)
                 .build();
-        eventConfirmationRepository.save(confirmation);
+        try {
+            eventConfirmationRepository.save(confirmation);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new CustomException(EventErrorStatus._ALREADY_CONFIRMED_EVENT);
+        }
 
         // Event 상태 변경
         event.updateStatus(EventStatus.CONFIRMED);

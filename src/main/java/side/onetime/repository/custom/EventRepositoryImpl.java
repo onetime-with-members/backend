@@ -4,6 +4,7 @@ import static side.onetime.domain.QEvent.*;
 import static side.onetime.domain.QEventParticipation.*;
 import static side.onetime.domain.QMember.*;
 import static side.onetime.domain.QSchedule.*;
+import static side.onetime.domain.QEventConfirmation.*;
 import static side.onetime.domain.QSelection.*;
 
 import java.time.LocalDateTime;
@@ -57,6 +58,10 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
 
         queryFactory.delete(member)
                 .where(member.event.eq(e))
+                .execute();
+
+        queryFactory.delete(eventConfirmation)
+                .where(eventConfirmation.eventId.eq(e.getId()))
                 .execute();
 
         queryFactory.update(event)

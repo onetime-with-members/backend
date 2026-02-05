@@ -7,6 +7,7 @@ import static side.onetime.domain.QGuideViewLog.*;
 import static side.onetime.domain.QMember.*;
 import static side.onetime.domain.QRefreshToken.*;
 import static side.onetime.domain.QSchedule.*;
+import static side.onetime.domain.QEventConfirmation.*;
 import static side.onetime.domain.QSelection.*;
 import static side.onetime.domain.QUser.*;
 
@@ -80,6 +81,10 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 
             queryFactory.delete(member)
                     .where(member.event.id.in(eventIds))
+                    .execute();
+
+            queryFactory.delete(eventConfirmation)
+                    .where(eventConfirmation.eventId.in(eventIds))
                     .execute();
 
             queryFactory.update(event)
