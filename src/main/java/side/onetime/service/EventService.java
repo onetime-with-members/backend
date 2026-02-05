@@ -321,7 +321,8 @@ public class EventService {
             }
         }
 
-        return GetEventResponse.of(event, ranges, participationRole);
+        EventConfirmation confirmation = eventConfirmationRepository.findByEventId(event.getId()).orElse(null);
+        return GetEventResponse.of(event, ranges, participationRole, confirmation);
     }
 
     /**

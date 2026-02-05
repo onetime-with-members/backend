@@ -1,9 +1,17 @@
 package side.onetime.event;
 
-import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
-import com.epages.restdocs.apispec.ResourceSnippetParameters;
-import com.epages.restdocs.apispec.Schema;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static com.epages.restdocs.apispec.ResourceDocumentation.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -14,28 +22,29 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.ResultActions;
+
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
+import com.epages.restdocs.apispec.ResourceSnippetParameters;
+import com.epages.restdocs.apispec.Schema;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import side.onetime.configuration.ControllerTestConfig;
 import side.onetime.controller.EventController;
 import side.onetime.domain.enums.Category;
+import side.onetime.domain.enums.EventStatus;
 import side.onetime.domain.enums.ParticipationRole;
 import side.onetime.dto.event.request.CreateEventRequest;
 import side.onetime.dto.event.request.ModifyEventRequest;
-import side.onetime.dto.event.response.*;
+import side.onetime.dto.event.response.CreateEventResponse;
+import side.onetime.dto.event.response.GetEventQrCodeResponse;
+import side.onetime.dto.event.response.GetEventResponse;
+import side.onetime.dto.event.response.GetMostPossibleTime;
+import side.onetime.dto.event.response.GetParticipantsResponse;
+import side.onetime.dto.event.response.GetParticipatedEventResponse;
+import side.onetime.dto.event.response.GetParticipatedEventsResponse;
+import side.onetime.dto.event.response.PageCursorInfo;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
 import side.onetime.service.EventService;
-
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
-import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
-import static org.mockito.ArgumentMatchers.*;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
-import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(EventController.class)
 public class EventControllerTest extends ControllerTestConfig {
@@ -117,7 +126,9 @@ public class EventControllerTest extends ControllerTestConfig {
                 "12:00",
                 Category.DATE,
                 List.of("2024.11.13"),
-                ParticipationRole.CREATOR
+                EventStatus.ACTIVE,
+                ParticipationRole.CREATOR,
+                null
         );
 
         Mockito.when(eventService.getEvent(eventId.toString(), null))
@@ -140,6 +151,7 @@ public class EventControllerTest extends ControllerTestConfig {
                 .andExpect(jsonPath("$.payload.end_time").value("12:00"))
                 .andExpect(jsonPath("$.payload.category").value("DATE"))
                 .andExpect(jsonPath("$.payload.ranges[0]").value("2024.11.13"))
+                .andExpect(jsonPath("$.payload.event_status").value("ACTIVE"))
                 .andExpect(jsonPath("$.payload.participation_role").value("CREATOR"))
 
                 // docs
@@ -164,7 +176,8 @@ public class EventControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("payload.end_time").type(JsonFieldType.STRING).description("이벤트 종료 시간"),
                                                 fieldWithPath("payload.category").type(JsonFieldType.STRING).description("이벤트 카테고리"),
                                                 fieldWithPath("payload.ranges").type(JsonFieldType.ARRAY).description("이벤트 날짜 또는 요일 범위"),
-                                                fieldWithPath("payload.participation_role").type(JsonFieldType.STRING).description("유저 역할")
+                                                fieldWithPath("payload.event_status").type(JsonFieldType.STRING).description("이벤트 상태 (ACTIVE, CONFIRMED)"),
+                                                fieldWithPath("payload.participation_role").type(JsonFieldType.STRING).description("유저 역할 (CREATOR, PARTICIPANT, CREATOR_AND_PARTICIPANT)")
                                         )
                                         .responseSchema(Schema.schema("GetEventResponseSchema"))
                                         .build()
@@ -387,6 +400,7 @@ public class EventControllerTest extends ControllerTestConfig {
                         "Sample Event",
                         createdDate,
                         10,
+                        EventStatus.ACTIVE,
                         ParticipationRole.CREATOR,
                         List.of(
                                 new GetMostPossibleTime("2024.11.13", "10:00", "10:30", 5, List.of("User1", "User2"), List.of("User3"))
@@ -438,7 +452,8 @@ public class EventControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("payload.events[].title").type(JsonFieldType.STRING).description("이벤트 제목"),
                                                 fieldWithPath("payload.events[].created_date").type(JsonFieldType.STRING).description("이벤트 생성일"),
                                                 fieldWithPath("payload.events[].participant_count").type(JsonFieldType.NUMBER).description("참여자 수"),
-                                                fieldWithPath("payload.events[].participation_role").type(JsonFieldType.STRING).description("유저 역할"),
+                                                fieldWithPath("payload.events[].event_status").type(JsonFieldType.STRING).description("이벤트 상태 (ACTIVE, CONFIRMED)"),
+                                                fieldWithPath("payload.events[].participation_role").type(JsonFieldType.STRING).description("유저 역할 (CREATOR, PARTICIPANT, CREATOR_AND_PARTICIPANT)"),
                                                 fieldWithPath("payload.events[].most_possible_times").type(JsonFieldType.ARRAY).description("가장 많이 가능한 시간대"),
                                                 fieldWithPath("payload.events[].most_possible_times[].time_point").type(JsonFieldType.STRING).description("날짜 또는 요일"),
                                                 fieldWithPath("payload.events[].most_possible_times[].start_time").type(JsonFieldType.STRING).description("시작 시간"),
