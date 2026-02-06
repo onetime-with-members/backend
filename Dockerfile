@@ -2,7 +2,7 @@ FROM amazoncorretto:17-alpine-jdk
 
 WORKDIR /app
 
-ARG JAR_FILE=build/libs/*.jar
+ARG JAR_FILE=build/libs/*-SNAPSHOT.jar
 COPY ${JAR_FILE} app.jar
 
 # 타임존 설정
