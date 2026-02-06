@@ -3,6 +3,15 @@ name: 🚀 Build & Deploy workflow on dev environment
 on:
   pull_request:
     branches: [develop, 'release/v**']
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: '배포 환경'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
 
 permissions:
   contents: read
@@ -10,42 +19,56 @@ permissions:
 jobs:
   build-and-push:
     name: Build and Push to ECR
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     environment: dev
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+
     steps:
-      - name: ✅ 브랜치 체크아웃
-        uses: actions/checkout@v3
-      - name: cache-gradle
-        uses: actions/cache@v3
+      - name: ✅ 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: ☕ Java 17 설정
+        uses: actions/setup-java@v4
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-      - name: 📦 프로젝트 빌드
-        run: ./gradlew clean build
-      - name: 🏗️ Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: 🏗️ Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: 🔐 AWS ECR 로그인
-        uses: aws-actions/configure-aws-credentials@v5
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: 🏷️ 이미지 태그 생성
+        id: meta
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          TIMESTAMP=$(TZ='Asia/Seoul' date +'%Y%m%d%H%M%S')
+          IMAGE_TAG="${TIMESTAMP}-${SHORT_SHA}"
+          echo "tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+
+      - name: 🔐 AWS 인증 설정
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
+
       - name: 🐳 ECR 로그인
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-      - name: 📦 Docker 이미지 빌드 및 ECR 푸시 (for ARM64)
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: dev/onetime-backend
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          docker buildx build --platform linux/arm64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --push .
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: 🏗️ Docker Buildx 설정
+        uses: docker/setup-buildx-action@v3
+
+      - name: 📦 Docker 이미지 빌드 및 ECR 푸시
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/arm64
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/dev/onetime-backend:${{ steps.meta.outputs.tag }}
+            ${{ steps.login-ecr.outputs.registry }}/dev/onetime-backend:latest
+          # GHA 캐시를 사용하여 빌드 시간 단축
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy:
     name: Deploy to Server
@@ -54,15 +77,16 @@ jobs:
     environment: dev
     steps:
       - name: 🔐 AWS 자격 증명 설정
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
-      - name: 🚀 서버에 배포 스크립트 실행
+
+      - name: 🚀 서버에 배포 스크립트 실행 (AWS SSM)
         run: |
           aws ssm send-command \
             --instance-ids "${{ secrets.EC2_INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
-            --comment "Deploying from GitHub Actions ${{ github.sha }}" \
-            --parameters '{"commands":["cd /home/ubuntu/deploy && ./deploy.sh ${{ github.sha }}"]}'
+            --comment "Deploying tag ${{ needs.build-and-push.outputs.image_tag }}" \
+            --parameters "{\"commands\":[\"cd /home/ubuntu/deploy && ./deploy.sh ${{ needs.build-and-push.outputs.image_tag }}\"]}"
