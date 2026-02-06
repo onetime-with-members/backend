@@ -37,6 +37,9 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
+      - name: 📦 프로젝트 빌드
+        run: ./gradlew clean build
+
       - name: 🏷️ 이미지 태그 생성
         id: meta
         run: |

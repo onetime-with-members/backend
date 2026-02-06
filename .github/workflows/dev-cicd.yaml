@@ -35,6 +35,9 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
+      - name: 📦 프로젝트 빌드
+        run: ./gradlew clean build
+
       - name: 🏷️ 이미지 태그 생성
         id: meta
         run: |
@@ -66,7 +69,6 @@ jobs:
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/dev/onetime-backend:${{ steps.meta.outputs.tag }}
             ${{ steps.login-ecr.outputs.registry }}/dev/onetime-backend:latest
-          # GHA 캐시를 사용하여 빌드 시간 단축
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
