@@ -1,13 +1,15 @@
 package side.onetime.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import java.util.List;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import side.onetime.domain.Banner;
 import side.onetime.domain.BannerStaging;
 import side.onetime.dto.admin.response.PageInfo;
@@ -19,30 +21,24 @@ import side.onetime.dto.banner.response.GetAllBannersResponse;
 import side.onetime.dto.banner.response.GetBannerResponse;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.AdminErrorStatus;
+import side.onetime.global.config.sync.BannerSyncProperties;
 import side.onetime.repository.AdminRepository;
 import side.onetime.repository.BannerRepository;
 import side.onetime.repository.BannerStagingRepository;
 import side.onetime.util.AdminAuthorizationUtil;
 import side.onetime.util.S3Util;
 
-import java.util.List;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class BannerService {
-
-    @Value("${app.sync.target-url:}")
-    private String targetUrl;
-
-    @Value("${app.sync.api-key:}")
-    private String apiKey;
 
     private final BannerRepository bannerRepository;
     private final AdminRepository adminRepository;
     private final BannerStagingRepository bannerStagingRepository;
     private final RestClient bannerClient;
     private final S3Util s3Util;
+	private final BannerSyncProperties bannerSyncProperties;
 
     /**
      * 배너 등록 메서드.
@@ -202,36 +198,26 @@ public class BannerService {
     public void exportBanners() {
         adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
                 .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
+		
+		if (!bannerSyncProperties.canExport()) {
+			throw new CustomException(AdminErrorStatus._SYNC_DISABLED_ENVIRONMENT);
+		}
 
         List<Banner> banners = bannerRepository.findAllByIsDeletedFalse();
         List<ExportBannerRequest> exportBannerRequests = banners.stream()
                 .map(ExportBannerRequest::from)
                 .toList();
-
-        validateSyncEnabled();
+        
         try {
             bannerClient.post()
                     .uri( "/api/v1/banners/staging")
-                    .header("X-API-KEY", apiKey)
+                    .header("X-API-KEY", bannerSyncProperties.apiKey())
                     .body(exportBannerRequests)
                     .retrieve()
                     .toBodilessEntity();
         } catch (Exception e) {
             log.error("❌ 배너 내보내기 중 서버 통신 오류 발생: {}", e.getMessage(), e);
             throw new CustomException(AdminErrorStatus._FAILED_EXPORT_TRANSMISSION);
-        }
-    }
-
-    /**
-     * 서버 간 데이터 동기화 활성화 검증 메서드.
-     *
-     * 환경 설정(targetUrl, apiKey)이 누락된 경우 동기화 기능을 사용할 수 없는 환경으로 판단하여 예외를 발생시킵니다.
-     *
-     * @throws CustomException 동기화 대상 서버 URL 또는 API 키가 설정되지 않은 경우
-     */
-    private void validateSyncEnabled() {
-        if (targetUrl.isBlank() || apiKey.isBlank()) {
-            throw new CustomException(AdminErrorStatus._SYNC_DISABLED_ENVIRONMENT);
         }
     }
 
@@ -290,12 +276,16 @@ public class BannerService {
      *
      * 기존에 저장되어 있던 모든 스테이징 데이터를 일괄 삭제 후, 새로운 데이터로 교체하여 최신화합니다.
      *
-     * @param apiKey API 인증키
+     * @param requestApiKey API 인증키
      * @param requests 테스트 서버로부터 전송된 배너 리스트
      */
     @Transactional
-    public void saveBannerStaging(String apiKey, List<ExportBannerRequest> requests) {
-        if (!this.apiKey.equals(apiKey)) {
+    public void saveBannerStaging(String requestApiKey, List<ExportBannerRequest> requests) {
+		
+		if (!bannerSyncProperties.canReceive()) {
+			throw new CustomException(AdminErrorStatus._SYNC_DISABLED_ENVIRONMENT);
+		}
+        if (!bannerSyncProperties.apiKey().equals(requestApiKey)) {
             throw new CustomException(AdminErrorStatus._INVALID_API_KEY);
         }
 
