@@ -1,12 +1,14 @@
 package side.onetime.controller;
 
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import side.onetime.auth.annotation.PublicApi;
 import side.onetime.dto.url.request.ConvertToOriginalUrlRequest;
 import side.onetime.dto.url.request.ConvertToShortenUrlRequest;
 import side.onetime.dto.url.response.ConvertToOriginalUrlResponse;
@@ -31,6 +33,7 @@ public class UrlController {
      * @param convertToShortenUrlRequest 원본 URL을 포함한 요청 객체
      * @return 변환된 단축 URL을 포함하는 응답 객체
      */
+    @PublicApi
     @PostMapping("/action-shorten")
     public ResponseEntity<ApiResponse<ConvertToShortenUrlResponse>> convertToShortenUrl(
             @Valid @RequestBody ConvertToShortenUrlRequest convertToShortenUrlRequest) {
@@ -48,6 +51,7 @@ public class UrlController {
      * @param convertToOriginalUrlRequest 단축 URL을 포함한 요청 객체
      * @return 복원된 원본 URL을 포함하는 응답 객체
      */
+    @PublicApi
     @PostMapping("/action-original")
     public ResponseEntity<ApiResponse<ConvertToOriginalUrlResponse>> convertToOriginalUrl(
             @Valid @RequestBody ConvertToOriginalUrlRequest convertToOriginalUrlRequest) {

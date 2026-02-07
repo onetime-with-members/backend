@@ -1,19 +1,36 @@
 package side.onetime.controller;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import lombok.RequiredArgsConstructor;
+import side.onetime.auth.annotation.IsAdmin;
+import side.onetime.auth.annotation.PublicApi;
 import side.onetime.dto.banner.request.RegisterBannerRequest;
 import side.onetime.dto.banner.request.RegisterBarBannerRequest;
 import side.onetime.dto.banner.request.UpdateBannerRequest;
 import side.onetime.dto.banner.request.UpdateBarBannerRequest;
-import side.onetime.dto.banner.response.*;
+import side.onetime.dto.banner.response.GetAllActivatedBannersResponse;
+import side.onetime.dto.banner.response.GetAllActivatedBarBannersResponse;
+import side.onetime.dto.banner.response.GetAllBannersResponse;
+import side.onetime.dto.banner.response.GetAllBarBannersResponse;
+import side.onetime.dto.banner.response.GetBannerResponse;
+import side.onetime.dto.banner.response.GetBarBannerResponse;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.BannerService;
@@ -35,6 +52,7 @@ public class BannerController {
      * @param imageFile 배너 등록 이미지 객체
      * @return 성공 응답 메시지
      */
+    @IsAdmin
     @PostMapping(value = "/banners/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<SuccessStatus>> registerBanner(
             @Valid @RequestPart(value = "request") RegisterBannerRequest request,
@@ -52,6 +70,7 @@ public class BannerController {
      * @param request 띠배너 등록 요청 정보
      * @return 성공 응답 메시지
      */
+    @IsAdmin
     @PostMapping("/bar-banners/register")
     public ResponseEntity<ApiResponse<SuccessStatus>> registerBarBanner(
             @Valid @RequestBody RegisterBarBannerRequest request
@@ -68,6 +87,7 @@ public class BannerController {
      * @param id 조회할 배너 ID
      * @return 배너 응답 객체
      */
+    @IsAdmin
     @GetMapping("/banners/{id}")
     public ResponseEntity<ApiResponse<GetBannerResponse>> getBanner(@PathVariable Long id) {
         GetBannerResponse response = bannerService.getBanner(id);
@@ -82,6 +102,7 @@ public class BannerController {
      * @param id 조회할 띠배너 ID
      * @return 띠배너 응답 객체
      */
+    @IsAdmin
     @GetMapping("/bar-banners/{id}")
     public ResponseEntity<ApiResponse<GetBarBannerResponse>> getBarBanner(@PathVariable Long id) {
         GetBarBannerResponse response = bannerService.getBarBanner(id);
@@ -95,6 +116,7 @@ public class BannerController {
      *
      * @return 배너 응답 객체 리스트
      */
+    @IsAdmin
     @GetMapping("/banners/all")
     public ResponseEntity<ApiResponse<GetAllBannersResponse>> getAllBanners(
             @RequestParam(value = "page", defaultValue = "1") @Min(1) int page
@@ -111,6 +133,7 @@ public class BannerController {
      *
      * @return 띠배너 응답 객체 리스트
      */
+    @IsAdmin
     @GetMapping("/bar-banners/all")
     public ResponseEntity<ApiResponse<GetAllBarBannersResponse>> getAllBarBanners(
             @RequestParam(value = "page", defaultValue = "1") @Min(1) int page
@@ -125,6 +148,7 @@ public class BannerController {
      *
      * @return 활성화된 배너 응답 객체 리스트
      */
+    @PublicApi
     @GetMapping("/banners/activated/all")
     public ResponseEntity<ApiResponse<GetAllActivatedBannersResponse>> getAllActivatedBanners() {
         GetAllActivatedBannersResponse response = bannerService.getAllActivatedBanners();
@@ -136,6 +160,7 @@ public class BannerController {
      *
      * @return 활성화된 띠배너 응답 객체 리스트
      */
+    @PublicApi
     @GetMapping("/bar-banners/activated/all")
     public ResponseEntity<ApiResponse<GetAllActivatedBarBannersResponse>> getAllActivatedBarBanners() {
         GetAllActivatedBarBannersResponse response = bannerService.getAllActivatedBarBanners();
@@ -154,6 +179,7 @@ public class BannerController {
      * @param imageFile 배너 수정 이미지 객체
      * @return 성공 응답 메시지
      */
+    @IsAdmin
     @PatchMapping(value = "/banners/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<SuccessStatus>> updateBanner(
             @PathVariable Long id,
@@ -175,6 +201,7 @@ public class BannerController {
      * @param request 수정 요청 DTO
      * @return 성공 응답 메시지
      */
+    @IsAdmin
     @PatchMapping("/bar-banners/{id}")
     public ResponseEntity<ApiResponse<SuccessStatus>> updateBarBanner(
             @PathVariable Long id,
@@ -193,6 +220,7 @@ public class BannerController {
      * @param id 삭제할 배너 ID
      * @return 성공 응답 메시지
      */
+    @IsAdmin
     @DeleteMapping("/banners/{id}")
     public ResponseEntity<ApiResponse<SuccessStatus>> deleteBanner(@PathVariable Long id) {
         bannerService.deleteBanner(id);
@@ -208,6 +236,7 @@ public class BannerController {
      * @param id 삭제할 띠배너 ID
      * @return 성공 응답 메시지
      */
+    @IsAdmin
     @DeleteMapping("/bar-banners/{id}")
     public ResponseEntity<ApiResponse<SuccessStatus>> deleteBarBanner(@PathVariable Long id) {
         bannerService.deleteBarBanner(id);
@@ -222,6 +251,7 @@ public class BannerController {
      * @param id 클릭한 배너 ID
      * @return 성공 응답 메시지
      */
+    @PublicApi
     @PatchMapping("/banners/{id}/clicks")
     public ResponseEntity<ApiResponse<SuccessStatus>> increaseBannerClickCount(@PathVariable Long id) {
         bannerService.increaseBannerClickCount(id);

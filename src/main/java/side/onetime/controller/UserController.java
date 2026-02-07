@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import side.onetime.auth.annotation.IsUser;
+import side.onetime.auth.annotation.PublicApi;
 import side.onetime.domain.enums.GuideType;
 import side.onetime.dto.user.request.CreateGuideViewLogRequest;
 import side.onetime.dto.user.request.LogoutUserRequest;
@@ -48,6 +50,7 @@ public class UserController {
      * @param httpRequest HttpServletRequest (IP, User-Agent 추출용)
      * @return 발급된 액세스 토큰과 리프레쉬 토큰을 포함하는 응답 객체
      */
+    @PublicApi
     @PostMapping("/onboarding")
     public ResponseEntity<ApiResponse<OnboardUserResponse>> onboardUser(
             @Valid @RequestBody OnboardUserRequest onboardUserRequest,
@@ -66,6 +69,7 @@ public class UserController {
      *
      * @return 유저의 정보를 포함한 응답 객체
      */
+    @IsUser
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<GetUserProfileResponse>> getUserProfile() {
 
@@ -81,6 +85,7 @@ public class UserController {
      * @param updateUserProfileRequest 수정할 닉네임 or 언어를 포함하는 요청 객체
      * @return 성공 상태 응답 객체
      */
+    @IsUser
     @PatchMapping("/profile/action-update")
     public ResponseEntity<ApiResponse<SuccessStatus>> updateUserProfile(
             @Valid @RequestBody UpdateUserProfileRequest updateUserProfileRequest) {
@@ -96,6 +101,7 @@ public class UserController {
      *
      * @return 성공 상태 응답 객체
      */
+    @IsUser
     @PostMapping("/action-withdraw")
     public ResponseEntity<ApiResponse<SuccessStatus>> withdrawUser() {
 
@@ -110,6 +116,7 @@ public class UserController {
      *
      * @return 약관 동의 여부 응답 객체
      */
+    @IsUser
     @GetMapping("/policy")
     public ResponseEntity<ApiResponse<GetUserPolicyAgreementResponse>> getUserPolicyAgreement() {
 
@@ -126,6 +133,7 @@ public class UserController {
      * @param request 약관 동의 여부 수정 요청 데이터 (필수 값)
      * @return 성공 상태 응답 객체
      */
+    @IsUser
     @PutMapping("/policy")
     public ResponseEntity<ApiResponse<SuccessStatus>> updateUserPolicyAgreement(
             @Valid @RequestBody UpdateUserPolicyAgreementRequest request) {
@@ -141,6 +149,7 @@ public class UserController {
      *
      * @return 유저의 수면 시작 시간 및 종료 시간을 포함한 응답 객체
      */
+    @IsUser
     @GetMapping("/sleep-time")
     public ResponseEntity<ApiResponse<GetUserSleepTimeResponse>> getUserSleepTime() {
 
@@ -156,6 +165,7 @@ public class UserController {
      * @param request 수면 시간 수정 요청 데이터 (필수 값)
      * @return 성공 상태 응답 객체
      */
+    @IsUser
     @PutMapping("/sleep-time")
     public ResponseEntity<ApiResponse<SuccessStatus>> updateUserSleepTime(
             @Valid @RequestBody UpdateUserSleepTimeRequest request) {
@@ -171,6 +181,7 @@ public class UserController {
      *
      * @return 성공 상태 응답 객체
      */
+    @IsUser
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<SuccessStatus>> logoutUser(
             @Valid @RequestBody LogoutUserRequest logoutUserRequest
@@ -189,6 +200,7 @@ public class UserController {
      * @param request 확인 여부를 저장할 가이드 타입 객체
      * @return 성공 상태 응답 객체
      */
+    // @IsUser
     @PostMapping("/guides/view-log")
     public ResponseEntity<ApiResponse<SuccessStatus>> createGuideViewLog(
             @Valid @RequestBody CreateGuideViewLogRequest request
@@ -206,6 +218,7 @@ public class UserController {
      * @param guideType 조회할 가이드 타입
      * @return 가이드 조회 로그 응답 객체
      */
+    @IsUser
     @GetMapping("/guides/view-log")
     public ResponseEntity<ApiResponse<GetGuideViewLogResponse>> getGuideViewLog(
             @RequestParam("guide_type") GuideType guideType
@@ -222,6 +235,7 @@ public class UserController {
      *
      * @return 성공 상태 응답 객체
      */
+    @IsUser
     @DeleteMapping("/guides/view-log")
     public ResponseEntity<ApiResponse<SuccessStatus>> deleteGuideViewLog(){
 
