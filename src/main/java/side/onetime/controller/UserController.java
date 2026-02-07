@@ -200,7 +200,7 @@ public class UserController {
      * @param request 확인 여부를 저장할 가이드 타입 객체
      * @return 성공 상태 응답 객체
      */
-    // @IsUser
+    @IsUser
     @PostMapping("/guides/view-log")
     public ResponseEntity<ApiResponse<SuccessStatus>> createGuideViewLog(
             @Valid @RequestBody CreateGuideViewLogRequest request
