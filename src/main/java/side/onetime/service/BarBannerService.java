@@ -1,12 +1,14 @@
 package side.onetime.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import java.util.List;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import side.onetime.domain.BarBanner;
 import side.onetime.domain.BarBannerStaging;
 import side.onetime.dto.admin.response.PageInfo;
@@ -18,28 +20,22 @@ import side.onetime.dto.barbanner.response.GetAllBarBannersResponse;
 import side.onetime.dto.barbanner.response.GetBarBannerResponse;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.AdminErrorStatus;
+import side.onetime.global.config.sync.BannerSyncProperties;
 import side.onetime.repository.AdminRepository;
 import side.onetime.repository.BarBannerRepository;
 import side.onetime.repository.BarBannerStagingRepository;
 import side.onetime.util.AdminAuthorizationUtil;
 
-import java.util.List;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class BarBannerService {
-
-    @Value("${app.sync.target-url:}")
-    private String targetUrl;
-
-    @Value("${app.sync.api-key:}")
-    private String apiKey;
-
+	
     private final BarBannerRepository barBannerRepository;
     private final AdminRepository adminRepository;
     private final BarBannerStagingRepository barBannerStagingRepository;
     private final RestClient bannerClient;
+	private final BannerSyncProperties bannerSyncProperties;
 
     /**
      * 띠배너 등록 메서드.
@@ -172,36 +168,26 @@ public class BarBannerService {
     public void exportBarBanners() {
         adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
                 .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
+		
+		if (!bannerSyncProperties.canExport()) {
+			throw new CustomException(AdminErrorStatus._SYNC_DISABLED_ENVIRONMENT);
+		}
 
         List<BarBanner> barBanners = barBannerRepository.findAllByIsDeletedFalse();
         List<ExportBarBannerRequest> exportBarBannerRequests = barBanners.stream()
                 .map(ExportBarBannerRequest::from)
                 .toList();
-
-        validateSyncEnabled();
+		
         try {
             bannerClient.post()
                     .uri( "/api/v1/bar-banners/staging")
-                    .header("X-API-KEY", apiKey)
+                    .header("X-API-KEY", bannerSyncProperties.apiKey())
                     .body(exportBarBannerRequests)
                     .retrieve()
                     .toBodilessEntity();
         } catch (Exception e) {
             log.error("❌ 띠배너 내보내기 중 서버 통신 오류 발생: {}", e.getMessage(), e);
             throw new CustomException(AdminErrorStatus._FAILED_EXPORT_TRANSMISSION);
-        }
-    }
-
-    /**
-     * 서버 간 데이터 동기화 활성화 검증 메서드.
-     *
-     * 환경 설정(targetUrl, apiKey)이 누락된 경우 동기화 기능을 사용할 수 없는 환경으로 판단하여 예외를 발생시킵니다.
-     *
-     * @throws CustomException 동기화 대상 서버 URL 또는 API 키가 설정되지 않은 경우
-     */
-    private void validateSyncEnabled() {
-        if (targetUrl.isBlank() || apiKey.isBlank()) {
-            throw new CustomException(AdminErrorStatus._SYNC_DISABLED_ENVIRONMENT);
         }
     }
 
@@ -256,12 +242,16 @@ public class BarBannerService {
      *
      * 기존에 저장되어 있던 모든 스테이징 데이터를 일괄 삭제 후, 새로운 데이터로 교체하여 최신화합니다.
      *
-     * @param apiKey API 인증키
+     * @param requestApiKey API 인증키
      * @param requests 테스트 서버로부터 전송된 띠배너 리스트
      */
     @Transactional
-    public void saveBarBannerStaging(String apiKey, List<ExportBarBannerRequest> requests) {
-        if (!this.apiKey.equals(apiKey)) {
+    public void saveBarBannerStaging(String requestApiKey, List<ExportBarBannerRequest> requests) {
+		
+		if (!bannerSyncProperties.canReceive()) {
+			throw new CustomException(AdminErrorStatus._SYNC_DISABLED_ENVIRONMENT);
+		}
+        if (!bannerSyncProperties.apiKey().equals(requestApiKey)) {
             throw new CustomException(AdminErrorStatus._INVALID_API_KEY);
         }
 
