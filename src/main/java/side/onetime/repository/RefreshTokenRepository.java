@@ -31,7 +31,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
      * @param lastUsedIp 마지막 사용 IP
      * @return 업데이트된 행 수 (0이면 이미 rotate됨)
      */
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("""
         UPDATE RefreshToken r
         SET r.status = 'ROTATED',
