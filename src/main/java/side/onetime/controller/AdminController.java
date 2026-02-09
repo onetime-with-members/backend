@@ -1,21 +1,35 @@
 package side.onetime.controller;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import lombok.RequiredArgsConstructor;
+import side.onetime.auth.annotation.IsAdmin;
+import side.onetime.auth.annotation.IsMasterAdmin;
+import side.onetime.auth.annotation.PublicApi;
 import side.onetime.dto.admin.request.LoginAdminUserRequest;
 import side.onetime.dto.admin.request.RegisterAdminUserRequest;
 import side.onetime.dto.admin.request.UpdateAdminUserStatusRequest;
-import side.onetime.dto.admin.response.*;
+import side.onetime.dto.admin.response.AdminUserDetailResponse;
+import side.onetime.dto.admin.response.GetAdminUserProfileResponse;
+import side.onetime.dto.admin.response.GetAllDashboardEventsResponse;
+import side.onetime.dto.admin.response.GetAllDashboardUsersResponse;
+import side.onetime.dto.admin.response.LoginAdminUserResponse;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.AdminService;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -33,6 +47,7 @@ public class AdminController {
      * @param request 관리자 이름, 이메일, 비밀번호 정보를 담은 요청 객체
      * @return 성공 응답 메시지
      */
+    @PublicApi
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<SuccessStatus>> registerAdminUser(
             @Valid @RequestBody RegisterAdminUserRequest request) {
@@ -50,6 +65,7 @@ public class AdminController {
      * @param request 관리자 이름, 이메일, 비밀번호 정보를 담은 요청 객체
      * @return 성공 응답 메시지
      */
+    @PublicApi
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginAdminUserResponse>> loginAdminUser(
             @Valid @RequestBody LoginAdminUserRequest request) {
@@ -66,6 +82,7 @@ public class AdminController {
      *
      * @return 관리자 프로필 정보가 포함된 응답 객체
      */
+    @IsAdmin
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<GetAdminUserProfileResponse>> getAdminUserProfile() {
 
@@ -83,6 +100,7 @@ public class AdminController {
      *
      * @return 전체 관리자 프로필 목록이 포함된 응답 객체
      */
+    @IsMasterAdmin
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<AdminUserDetailResponse>>> getAllAdminUserDetail() {
 
@@ -100,6 +118,7 @@ public class AdminController {
      * @param request 수정할 관리자 ID와 변경할 권한 상태를 담은 요청 객체
      * @return 성공 응답 메시지
      */
+    @IsMasterAdmin
     @PatchMapping("/status")
     public ResponseEntity<ApiResponse<SuccessStatus>> updateAdminUserStatus(
             @Valid @RequestBody UpdateAdminUserStatusRequest request) {
@@ -116,6 +135,7 @@ public class AdminController {
      *
      * @return 성공 응답 메시지
      */
+    @IsAdmin
     @PostMapping("/withdraw")
     public ResponseEntity<ApiResponse<SuccessStatus>> withdrawAdminUser() {
 
@@ -134,6 +154,7 @@ public class AdminController {
      * @param sorting 정렬 방향 ("asc" 또는 "desc")
      * @return 이벤트 목록 및 페이지 정보가 포함된 응답 DTO
      */
+    @IsAdmin
     @GetMapping("/dashboard/events")
     public ResponseEntity<ApiResponse<GetAllDashboardEventsResponse>> getAllDashboardEvents(
             @RequestParam(value = "page", defaultValue = "1") @Min(1) int page,
@@ -156,6 +177,7 @@ public class AdminController {
      * @param sorting 정렬 방향 ("asc" 또는 "desc")
      * @return 사용자 목록 및 페이지 정보가 포함된 응답 DTO
      */
+    @IsAdmin
     @GetMapping("/dashboard/users")
     public ResponseEntity<ApiResponse<GetAllDashboardUsersResponse>> getAllDashboardUsers(
             @RequestParam(value = "page", defaultValue = "1") @Min(1) int page,
