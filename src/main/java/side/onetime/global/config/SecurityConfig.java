@@ -70,6 +70,14 @@ public class SecurityConfig {
 		"/api/v1/schedules/date/*/filtering",     // 스케줄 필터링
 	};
 	
+	/**
+	 * [PATCH 요청]에 한해서만 Public인 URL
+	 */
+	private static final String[] PUBLIC_PATCH_URLS = {
+		"/api/v1/banners/*/clicks",
+		"/api/v1/events/*"
+	};
+	
 	private static final String[] ALLOWED_ORIGINS = {
 		"http://localhost:5173",
 		"http://localhost:3000",
@@ -112,7 +120,7 @@ public class SecurityConfig {
 				// 3. POST Public
 				.requestMatchers(HttpMethod.POST, PUBLIC_POST_URLS).permitAll()
 				// 4. PATCH Public
-				.requestMatchers(HttpMethod.PATCH, "/api/v1/banners/*/clicks").permitAll()
+				.requestMatchers(HttpMethod.PATCH, PUBLIC_PATCH_URLS).permitAll()
 				// 5. Safety-Net: 위에서 허용되지 않은 /api/** 요청은 인증 필요
 				.requestMatchers("/api/**").authenticated()
 				// 6. 그 외 (정적 리소스 등)

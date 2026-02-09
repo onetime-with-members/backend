@@ -194,7 +194,7 @@ public class EventController {
      * @param modifyEventRequest 새로운 이벤트 정보가 담긴 요청 데이터 (제목, 시간, 범위 등)
      * @return 수정 성공 여부
      */
-    @IsUser
+    @PublicApi
     @PatchMapping("/{event_id}")
     public ResponseEntity<ApiResponse<SuccessStatus>> modifyEvent(
             @PathVariable("event_id") String eventId,
