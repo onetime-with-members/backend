@@ -36,6 +36,9 @@ public class EmailLog {
     @Column(name = "subject", nullable = false, length = 500)
     private String subject;
 
+    @Column(name = "content", columnDefinition = "TEXT")
+    private String content;
+
     @Column(name = "content_type", length = 10)
     private String contentType;
 
@@ -53,15 +56,16 @@ public class EmailLog {
     private LocalDateTime sentAt;
 
     @Builder
-    public EmailLog(Long userId, String recipient, String subject, String contentType,
+    public EmailLog(Long userId, String recipient, String subject, String content, String contentType,
                     EmailLogStatus status, String errorMessage, String targetGroup) {
-		this.userId = userId;
-		this.recipient = recipient;
-		this.subject = subject;
-		this.contentType = contentType;
-		this.status = status;
-		this.errorMessage = errorMessage;
-		this.targetGroup = targetGroup;
+        this.userId = userId;
+        this.recipient = recipient;
+        this.subject = subject;
+        this.content = content;
+        this.contentType = contentType;
+        this.status = status;
+        this.errorMessage = errorMessage;
+        this.targetGroup = targetGroup;
         this.sentAt = LocalDateTime.now();
     }
 

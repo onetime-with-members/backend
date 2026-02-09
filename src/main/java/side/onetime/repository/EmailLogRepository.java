@@ -11,8 +11,9 @@ import org.springframework.data.repository.query.Param;
 
 import side.onetime.domain.EmailLog;
 import side.onetime.domain.enums.EmailLogStatus;
+import side.onetime.repository.custom.EmailLogRepositoryCustom;
 
-public interface EmailLogRepository extends JpaRepository<EmailLog, Long> {
+public interface EmailLogRepository extends JpaRepository<EmailLog, Long>, EmailLogRepositoryCustom {
 
     Page<EmailLog> findAllByOrderBySentAtDesc(Pageable pageable);
 

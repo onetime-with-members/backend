@@ -96,6 +96,7 @@ public enum SuccessStatus implements BaseCode {
     _GET_STICKINESS(HttpStatus.OK, "200", "점착도 조회에 성공했습니다."),
     // Email
     _SEND_EMAIL(HttpStatus.OK, "200", "이메일 발송에 성공했습니다."),
+    _SEND_TEST_EMAIL(HttpStatus.OK, "200", "테스트 이메일 발송에 성공했습니다."),
     _GET_EMAIL_LOGS(HttpStatus.OK, "200", "이메일 로그 조회에 성공했습니다."),
     _GET_EMAIL_STATS(HttpStatus.OK, "200", "이메일 통계 조회에 성공했습니다."),
     // Email Template
@@ -104,6 +105,10 @@ public enum SuccessStatus implements BaseCode {
     _CREATE_EMAIL_TEMPLATE(HttpStatus.CREATED, "201", "이메일 템플릿 생성에 성공했습니다."),
     _UPDATE_EMAIL_TEMPLATE(HttpStatus.OK, "200", "이메일 템플릿 수정에 성공했습니다."),
     _DELETE_EMAIL_TEMPLATE(HttpStatus.OK, "200", "이메일 템플릿 삭제에 성공했습니다."),
+    // Email Schedule
+    _CREATE_EMAIL_SCHEDULE(HttpStatus.CREATED, "201", "이메일 예약 생성에 성공했습니다."),
+    _GET_EMAIL_SCHEDULES(HttpStatus.OK, "200", "이메일 예약 목록 조회에 성공했습니다."),
+    _CANCEL_EMAIL_SCHEDULE(HttpStatus.OK, "200", "이메일 예약 취소에 성공했습니다."),
     ;
 
     private final HttpStatus httpStatus;

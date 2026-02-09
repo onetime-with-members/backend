@@ -612,11 +612,11 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     // ==================== 이메일 발송용 쿼리 ====================
 
     /**
-     * 마케팅 동의 유저 이메일+userId 목록
-     * 반환: [email, users_id]
+     * 마케팅 동의 유저 이메일+userId+name+nickname 목록
+     * 반환: [email, users_id, name, nickname]
      */
     @Query(value = """
-        SELECT email, users_id FROM users
+        SELECT email, users_id, name, nickname FROM users
         WHERE status = 'ACTIVE'
           AND marketing_policy_agreement = 1
           AND email IS NOT NULL
@@ -626,17 +626,17 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     List<Object[]> findMarketingAgreedUserEmailsWithIds(@Param("limit") int limit);
 
     /**
-     * 휴면 유저 이메일+userId 목록
-     * 반환: [email, users_id]
+     * 휴면 유저 이메일+userId+name+nickname 목록
+     * 반환: [email, users_id, name, nickname]
      */
     @Query(value = """
-        SELECT u.email, u.users_id
+        SELECT u.email, u.users_id, u.name, u.nickname
         FROM users u
         LEFT JOIN refresh_token rt ON u.users_id = rt.users_id AND rt.user_type = 'USER'
         WHERE u.status = 'ACTIVE'
           AND u.marketing_policy_agreement = 1
           AND u.email IS NOT NULL
-        GROUP BY u.users_id, u.email
+        GROUP BY u.users_id, u.email, u.name, u.nickname
         HAVING DATEDIFF(NOW(), MAX(COALESCE(rt.last_used_at, rt.issued_at))) >= :days
         LIMIT :limit
         """, nativeQuery = true)
@@ -646,11 +646,11 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     );
 
     /**
-     * 이벤트 미생성 유저 이메일+userId 목록
-     * 반환: [email, users_id]
+     * 이벤트 미생성 유저 이메일+userId+name+nickname 목록
+     * 반환: [email, users_id, name, nickname]
      */
     @Query(value = """
-        SELECT u.email, u.users_id
+        SELECT u.email, u.users_id, u.name, u.nickname
         FROM users u
         LEFT JOIN event_participations ep ON u.users_id = ep.users_id
             AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
@@ -667,35 +667,35 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
     );
 
     /**
-     * 1회성 유저 이메일+userId 목록
-     * 반환: [email, users_id]
+     * 1회성 유저 이메일+userId+name+nickname 목록
+     * 반환: [email, users_id, name, nickname]
      */
     @Query(value = """
-        SELECT u.email, u.users_id
+        SELECT u.email, u.users_id, u.name, u.nickname
         FROM users u
         JOIN event_participations ep ON u.users_id = ep.users_id
             AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
         WHERE u.status = 'ACTIVE'
           AND u.marketing_policy_agreement = 1
           AND u.email IS NOT NULL
-        GROUP BY u.users_id, u.email
+        GROUP BY u.users_id, u.email, u.name, u.nickname
         HAVING COUNT(ep.events_id) = 1
         LIMIT :limit
         """, nativeQuery = true)
     List<Object[]> findOneTimeUserEmailsWithIds(@Param("limit") int limit);
 
     /**
-     * VIP 유저 이메일+userId 목록
-     * 반환: [email, users_id]
+     * VIP 유저 이메일+userId+name+nickname 목록
+     * 반환: [email, users_id, name, nickname]
      */
     @Query(value = """
-        SELECT u.email, u.users_id
+        SELECT u.email, u.users_id, u.name, u.nickname
         FROM users u
         JOIN event_participations ep ON u.users_id = ep.users_id
             AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
         WHERE u.status = 'ACTIVE'
           AND u.email IS NOT NULL
-        GROUP BY u.users_id, u.email
+        GROUP BY u.users_id, u.email, u.name, u.nickname
         HAVING COUNT(ep.events_id) >= 5
         ORDER BY COUNT(ep.events_id) DESC
         LIMIT :limit

@@ -15,23 +15,33 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import side.onetime.domain.EmailLog;
+import side.onetime.domain.EmailSchedule;
 import side.onetime.domain.EmailTemplate;
 import side.onetime.domain.enums.EmailLogStatus;
+import side.onetime.domain.enums.EmailScheduleStatus;
+import side.onetime.domain.AdminUser;
 import side.onetime.dto.admin.email.request.CreateEmailTemplateRequest;
 import side.onetime.dto.admin.email.request.SendByTemplateRequest;
 import side.onetime.dto.admin.email.request.SendEmailRequest;
+import side.onetime.dto.admin.email.request.SendTestEmailRequest;
+import side.onetime.dto.admin.email.request.CreateEmailScheduleRequest;
 import side.onetime.dto.admin.email.request.SendToGroupRequest;
 import side.onetime.dto.admin.email.request.UpdateEmailTemplateRequest;
 import side.onetime.dto.admin.email.response.EmailLogPageResponse;
 import side.onetime.dto.admin.email.response.EmailLogStatsResponse;
+import side.onetime.dto.admin.email.response.EmailScheduleResponse;
 import side.onetime.dto.admin.email.response.EmailTemplateResponse;
 import side.onetime.dto.admin.email.response.SendEmailResponse;
 import side.onetime.dto.admin.email.response.UserEmailDto;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.EmailErrorStatus;
+import side.onetime.global.common.status.ErrorStatus;
+import side.onetime.repository.AdminRepository;
 import side.onetime.repository.EmailLogRepository;
+import side.onetime.repository.EmailScheduleRepository;
 import side.onetime.repository.EmailTemplateRepository;
 import side.onetime.repository.StatisticsRepository;
+import side.onetime.util.AdminAuthorizationUtil;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.Body;
 import software.amazon.awssdk.services.ses.model.Content;
@@ -48,8 +58,10 @@ import software.amazon.awssdk.services.ses.model.Message;
 public class EmailService {
 
     private final SesClient sesClient;
+    private final AdminRepository adminRepository;
     private final StatisticsRepository statisticsRepository;
     private final EmailLogRepository emailLogRepository;
+    private final EmailScheduleRepository emailScheduleRepository;
     private final EmailTemplateRepository emailTemplateRepository;
 
     @Value("${spring.cloud.aws.ses.from-email:noreply@onetime.com}")
@@ -63,11 +75,37 @@ public class EmailService {
      */
     @Transactional
     public SendEmailResponse sendEmail(SendEmailRequest request) {
-        return sendEmailWithGroup(request, null);
+        return sendEmailWithGroup(request, null, null);
     }
 
     /**
-     * 마케팅 타겟 그룹에 일괄 발송
+     * 테스트 이메일 발송 (로그인된 어드민 본인에게 1통)
+     * 템플릿 변수는 미리보기용 값으로 치환
+     */
+    @Transactional
+    public SendEmailResponse sendTestEmail(SendTestEmailRequest request) {
+        Long adminId = AdminAuthorizationUtil.getLoginAdminId();
+        AdminUser admin = adminRepository.findById(adminId)
+                .orElseThrow(() -> new CustomException(ErrorStatus._UNIDENTIFIED_USER));
+
+        // 템플릿 변수를 미리보기용으로 치환
+        UserEmailDto previewUser = new UserEmailDto(admin.getEmail(), null, admin.getName(), admin.getName());
+        String resolvedContent = resolveVariables(request.content(), previewUser);
+        String resolvedSubject = resolveVariables(request.subject(), previewUser);
+
+        SendEmailRequest emailRequest = new SendEmailRequest(
+                List.of(admin.getEmail()),
+                resolvedSubject,
+                resolvedContent,
+                request.getContentType(),
+                List.of(adminId)
+        );
+
+        return sendEmailWithGroup(emailRequest, "test", null);
+    }
+
+    /**
+     * 마케팅 타겟 그룹에 일괄 발송 (템플릿 변수 치환 지원)
      */
     @Transactional
     public SendEmailResponse sendToMarketingGroup(SendToGroupRequest request) {
@@ -89,7 +127,7 @@ public class EmailService {
                 userIds
         );
 
-        return sendEmailWithGroup(emailRequest, request.targetGroup());
+        return sendEmailWithGroup(emailRequest, request.targetGroup(), users);
     }
 
     /**
@@ -108,14 +146,17 @@ public class EmailService {
                 request.userIds()
         );
 
-        return sendEmailWithGroup(emailRequest, request.templateCode());
+        return sendEmailWithGroup(emailRequest, request.templateCode(), null);
     }
 
     /**
-     * 이메일 발송 (그룹 정보 포함)
+     * 이메일 발송 (그룹 정보 포함, 템플릿 변수 치환 지원)
      * AWS SES Rate Limiting 적용 (기본 100ms 딜레이, 초당 10개)
+     *
+     * @param users 유저 정보 (null이면 변수 치환 미적용)
      */
-    private SendEmailResponse sendEmailWithGroup(SendEmailRequest request, String targetGroup) {
+    private SendEmailResponse sendEmailWithGroup(SendEmailRequest request, String targetGroup,
+                                                  List<UserEmailDto> users) {
         List<String> failedEmails = new ArrayList<>();
         int sentCount = 0;
 
@@ -124,18 +165,26 @@ public class EmailService {
             String to = recipients.get(i);
             Long userId = request.getUserIdAt(i);
 
+            // 템플릿 변수 치환 적용
+            String resolvedContent = request.content();
+            String resolvedSubject = request.subject();
+            if (users != null && i < users.size()) {
+                resolvedContent = resolveVariables(resolvedContent, users.get(i));
+                resolvedSubject = resolveVariables(resolvedSubject, users.get(i));
+            }
+
             try {
-                sendSingleEmail(to, request.subject(), request.content(), request.getContentType());
+                sendSingleEmail(to, resolvedSubject, resolvedContent, request.getContentType());
                 sentCount++;
 
-                saveEmailLog(userId, to, request.subject(), request.getContentType(),
+                saveEmailLog(userId, to, resolvedSubject, resolvedContent, request.getContentType(),
                         EmailLogStatus.SENT, null, targetGroup);
 
             } catch (Exception e) {
                 log.error("[Email] 발송 실패 - 수신자: {}, 사유: {}", to, e.getMessage());
                 failedEmails.add(to);
 
-                saveEmailLog(userId, to, request.subject(), request.getContentType(),
+                saveEmailLog(userId, to, resolvedSubject, resolvedContent, request.getContentType(),
                         EmailLogStatus.FAILED, e.getMessage(), targetGroup);
             }
 
@@ -156,6 +205,25 @@ public class EmailService {
     }
 
     /**
+     * 템플릿 변수 치환
+     * 지원 변수: {{nickname}}, {{name}}, {{email}}
+     * nickname이 null이면 name으로 fallback, name도 null이면 빈 문자열
+     */
+    private String resolveVariables(String text, UserEmailDto user) {
+        if (text == null || !text.contains("{{")) {
+            return text;
+        }
+
+        String displayName = user.nickname() != null ? user.nickname()
+                : user.name() != null ? user.name() : "";
+
+        return text
+                .replace("{{nickname}}", displayName)
+                .replace("{{name}}", user.name() != null ? user.name() : "")
+                .replace("{{email}}", user.email() != null ? user.email() : "");
+    }
+
+    /**
      * Rate limiting 딜레이 적용
      */
     private void applyRateLimitDelay() {
@@ -170,12 +238,14 @@ public class EmailService {
     /**
      * 이메일 로그 저장
      */
-    private void saveEmailLog(Long userId, String recipient, String subject, String contentType,
-                              EmailLogStatus status, String errorMessage, String targetGroup) {
+    private void saveEmailLog(Long userId, String recipient, String subject, String content,
+                              String contentType, EmailLogStatus status, String errorMessage,
+                              String targetGroup) {
         EmailLog emailLog = EmailLog.builder()
                 .userId(userId)
                 .recipient(recipient)
                 .subject(subject)
+                .content(content)
                 .contentType(contentType)
                 .status(status)
                 .errorMessage(errorMessage)
@@ -234,27 +304,23 @@ public class EmailService {
     // ==================== 로그 조회 ====================
 
     /**
-     * 이메일 로그 목록 조회 (페이징)
+     * 이메일 로그 목록 조회 (페이징 + 복합 필터)
      */
     @Transactional(readOnly = true)
-    public EmailLogPageResponse getEmailLogs(int page, int size, String status, String search) {
+    public EmailLogPageResponse getEmailLogs(int page, int size, String status, String search,
+                                              String startDateStr, String endDateStr, String targetGroup) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<EmailLog> emailLogPage;
 
-        if (search != null && !search.isBlank()) {
-            emailLogPage = emailLogRepository.findByRecipientContainingOrderBySentAtDesc(search.trim(), pageable);
-        } else if (status != null && !status.isBlank()) {
-            try {
-                EmailLogStatus emailLogStatus = EmailLogStatus.valueOf(status.toUpperCase());
-                emailLogPage = emailLogRepository.findByStatusOrderBySentAtDesc(emailLogStatus, pageable);
-            } catch (IllegalArgumentException e) {
-                emailLogPage = emailLogRepository.findAllByOrderBySentAtDesc(pageable);
-            }
-        } else {
-            emailLogPage = emailLogRepository.findAllByOrderBySentAtDesc(pageable);
-        }
+        LocalDateTime startDate = startDateStr != null && !startDateStr.isBlank()
+                ? LocalDate.parse(startDateStr).atStartOfDay() : null;
+        LocalDateTime endDate = endDateStr != null && !endDateStr.isBlank()
+                ? LocalDate.parse(endDateStr).plusDays(1).atStartOfDay() : null;
 
-        return EmailLogPageResponse.from(emailLogPage);
+        List<EmailLog> logs = emailLogRepository.findAllWithFilters(pageable, search, startDate, endDate,
+                status, targetGroup);
+        long totalElements = emailLogRepository.countWithFilters(search, startDate, endDate, status, targetGroup);
+
+        return EmailLogPageResponse.of(logs, page, size, totalElements);
     }
 
     /**
@@ -346,5 +412,63 @@ public class EmailService {
                 .orElseThrow(() -> new CustomException(EmailErrorStatus._EMAIL_TEMPLATE_NOT_FOUND));
 
         emailTemplateRepository.delete(template);
+    }
+
+    // ==================== 발송 예약 ====================
+
+    /**
+     * 이메일 예약 생성
+     */
+    @Transactional
+    public EmailScheduleResponse createSchedule(CreateEmailScheduleRequest request) {
+        EmailTemplate template = emailTemplateRepository.findById(request.templateId())
+                .orElseThrow(() -> new CustomException(EmailErrorStatus._EMAIL_TEMPLATE_NOT_FOUND));
+
+        LocalDateTime scheduledAt;
+        try {
+            scheduledAt = LocalDateTime.parse(request.scheduledAt());
+        } catch (Exception e) {
+            throw new CustomException(EmailErrorStatus._EMAIL_SCHEDULE_INVALID_TIME_FORMAT);
+        }
+
+        if (scheduledAt.isBefore(LocalDateTime.now())) {
+            throw new CustomException(EmailErrorStatus._EMAIL_SCHEDULE_INVALID_TIME);
+        }
+
+        EmailSchedule schedule = EmailSchedule.builder()
+                .template(template)
+                .targetGroup(request.targetGroup())
+                .targetLimit(request.getTargetLimit())
+                .scheduledAt(scheduledAt)
+                .build();
+
+        emailScheduleRepository.save(schedule);
+        return EmailScheduleResponse.from(schedule);
+    }
+
+    /**
+     * 이메일 예약 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public List<EmailScheduleResponse> getSchedules() {
+        return emailScheduleRepository.findAllByOrderByScheduledAtDesc()
+                .stream()
+                .map(EmailScheduleResponse::from)
+                .toList();
+    }
+
+    /**
+     * 이메일 예약 취소
+     */
+    @Transactional
+    public void cancelSchedule(Long id) {
+        EmailSchedule schedule = emailScheduleRepository.findById(id)
+                .orElseThrow(() -> new CustomException(EmailErrorStatus._EMAIL_SCHEDULE_NOT_FOUND));
+
+        if (schedule.getStatus() != EmailScheduleStatus.PENDING) {
+            throw new CustomException(EmailErrorStatus._EMAIL_SCHEDULE_NOT_CANCELLABLE);
+        }
+
+        schedule.cancel();
     }
 }

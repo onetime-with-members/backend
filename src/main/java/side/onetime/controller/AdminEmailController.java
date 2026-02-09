@@ -16,13 +16,16 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import side.onetime.dto.admin.email.request.CreateEmailScheduleRequest;
 import side.onetime.dto.admin.email.request.CreateEmailTemplateRequest;
 import side.onetime.dto.admin.email.request.SendByTemplateRequest;
 import side.onetime.dto.admin.email.request.SendEmailRequest;
+import side.onetime.dto.admin.email.request.SendTestEmailRequest;
 import side.onetime.dto.admin.email.request.SendToGroupRequest;
 import side.onetime.dto.admin.email.request.UpdateEmailTemplateRequest;
 import side.onetime.dto.admin.email.response.EmailLogPageResponse;
 import side.onetime.dto.admin.email.response.EmailLogStatsResponse;
+import side.onetime.dto.admin.email.response.EmailScheduleResponse;
 import side.onetime.dto.admin.email.response.EmailTemplateResponse;
 import side.onetime.dto.admin.email.response.SendEmailResponse;
 import side.onetime.global.common.ApiResponse;
@@ -54,6 +57,19 @@ public class AdminEmailController {
     }
 
     /**
+     * 테스트 이메일 발송 (로그인된 어드민 본인에게 1통)
+     *
+     * @param request 제목, 내용, 콘텐츠 타입
+     * @return 발송 결과
+     */
+    @PostMapping("/send-test")
+    public ResponseEntity<ApiResponse<SendEmailResponse>> sendTestEmail(
+            @Valid @RequestBody SendTestEmailRequest request) {
+        SendEmailResponse response = emailService.sendTestEmail(request);
+        return ApiResponse.onSuccess(SuccessStatus._SEND_TEST_EMAIL, response);
+    }
+
+    /**
      * 마케팅 타겟 그룹에 일괄 이메일 발송
      *
      * @param request 대상 그룹 (agreed, dormant, noEvent, oneTime, vip), 제목, 내용
@@ -80,12 +96,15 @@ public class AdminEmailController {
     }
 
     /**
-     * 이메일 발송 로그 조회 (페이징)
+     * 이메일 발송 로그 조회 (페이징 + 복합 필터)
      *
-     * @param page   페이지 번호 (0부터 시작)
-     * @param size   페이지 크기
-     * @param status 상태 필터 (SENT, FAILED 등)
-     * @param search 수신자 검색
+     * @param page        페이지 번호 (0부터 시작)
+     * @param size        페이지 크기
+     * @param status      상태 필터 (SENT, FAILED 등)
+     * @param search      수신자/제목 검색
+     * @param startDate   시작일 (yyyy-MM-dd)
+     * @param endDate     종료일 (yyyy-MM-dd)
+     * @param targetGroup 타겟 그룹 필터
      * @return 이메일 로그 목록
      */
     @GetMapping("/logs")
@@ -93,8 +112,12 @@ public class AdminEmailController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String search) {
-        EmailLogPageResponse response = emailService.getEmailLogs(page, size, status, search);
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) String targetGroup) {
+        EmailLogPageResponse response = emailService.getEmailLogs(page, size, status, search,
+                startDate, endDate, targetGroup);
         return ApiResponse.onSuccess(SuccessStatus._GET_EMAIL_LOGS, response);
     }
 
@@ -157,5 +180,42 @@ public class AdminEmailController {
     public ResponseEntity<ApiResponse<Void>> deleteTemplate(@PathVariable Long id) {
         emailService.deleteTemplate(id);
         return ApiResponse.onSuccess(SuccessStatus._DELETE_EMAIL_TEMPLATE, null);
+    }
+
+    // ==================== Schedule CRUD ====================
+
+    /**
+     * 이메일 예약 생성
+     *
+     * @param request 템플릿 ID, 대상 그룹, 예약 시간
+     * @return 생성된 예약 정보
+     */
+    @PostMapping("/schedules")
+    public ResponseEntity<ApiResponse<EmailScheduleResponse>> createSchedule(
+            @Valid @RequestBody CreateEmailScheduleRequest request) {
+        EmailScheduleResponse response = emailService.createSchedule(request);
+        return ApiResponse.onSuccess(SuccessStatus._CREATE_EMAIL_SCHEDULE, response);
+    }
+
+    /**
+     * 이메일 예약 목록 조회
+     *
+     * @return 예약 목록
+     */
+    @GetMapping("/schedules")
+    public ResponseEntity<ApiResponse<List<EmailScheduleResponse>>> getSchedules() {
+        List<EmailScheduleResponse> response = emailService.getSchedules();
+        return ApiResponse.onSuccess(SuccessStatus._GET_EMAIL_SCHEDULES, response);
+    }
+
+    /**
+     * 이메일 예약 취소
+     *
+     * @param id 예약 ID
+     */
+    @DeleteMapping("/schedules/{id}")
+    public ResponseEntity<ApiResponse<Void>> cancelSchedule(@PathVariable Long id) {
+        emailService.cancelSchedule(id);
+        return ApiResponse.onSuccess(SuccessStatus._CANCEL_EMAIL_SCHEDULE, null);
     }
 }

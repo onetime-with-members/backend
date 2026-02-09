@@ -161,12 +161,12 @@ public class AdminEmailControllerTest extends AdminControllerTestConfig {
         // given
         List<EmailLogResponse> logs = List.of(
                 new EmailLogResponse(
-                        1L, 1L, "hong@example.com", "테스트 제목",
+                        1L, 1L, "hong@example.com", "테스트 제목", null,
                         "TEXT", EmailLogStatus.SENT, null, null,
                         LocalDateTime.of(2025, 3, 1, 10, 0, 0)
                 ),
                 new EmailLogResponse(
-                        2L, 2L, "kim@example.com", "테스트 제목",
+                        2L, 2L, "kim@example.com", "테스트 제목", null,
                         "TEXT", EmailLogStatus.SENT, null, "agreed",
                         LocalDateTime.of(2025, 3, 1, 10, 1, 0)
                 )
@@ -174,7 +174,8 @@ public class AdminEmailControllerTest extends AdminControllerTestConfig {
         EmailLogPageResponse response = new EmailLogPageResponse(logs, 0, 1, 2, false, false);
 
         // when
-        Mockito.when(emailService.getEmailLogs(anyInt(), anyInt(), any(), any())).thenReturn(response);
+        Mockito.when(emailService.getEmailLogs(anyInt(), anyInt(), any(), any(), any(), any(), any()))
+                .thenReturn(response);
 
         // then
         mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/admin/email/logs")
@@ -186,7 +187,7 @@ public class AdminEmailControllerTest extends AdminControllerTestConfig {
                 .andExpect(jsonPath("$.payload.logs[0].recipient").value("hong@example.com"))
                 .andExpect(jsonPath("$.payload.totalElements").value(2));
 
-        Mockito.verify(emailService).getEmailLogs(eq(0), eq(20), isNull(), isNull());
+        Mockito.verify(emailService).getEmailLogs(eq(0), eq(20), isNull(), isNull(), isNull(), isNull(), isNull());
     }
 
     @Test
@@ -195,7 +196,7 @@ public class AdminEmailControllerTest extends AdminControllerTestConfig {
         // given
         List<EmailLogResponse> logs = List.of(
                 new EmailLogResponse(
-                        3L, 3L, "fail@example.com", "실패 메일",
+                        3L, 3L, "fail@example.com", "실패 메일", null,
                         "TEXT", EmailLogStatus.FAILED, "SMTP error", null,
                         LocalDateTime.of(2025, 3, 1, 10, 2, 0)
                 )
@@ -203,7 +204,8 @@ public class AdminEmailControllerTest extends AdminControllerTestConfig {
         EmailLogPageResponse response = new EmailLogPageResponse(logs, 0, 1, 1, false, false);
 
         // when
-        Mockito.when(emailService.getEmailLogs(anyInt(), anyInt(), eq("FAILED"), any())).thenReturn(response);
+        Mockito.when(emailService.getEmailLogs(anyInt(), anyInt(), eq("FAILED"), any(), any(), any(), any()))
+                .thenReturn(response);
 
         // then
         mockMvc.perform(RestDocumentationRequestBuilders.get("/api/v1/admin/email/logs")
@@ -215,7 +217,7 @@ public class AdminEmailControllerTest extends AdminControllerTestConfig {
                 .andExpect(jsonPath("$.payload.logs[0].status").value("FAILED"))
                 .andExpect(jsonPath("$.payload.logs[0].errorMessage").value("SMTP error"));
 
-        Mockito.verify(emailService).getEmailLogs(eq(0), eq(20), eq("FAILED"), isNull());
+        Mockito.verify(emailService).getEmailLogs(eq(0), eq(20), eq("FAILED"), isNull(), isNull(), isNull(), isNull());
     }
 
     // ==================== Email Stats ====================

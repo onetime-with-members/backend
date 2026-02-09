@@ -26,4 +26,18 @@ public record EmailLogPageResponse(
                 page.hasPrevious()
         );
     }
+
+    public static EmailLogPageResponse of(List<EmailLog> logs, int page, int size, long totalElements) {
+        int totalPages = size > 0 ? (int) Math.ceil((double) totalElements / size) : 0;
+        return new EmailLogPageResponse(
+                logs.stream()
+                        .map(EmailLogResponse::from)
+                        .toList(),
+                page,
+                totalPages,
+                totalElements,
+                page < totalPages - 1,
+                page > 0
+        );
+    }
 }
