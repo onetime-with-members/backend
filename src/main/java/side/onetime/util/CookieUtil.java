@@ -17,7 +17,7 @@ public class CookieUtil {
     }
 
     // Admin Cookie Constants
-    public static final String ADMIN_ACCESS_TOKEN_COOKIE = "admin_token";
+    public static final String ADMIN_ACCESS_TOKEN_COOKIE = "admin_access_token";
     public static final String ADMIN_REFRESH_TOKEN_COOKIE = "admin_refresh_token";
     public static final int ADMIN_ACCESS_COOKIE_MAX_AGE = 60 * 60; // 1 hour
     public static final int ADMIN_REFRESH_COOKIE_MAX_AGE = 60 * 60 * 24 * 14; // 14 days
