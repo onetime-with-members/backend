@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -14,22 +13,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import side.onetime.domain.AdminUser;
 import side.onetime.domain.EmailLog;
-import side.onetime.domain.EmailSchedule;
 import side.onetime.domain.EmailTemplate;
 import side.onetime.domain.enums.EmailLogStatus;
-import side.onetime.domain.enums.EmailScheduleStatus;
-import side.onetime.domain.AdminUser;
 import side.onetime.dto.admin.email.request.CreateEmailTemplateRequest;
 import side.onetime.dto.admin.email.request.SendByTemplateRequest;
 import side.onetime.dto.admin.email.request.SendEmailRequest;
 import side.onetime.dto.admin.email.request.SendTestEmailRequest;
-import side.onetime.dto.admin.email.request.CreateEmailScheduleRequest;
 import side.onetime.dto.admin.email.request.SendToGroupRequest;
 import side.onetime.dto.admin.email.request.UpdateEmailTemplateRequest;
 import side.onetime.dto.admin.email.response.EmailLogPageResponse;
 import side.onetime.dto.admin.email.response.EmailLogStatsResponse;
-import side.onetime.dto.admin.email.response.EmailScheduleResponse;
 import side.onetime.dto.admin.email.response.EmailTemplateResponse;
 import side.onetime.dto.admin.email.response.SendEmailResponse;
 import side.onetime.dto.admin.email.response.UserEmailDto;
@@ -38,7 +33,6 @@ import side.onetime.exception.status.EmailErrorStatus;
 import side.onetime.global.common.status.ErrorStatus;
 import side.onetime.repository.AdminRepository;
 import side.onetime.repository.EmailLogRepository;
-import side.onetime.repository.EmailScheduleRepository;
 import side.onetime.repository.EmailTemplateRepository;
 import side.onetime.repository.StatisticsRepository;
 import side.onetime.util.AdminAuthorizationUtil;
@@ -61,7 +55,6 @@ public class EmailService {
     private final AdminRepository adminRepository;
     private final StatisticsRepository statisticsRepository;
     private final EmailLogRepository emailLogRepository;
-    private final EmailScheduleRepository emailScheduleRepository;
     private final EmailTemplateRepository emailTemplateRepository;
 
     @Value("${spring.cloud.aws.ses.from-email:noreply@onetime.com}")
@@ -414,61 +407,4 @@ public class EmailService {
         emailTemplateRepository.delete(template);
     }
 
-    // ==================== 발송 예약 ====================
-
-    /**
-     * 이메일 예약 생성
-     */
-    @Transactional
-    public EmailScheduleResponse createSchedule(CreateEmailScheduleRequest request) {
-        EmailTemplate template = emailTemplateRepository.findById(request.templateId())
-                .orElseThrow(() -> new CustomException(EmailErrorStatus._EMAIL_TEMPLATE_NOT_FOUND));
-
-        LocalDateTime scheduledAt;
-        try {
-            scheduledAt = LocalDateTime.parse(request.scheduledAt());
-        } catch (Exception e) {
-            throw new CustomException(EmailErrorStatus._EMAIL_SCHEDULE_INVALID_TIME_FORMAT);
-        }
-
-        if (scheduledAt.isBefore(LocalDateTime.now())) {
-            throw new CustomException(EmailErrorStatus._EMAIL_SCHEDULE_INVALID_TIME);
-        }
-
-        EmailSchedule schedule = EmailSchedule.builder()
-                .template(template)
-                .targetGroup(request.targetGroup())
-                .targetLimit(request.getTargetLimit())
-                .scheduledAt(scheduledAt)
-                .build();
-
-        emailScheduleRepository.save(schedule);
-        return EmailScheduleResponse.from(schedule);
-    }
-
-    /**
-     * 이메일 예약 목록 조회
-     */
-    @Transactional(readOnly = true)
-    public List<EmailScheduleResponse> getSchedules() {
-        return emailScheduleRepository.findAllByOrderByScheduledAtDesc()
-                .stream()
-                .map(EmailScheduleResponse::from)
-                .toList();
-    }
-
-    /**
-     * 이메일 예약 취소
-     */
-    @Transactional
-    public void cancelSchedule(Long id) {
-        EmailSchedule schedule = emailScheduleRepository.findById(id)
-                .orElseThrow(() -> new CustomException(EmailErrorStatus._EMAIL_SCHEDULE_NOT_FOUND));
-
-        if (schedule.getStatus() != EmailScheduleStatus.PENDING) {
-            throw new CustomException(EmailErrorStatus._EMAIL_SCHEDULE_NOT_CANCELLABLE);
-        }
-
-        schedule.cancel();
-    }
 }

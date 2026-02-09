@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import side.onetime.dto.admin.email.request.CreateEmailScheduleRequest;
 import side.onetime.dto.admin.email.request.CreateEmailTemplateRequest;
 import side.onetime.dto.admin.email.request.SendByTemplateRequest;
 import side.onetime.dto.admin.email.request.SendEmailRequest;
@@ -25,7 +24,6 @@ import side.onetime.dto.admin.email.request.SendToGroupRequest;
 import side.onetime.dto.admin.email.request.UpdateEmailTemplateRequest;
 import side.onetime.dto.admin.email.response.EmailLogPageResponse;
 import side.onetime.dto.admin.email.response.EmailLogStatsResponse;
-import side.onetime.dto.admin.email.response.EmailScheduleResponse;
 import side.onetime.dto.admin.email.response.EmailTemplateResponse;
 import side.onetime.dto.admin.email.response.SendEmailResponse;
 import side.onetime.global.common.ApiResponse;
@@ -182,40 +180,4 @@ public class AdminEmailController {
         return ApiResponse.onSuccess(SuccessStatus._DELETE_EMAIL_TEMPLATE, null);
     }
 
-    // ==================== Schedule CRUD ====================
-
-    /**
-     * 이메일 예약 생성
-     *
-     * @param request 템플릿 ID, 대상 그룹, 예약 시간
-     * @return 생성된 예약 정보
-     */
-    @PostMapping("/schedules")
-    public ResponseEntity<ApiResponse<EmailScheduleResponse>> createSchedule(
-            @Valid @RequestBody CreateEmailScheduleRequest request) {
-        EmailScheduleResponse response = emailService.createSchedule(request);
-        return ApiResponse.onSuccess(SuccessStatus._CREATE_EMAIL_SCHEDULE, response);
-    }
-
-    /**
-     * 이메일 예약 목록 조회
-     *
-     * @return 예약 목록
-     */
-    @GetMapping("/schedules")
-    public ResponseEntity<ApiResponse<List<EmailScheduleResponse>>> getSchedules() {
-        List<EmailScheduleResponse> response = emailService.getSchedules();
-        return ApiResponse.onSuccess(SuccessStatus._GET_EMAIL_SCHEDULES, response);
-    }
-
-    /**
-     * 이메일 예약 취소
-     *
-     * @param id 예약 ID
-     */
-    @DeleteMapping("/schedules/{id}")
-    public ResponseEntity<ApiResponse<Void>> cancelSchedule(@PathVariable Long id) {
-        emailService.cancelSchedule(id);
-        return ApiResponse.onSuccess(SuccessStatus._CANCEL_EMAIL_SCHEDULE, null);
-    }
 }

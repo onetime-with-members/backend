@@ -38,10 +38,6 @@
                 <i data-lucide="file-text" class="w-4 h-4 inline mr-1"></i>
                 템플릿
             </button>
-            <button type="button" class="tab-btn pb-3 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" data-tab="emailSchedules">
-                <i data-lucide="clock" class="w-4 h-4 inline mr-1"></i>
-                발송 예약
-            </button>
         </nav>
     </div>
 
@@ -313,40 +309,6 @@
         </div>
 
         <!-- Tab 5: Schedules -->
-        <div id="emailSchedules" class="tab-content hidden">
-            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors">
-                <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                        <i data-lucide="clock" class="w-4 h-4"></i>
-                        발송 예약
-                    </h3>
-                    <button type="button" class="px-3 py-1.5 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2" onclick="showScheduleModal()">
-                        <i data-lucide="plus" class="w-4 h-4"></i>
-                        새 예약
-                    </button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b border-gray-200 dark:border-gray-700">
-                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">템플릿</th>
-                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">대상 그룹</th>
-                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">최대 발송</th>
-                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">예약 시간</th>
-                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">상태</th>
-                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">결과</th>
-                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="schedulesTableBody">
-                            <tr>
-                                <td colspan="7" class="text-center text-gray-400 dark:text-gray-500 py-8">발송 예약이 없습니다</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Template Modal -->
@@ -390,53 +352,6 @@
                 </button>
                 <button type="button" onclick="saveTemplate()" class="px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors">
                     저장
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Schedule Modal -->
-    <div id="scheduleModal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
-            <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">새 발송 예약</h3>
-                <button onclick="closeScheduleModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <div class="flex-1 overflow-auto p-4">
-                <div class="mb-4">
-                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">템플릿</label>
-                    <select id="scheduleTemplateId" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
-                        <option value="">템플릿을 선택하세요</option>
-                    </select>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">대상 그룹</label>
-                    <select id="scheduleTargetGroup" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
-                        <option value="">-- 선택 --</option>
-                        <option value="agreed">마케팅 동의</option>
-                        <option value="dormant">휴면 유저</option>
-                        <option value="noEvent">이벤트 미생성</option>
-                        <option value="oneTime">일회성 유저</option>
-                        <option value="vip">VIP 유저</option>
-                    </select>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">최대 발송 수</label>
-                    <input type="number" id="scheduleTargetLimit" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" value="100" min="1" max="1000">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">예약 시간</label>
-                    <input type="datetime-local" id="scheduleAt" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
-                </div>
-            </div>
-            <div class="flex items-center justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-700">
-                <button type="button" onclick="closeScheduleModal()" class="px-4 py-2 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                    취소
-                </button>
-                <button type="button" onclick="saveSchedule()" class="px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors">
-                    예약
                 </button>
             </div>
         </div>
@@ -520,8 +435,6 @@
                 loadEmailStats();
             } else if (targetTab === 'emailTemplates') {
                 loadTemplates();
-            } else if (targetTab === 'emailSchedules') {
-                loadSchedules();
             }
         });
     });
@@ -1128,136 +1041,6 @@
         document.getElementById('logSearchInput').value = '';
         loadEmailLogs(0);
     });
-
-    // ==================== Email Schedules ====================
-    function loadSchedules() {
-        fetch('/api/v1/admin/email/schedules')
-            .then(response => response.json())
-            .then(data => {
-                if (data.is_success && data.payload) {
-                    renderSchedulesTable(data.payload);
-                }
-            })
-            .catch(error => console.error('Error loading schedules:', error));
-    }
-
-    const TARGET_GROUP_LABELS = {
-        'agreed': '마케팅 동의',
-        'dormant': '휴면 유저',
-        'noEvent': '이벤트 미생성',
-        'oneTime': '일회성 유저',
-        'vip': 'VIP 유저'
-    };
-
-    function renderSchedulesTable(schedules) {
-        let tbody = '';
-        if (!schedules || schedules.length === 0) {
-            tbody = '<tr><td colspan="7" class="text-center text-gray-400 dark:text-gray-500 py-8">발송 예약이 없습니다</td></tr>';
-        } else {
-            schedules.forEach(s => {
-                const scheduledAt = new Date(s.scheduledAt).toLocaleString('ko-KR');
-                const statusClass = s.status === 'PENDING' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' :
-                                   s.status === 'PROCESSING' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
-                                   s.status === 'COMPLETED' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
-                                   s.status === 'CANCELLED' ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400' : '';
-                const statusLabel = s.status === 'PENDING' ? '대기' : s.status === 'PROCESSING' ? '처리 중' : s.status === 'COMPLETED' ? '완료' : s.status === 'CANCELLED' ? '취소됨' : s.status;
-                const result = s.status === 'COMPLETED' ? `${s.sentCount || 0}건 발송 / ${s.failedCount || 0}건 실패` : '-';
-                const groupLabel = TARGET_GROUP_LABELS[s.targetGroup] || s.targetGroup;
-
-                tbody += `
-                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
-                        <td class="py-3 px-4 text-gray-900 dark:text-white">${s.templateName || '-'}</td>
-                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400">${groupLabel}</td>
-                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400 tabular-nums">${s.targetLimit || '-'}</td>
-                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400 tabular-nums">${scheduledAt}</td>
-                        <td class="py-3 px-4"><span class="px-2 py-0.5 text-xs rounded ${statusClass}">${statusLabel}</span></td>
-                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400">${result}</td>
-                        <td class="py-3 px-4">
-                            ${s.status === 'PENDING' ? `<button class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400" onclick="cancelSchedule(${s.id})"><i data-lucide="x-circle" class="w-4 h-4"></i></button>` : ''}
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-        document.getElementById('schedulesTableBody').innerHTML = tbody;
-        lucide.createIcons();
-    }
-
-    function showScheduleModal() {
-        document.getElementById('scheduleTemplateId').value = '';
-        document.getElementById('scheduleTargetGroup').value = '';
-        document.getElementById('scheduleTargetLimit').value = '100';
-        document.getElementById('scheduleAt').value = '';
-
-        // Set min datetime to now
-        const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        document.getElementById('scheduleAt').min = now.toISOString().slice(0, 16);
-
-        document.getElementById('scheduleModal').classList.remove('hidden');
-        lucide.createIcons();
-    }
-
-    function closeScheduleModal() {
-        document.getElementById('scheduleModal').classList.add('hidden');
-    }
-
-    document.getElementById('scheduleModal').addEventListener('click', function(e) {
-        if (e.target === this) closeScheduleModal();
-    });
-
-    function saveSchedule() {
-        const templateId = document.getElementById('scheduleTemplateId').value;
-        const targetGroup = document.getElementById('scheduleTargetGroup').value;
-        const targetLimit = parseInt(document.getElementById('scheduleTargetLimit').value) || 100;
-        const scheduledAt = document.getElementById('scheduleAt').value;
-
-        if (!templateId) { showAlert('템플릿을 선택해주세요', 'warning'); return; }
-        if (!targetGroup) { showAlert('대상 그룹을 선택해주세요', 'warning'); return; }
-        if (!scheduledAt) { showAlert('예약 시간을 입력해주세요', 'warning'); return; }
-
-        // Convert datetime-local to ISO format
-        const scheduledAtISO = scheduledAt.replace('T', 'T') + ':00';
-
-        fetch('/api/v1/admin/email/schedules', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                templateId: parseInt(templateId),
-                targetGroup: targetGroup,
-                targetLimit: targetLimit,
-                scheduledAt: scheduledAtISO
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.is_success) {
-                closeScheduleModal();
-                loadSchedules();
-                showAlert('발송 예약이 등록되었습니다', 'success');
-            } else {
-                showAlert(data.message || '예약 등록 실패', 'error');
-            }
-        })
-        .catch(error => { console.error(error); showAlert('예약 등록 실패', 'error'); });
-    }
-
-    async function cancelSchedule(id) {
-        const confirmed = await showConfirm('이 예약을 취소하시겠습니까?', '예약 취소');
-        if (!confirmed) return;
-
-        fetch(`/api/v1/admin/email/schedules/${id}`, { method: 'DELETE' })
-            .then(response => response.json())
-            .then(data => {
-                if (data.is_success) {
-                    loadSchedules();
-                    showAlert('예약이 취소되었습니다', 'success');
-                } else {
-                    showAlert(data.message || '예약 취소 실패', 'error');
-                }
-            })
-            .catch(error => { console.error(error); showAlert('예약 취소 실패', 'error'); });
-    }
 
     // ==================== Initialize ====================
     document.addEventListener('DOMContentLoaded', function() {
