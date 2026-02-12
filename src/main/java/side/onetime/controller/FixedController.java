@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
+import side.onetime.auth.annotation.IsUser;
 import side.onetime.dto.fixed.request.UpdateFixedScheduleRequest;
 import side.onetime.dto.fixed.response.GetFixedScheduleResponse;
 import side.onetime.global.common.ApiResponse;
@@ -33,6 +34,7 @@ public class FixedController {
      *
      * @return 유저의 고정 스케줄 목록
      */
+    @IsUser
     @GetMapping
     public ResponseEntity<ApiResponse<GetFixedScheduleResponse>> getUserFixedSchedule() {
 
@@ -48,6 +50,7 @@ public class FixedController {
      * @param request 새로운 고정 스케줄 목록
      * @return 성공 상태 응답 객체
      */
+    @IsUser
     @PutMapping
     public ResponseEntity<ApiResponse<SuccessStatus>> updateUserFixedSchedules(
             @Valid @RequestBody UpdateFixedScheduleRequest request) {
@@ -64,6 +67,7 @@ public class FixedController {
 	 * @param identifier 파싱할 에브리타임 시간표 URL 식별자
 	 * @return 성공 상태 응답 객체
 	 */
+	@IsUser
 	@GetMapping("/everytime/{identifier}")
 	public ResponseEntity<ApiResponse<GetFixedScheduleResponse>> getUserEverytimeTimetable(
 		@PathVariable

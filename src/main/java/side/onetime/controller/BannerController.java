@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import side.onetime.auth.annotation.IsAdmin;
+import side.onetime.auth.annotation.PublicApi;
 import side.onetime.dto.banner.request.ExportBannerRequest;
 import side.onetime.dto.banner.request.RegisterBannerRequest;
 import side.onetime.dto.banner.request.UpdateBannerRequest;
@@ -41,7 +43,8 @@ public class BannerController {
      * @param imageFile 배너 등록 이미지 객체
      * @return 성공 응답 메시지
      */
-    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @IsAdmin
+    @PostMapping(value = "/banners/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<SuccessStatus>> registerBanner(
             @Valid @RequestPart(value = "request") RegisterBannerRequest request,
             @RequestPart(value = "image_file") MultipartFile imageFile) {
@@ -57,7 +60,8 @@ public class BannerController {
      * @param id 조회할 배너 ID
      * @return 배너 응답 객체
      */
-    @GetMapping("/{id}")
+    @IsAdmin
+    @GetMapping("/banners/{id}")
     public ResponseEntity<ApiResponse<GetBannerResponse>> getBanner(@PathVariable Long id) {
         GetBannerResponse response = bannerService.getBanner(id);
         return ApiResponse.onSuccess(SuccessStatus._GET_BANNER, response);
@@ -70,7 +74,8 @@ public class BannerController {
      *
      * @return 배너 응답 객체 리스트
      */
-    @GetMapping("/all")
+    @IsAdmin
+    @GetMapping("/banners/all")
     public ResponseEntity<ApiResponse<GetAllBannersResponse>> getAllBanners(
             @RequestParam(value = "page", defaultValue = "1") @Min(1) int page
     ) {
@@ -84,7 +89,8 @@ public class BannerController {
      *
      * @return 활성화된 배너 응답 객체 리스트
      */
-    @GetMapping("/activated/all")
+    @PublicApi
+    @GetMapping("/banners/activated/all")
     public ResponseEntity<ApiResponse<GetAllActivatedBannersResponse>> getAllActivatedBanners() {
         GetAllActivatedBannersResponse response = bannerService.getAllActivatedBanners();
         return ApiResponse.onSuccess(SuccessStatus._GET_ALL_ACTIVATED_BANNERS, response);
@@ -102,7 +108,8 @@ public class BannerController {
      * @param imageFile 배너 수정 이미지 객체
      * @return 성공 응답 메시지
      */
-    @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @IsAdmin
+    @PatchMapping(value = "/banners/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<SuccessStatus>> updateBanner(
             @PathVariable Long id,
             @Valid @RequestPart(value = "request") UpdateBannerRequest request,
@@ -121,7 +128,8 @@ public class BannerController {
      * @param id 삭제할 배너 ID
      * @return 성공 응답 메시지
      */
-    @DeleteMapping("/{id}")
+    @IsAdmin
+    @DeleteMapping("/banners/{id}")
     public ResponseEntity<ApiResponse<SuccessStatus>> deleteBanner(@PathVariable Long id) {
         bannerService.deleteBanner(id);
         return ApiResponse.onSuccess(SuccessStatus._DELETE_BANNER);
@@ -135,7 +143,8 @@ public class BannerController {
      * @param id 클릭한 배너 ID
      * @return 성공 응답 메시지
      */
-    @PatchMapping("/{id}/clicks")
+    @PublicApi
+    @PatchMapping("/banners/{id}/clicks")
     public ResponseEntity<ApiResponse<SuccessStatus>> increaseBannerClickCount(@PathVariable Long id) {
         bannerService.increaseBannerClickCount(id);
         return ApiResponse.onSuccess(SuccessStatus._INCREASE_BANNER_CLICK_COUNT);
@@ -148,6 +157,7 @@ public class BannerController {
      *
      * @return 성공 응답 메시지
      */
+    @IsAdmin
     @PostMapping("/export")
     public ResponseEntity<ApiResponse<SuccessStatus>> exportBanners() {
         bannerService.exportBanners();
@@ -161,6 +171,7 @@ public class BannerController {
      *
      * @return 성공 응답 메시지
      */
+    @IsAdmin
     @PostMapping("/import")
     public ResponseEntity<ApiResponse<SuccessStatus>> importBanners() {
         bannerService.importBanners();
@@ -176,6 +187,7 @@ public class BannerController {
      * @param requests 테스트 서버에서 전송한 배너 리스트
      * @return 성공 응답 메시지
      */
+    @PublicApi
     @PostMapping("/staging")
     public ResponseEntity<ApiResponse<SuccessStatus>> saveBannerStaging(
             @RequestHeader(name = "X-API-KEY") String apiKey,

@@ -8,6 +8,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import side.onetime.auth.annotation.IsAdmin;
+import side.onetime.auth.annotation.PublicApi;
 import side.onetime.dto.barbanner.request.ExportBarBannerRequest;
 import side.onetime.dto.barbanner.request.RegisterBarBannerRequest;
 import side.onetime.dto.barbanner.request.UpdateBarBannerRequest;
@@ -37,6 +39,7 @@ public class BarBannerController {
      * @param request 띠배너 등록 요청 정보
      * @return 성공 응답 메시지
      */
+    @IsAdmin
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<SuccessStatus>> registerBarBanner(
             @Valid @RequestBody RegisterBarBannerRequest request
@@ -53,6 +56,7 @@ public class BarBannerController {
      * @param id 조회할 띠배너 ID
      * @return 띠배너 응답 객체
      */
+    @IsAdmin
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<GetBarBannerResponse>> getBarBanner(@PathVariable Long id) {
         GetBarBannerResponse response = barBannerService.getBarBanner(id);
@@ -66,6 +70,7 @@ public class BarBannerController {
      *
      * @return 띠배너 응답 객체 리스트
      */
+    @IsAdmin
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<GetAllBarBannersResponse>> getAllBarBanners(
             @RequestParam(value = "page", defaultValue = "1") @Min(1) int page
@@ -80,6 +85,7 @@ public class BarBannerController {
      *
      * @return 활성화된 띠배너 응답 객체 리스트
      */
+    @PublicApi
     @GetMapping("/activated/all")
     public ResponseEntity<ApiResponse<GetAllActivatedBarBannersResponse>> getAllActivatedBarBanners() {
         GetAllActivatedBarBannersResponse response = barBannerService.getAllActivatedBarBanners();
@@ -97,6 +103,7 @@ public class BarBannerController {
      * @param request 수정 요청 DTO
      * @return 성공 응답 메시지
      */
+    @IsAdmin
     @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<SuccessStatus>> updateBarBanner(
             @PathVariable Long id,
@@ -115,6 +122,7 @@ public class BarBannerController {
      * @param id 삭제할 띠배너 ID
      * @return 성공 응답 메시지
      */
+    @IsAdmin
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<SuccessStatus>> deleteBarBanner(@PathVariable Long id) {
         barBannerService.deleteBarBanner(id);
@@ -128,6 +136,7 @@ public class BarBannerController {
      *
      * @return 성공 응답 메시지
      */
+    @IsAdmin
     @PostMapping("/export")
     public ResponseEntity<ApiResponse<SuccessStatus>> exportBarBanners() {
         barBannerService.exportBarBanners();
@@ -141,6 +150,7 @@ public class BarBannerController {
      *
      * @return 성공 응답 메시지
      */
+    @IsAdmin
     @PostMapping("/import")
     public ResponseEntity<ApiResponse<SuccessStatus>> importBarBanners() {
         barBannerService.importBarBanners();
@@ -156,6 +166,7 @@ public class BarBannerController {
      * @param requests 테스트 서버에서 전송한 띠배너 리스트
      * @return 성공 응답 메시지
      */
+    @PublicApi
     @PostMapping("/staging")
     public ResponseEntity<ApiResponse<SuccessStatus>> saveBarBannerStaging(
             @RequestHeader(name = "X-API-KEY") String apiKey,
