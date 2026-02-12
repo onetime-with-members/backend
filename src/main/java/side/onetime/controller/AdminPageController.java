@@ -233,4 +233,17 @@ public class AdminPageController {
         model.addAttribute("pageTitle", "Send Email");
         return "admin/email";
     }
+
+    // ==================== Banner Page ====================
+
+    /**
+     * 배너 관리 페이지 렌더링
+     */
+    @GetMapping("/banner")
+    public String bannerPage(HttpServletRequest request, Model model) {
+        model.addAttribute("currentUri", request.getRequestURI());
+        model.addAttribute("currentPage", "banner");
+        model.addAttribute("pageTitle", "Banner Management");
+        return "admin/banner";
+    }
 }

@@ -64,6 +64,13 @@
                 <i data-lucide="mail" class="w-4 h-4"></i>
                 <span>이메일 발송</span>
             </a>
+
+            <a th:href="@{/admin/banner}"
+               th:classappend="${currentPage == 'banner'} ? 'bg-accent-50 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'"
+               class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                <i data-lucide="image" class="w-4 h-4"></i>
+                <span>배너 관리</span>
+            </a>
         </div>
     </nav>
 

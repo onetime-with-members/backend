@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout/default}">
+<head>
+    <title>배너 관리 - OneTime Admin</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">배너 관리</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">배너와 띠배너를 관리합니다</p>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
+        <nav class="flex gap-6">
+            <button type="button" class="tab-btn pb-3 text-sm font-medium border-b-2 border-accent-500 text-gray-900 dark:text-white" data-tab="carouselBanners">
+                <i data-lucide="image" class="w-4 h-4 inline mr-1"></i>
+                배너
+            </button>
+            <button type="button" class="tab-btn pb-3 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" data-tab="barBanners">
+                <i data-lucide="bar-chart-horizontal" class="w-4 h-4 inline mr-1"></i>
+                띠배너
+            </button>
+        </nav>
+    </div>
+
+    <!-- Tab Contents -->
+    <div id="tabContents">
+        <!-- Tab 1: Carousel Banners -->
+        <div id="carouselBanners" class="tab-content">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">전체</p>
+                    <p class="text-xl font-semibold text-gray-900 dark:text-white" id="statsTotal">-</p>
+                </div>
+                <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">활성</p>
+                    <p class="text-xl font-semibold text-green-600 dark:text-green-400" id="statsActive">-</p>
+                </div>
+                <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">비활성</p>
+                    <p class="text-xl font-semibold text-gray-600 dark:text-gray-400" id="statsInactive">-</p>
+                </div>
+                <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">총 클릭 수</p>
+                    <p class="text-xl font-semibold text-blue-600 dark:text-blue-400" id="statsTotalClicks" style="font-variant-numeric: tabular-nums">-</p>
+                </div>
+            </div>
+
+            <!-- Banners Table -->
+            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors">
+                <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                        <i data-lucide="image" class="w-4 h-4"></i>
+                        배너
+                    </h3>
+                    <button type="button" class="px-3 py-1.5 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2" onclick="showBannerModal()">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        배너 등록
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-200 dark:border-gray-700">
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">이미지</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">제목</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">조직</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">상태</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">클릭 수</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">등록일</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bannersTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center text-gray-400 dark:text-gray-500 py-8">배너가 없습니다</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination -->
+                <nav id="bannersPagination" class="hidden flex justify-center py-4 border-t border-gray-200 dark:border-gray-700">
+                    <ul class="flex gap-1" id="bannerPaginationList"></ul>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Tab 2: Bar Banners -->
+        <div id="barBanners" class="tab-content hidden">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">전체</p>
+                    <p class="text-xl font-semibold text-gray-900 dark:text-white" id="barStatsTotal">-</p>
+                </div>
+                <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">활성</p>
+                    <p class="text-xl font-semibold text-green-600 dark:text-green-400" id="barStatsActive">-</p>
+                </div>
+                <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">비활성</p>
+                    <p class="text-xl font-semibold text-gray-600 dark:text-gray-400" id="barStatsInactive">-</p>
+                </div>
+            </div>
+
+            <!-- Bar Banners Table -->
+            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors">
+                <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                        <i data-lucide="bar-chart-horizontal" class="w-4 h-4"></i>
+                        띠배너
+                    </h3>
+                    <button type="button" class="px-3 py-1.5 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2" onclick="showBarBannerModal()">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        띠배너 등록
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-200 dark:border-gray-700">
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">내용(한)</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">내용(영)</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">색상 미리보기</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">상태</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">등록일</th>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400 font-medium">액션</th>
+                            </tr>
+                        </thead>
+                        <tbody id="barBannersTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center text-gray-400 dark:text-gray-500 py-8">띠배너가 없습니다</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination -->
+                <nav id="barBannersPagination" class="hidden flex justify-center py-4 border-t border-gray-200 dark:border-gray-700">
+                    <ul class="flex gap-1" id="barBannerPaginationList"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Banner Modal (Create/Edit) -->
+    <div id="bannerModal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="bannerModalTitle">배너 등록</h3>
+                <button onclick="closeBannerModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" aria-label="닫기">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-auto p-4">
+                <input type="hidden" id="bannerId">
+
+                <!-- Preview -->
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-2">미리보기</label>
+                    <div class="relative w-full h-32 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
+                        <img id="bannerPreviewImage" class="absolute inset-0 w-full h-full object-cover" src="" alt="">
+                        <div class="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent flex flex-col justify-center px-6">
+                            <span id="bannerPreviewOrg" class="text-xs text-white/80"></span>
+                            <span id="bannerPreviewTitle" class="text-base font-semibold text-white mt-1"></span>
+                            <span id="bannerPreviewSubTitle" class="text-xs text-white/70 mt-0.5"></span>
+                            <span id="bannerPreviewBtn" class="mt-2 text-xs font-medium" style="color: var(--preview-color, #ffffff)"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">조직명 <span class="text-red-500">*</span></label>
+                        <input type="text" id="bannerOrganization" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="예: 원타임" onkeyup="updateBannerPreview()">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">제목 <span class="text-red-500">*</span></label>
+                        <input type="text" id="bannerTitle" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="예: 이벤트 참여하고 선물 받기" onkeyup="updateBannerPreview()">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">부제목 <span class="text-red-500">*</span></label>
+                    <input type="text" id="bannerSubTitle" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="예: 지금 바로 참여해보세요" onkeyup="updateBannerPreview()">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">버튼 텍스트 <span class="text-red-500">*</span></label>
+                        <input type="text" id="bannerButtonText" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="예: 자세히 보기" onkeyup="updateBannerPreview()">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">색상 코드 <span class="text-red-500">*</span></label>
+                        <div class="flex gap-2">
+                            <input type="color" id="bannerColorPicker" class="w-12 h-10 rounded cursor-pointer" value="#677CEE" onchange="document.getElementById('bannerColorCode').value = this.value; updateBannerPreview()">
+                            <input type="text" id="bannerColorCode" class="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="#677CEE" onkeyup="document.getElementById('bannerColorPicker').value = this.value; updateBannerPreview()">
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">링크 URL</label>
+                    <input type="url" id="bannerLinkUrl" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="https://...">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">이미지 <span class="text-red-500" id="bannerImageRequired">*</span></label>
+                    <input type="file" id="bannerImageFile" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" accept="image/*" onchange="previewBannerImage(this)">
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">권장 크기: 1200x400px</p>
+                </div>
+                <div id="currentBannerImage" class="hidden mb-4">
+                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">현재 이미지</label>
+                    <img id="currentBannerImagePreview" class="w-full h-24 object-cover rounded-md" src="" alt="">
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">새 이미지를 선택하면 교체됩니다</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" onclick="closeBannerModal()" class="px-4 py-2 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    취소
+                </button>
+                <button type="button" onclick="saveBanner()" class="px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors">
+                    저장
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bar Banner Modal (Create/Edit) -->
+    <div id="barBannerModal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="barBannerModalTitle">띠배너 등록</h3>
+                <button onclick="closeBarBannerModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" aria-label="닫기">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-auto p-4">
+                <input type="hidden" id="barBannerId">
+
+                <!-- Preview -->
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-2">미리보기</label>
+                    <div id="barBannerPreview" class="w-full h-14 rounded-lg flex items-center justify-center gap-2 px-4" style="background-color: #FFD700;">
+                        <span style="color: #FFFFFF;" class="text-sm font-medium" id="barPreviewText">미리보기 텍스트</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4" id="barPreviewArrow" style="color: #FFFFFF;"></i>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">내용(한) <span class="text-red-500">*</span></label>
+                    <input type="text" id="barBannerContentKor" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="예: 새로운 기능을 확인해보세요" onkeyup="updateBarBannerPreview()">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">내용(영) <span class="text-red-500">*</span></label>
+                    <input type="text" id="barBannerContentEng" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="예: Check out new features" onkeyup="updateBarBannerPreview()">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">배경색 <span class="text-red-500">*</span></label>
+                        <div class="flex gap-2">
+                            <input type="color" id="barBannerBgColorPicker" class="w-12 h-10 rounded cursor-pointer" value="#FFD700" onchange="document.getElementById('barBannerBgColor').value = this.value; updateBarBannerPreview()">
+                            <input type="text" id="barBannerBgColor" class="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="#FFD700" onkeyup="document.getElementById('barBannerBgColorPicker').value = this.value; updateBarBannerPreview()">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">텍스트색 <span class="text-red-500">*</span></label>
+                        <div class="flex gap-2">
+                            <input type="color" id="barBannerTextColorPicker" class="w-12 h-10 rounded cursor-pointer" value="#FFFFFF" onchange="document.getElementById('barBannerTextColor').value = this.value; updateBarBannerPreview()">
+                            <input type="text" id="barBannerTextColor" class="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="#FFFFFF" onkeyup="document.getElementById('barBannerTextColorPicker').value = this.value; updateBarBannerPreview()">
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">링크 URL</label>
+                    <input type="url" id="barBannerLinkUrl" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="https://...">
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-2 p-4 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" onclick="closeBarBannerModal()" class="px-4 py-2 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    취소
+                </button>
+                <button type="button" onclick="saveBarBanner()" class="px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors">
+                    저장
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script th:inline="javascript">
+    // ==================== Utility ====================
+    function escapeHtml(unsafe) {
+        if (!unsafe) return '';
+        return String(unsafe)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function isValidHexColor(color) {
+        return /^#[0-9A-Fa-f]{3,6}$/.test(color);
+    }
+
+    function safeColor(color, fallback) {
+        return isValidHexColor(color) ? color : fallback;
+    }
+
+    // ==================== Tab Navigation ====================
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetTab = btn.dataset.tab;
+
+            tabBtns.forEach(b => {
+                b.classList.remove('border-accent-500', 'text-gray-900', 'dark:text-white');
+                b.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+            });
+            btn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+            btn.classList.add('border-accent-500', 'text-gray-900', 'dark:text-white');
+
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(targetTab).classList.remove('hidden');
+
+            // Load data when switching tabs
+            if (targetTab === 'carouselBanners') {
+                loadBanners();
+            } else if (targetTab === 'barBanners') {
+                loadBarBanners();
+            }
+        });
+    });
+
+    // ==================== Carousel Banners ====================
+    let currentBannerPage = 1;
+    let bannersData = [];
+
+    function loadBanners(page = 1) {
+        currentBannerPage = page;
+        fetch(`/api/v1/banners/all?page=${page}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    bannersData = data.payload.banners || [];
+                    renderBannerTable(data.payload);
+                    renderBannerPagination(data.payload.page_info);
+                    updateBannerStats(bannersData);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading banners:', error);
+                showAlert('배너 목록을 불러오는데 실패했습니다', 'error');
+            });
+    }
+
+    function updateBannerStats(banners) {
+        const total = banners.length;
+        const active = banners.filter(b => b.is_activated).length;
+        const inactive = total - active;
+        const totalClicks = banners.reduce((sum, b) => sum + (b.click_count || 0), 0);
+
+        document.getElementById('statsTotal').textContent = total;
+        document.getElementById('statsActive').textContent = active;
+        document.getElementById('statsInactive').textContent = inactive;
+        document.getElementById('statsTotalClicks').textContent = totalClicks.toLocaleString();
+    }
+
+    function renderBannerTable(data) {
+        const banners = data.banners || [];
+        let tbody = '';
+
+        if (banners.length === 0) {
+            tbody = '<tr><td colspan="7" class="text-center text-gray-400 dark:text-gray-500 py-8">배너가 없습니다</td></tr>';
+        } else {
+            banners.forEach(banner => {
+                const statusClass = banner.is_activated
+                    ? 'px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded'
+                    : 'px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded';
+                const statusText = banner.is_activated ? '활성' : '비활성';
+                const createdDate = banner.created_date ? banner.created_date.substring(0, 10) : '-';
+                const titleText = escapeHtml(banner.title);
+                const truncatedTitle = titleText.length > 30 ? titleText.substring(0, 30) + '...' : titleText;
+
+                tbody += `
+                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <td class="py-3 px-4">
+                            <img src="${escapeHtml(banner.image_url)}" class="w-10 h-10 rounded object-cover" alt="">
+                        </td>
+                        <td class="py-3 px-4 text-gray-900 dark:text-white">${truncatedTitle}</td>
+                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400">${escapeHtml(banner.organization)}</td>
+                        <td class="py-3 px-4"><span class="${statusClass}">${statusText}</span></td>
+                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400" style="font-variant-numeric: tabular-nums">${(banner.click_count || 0).toLocaleString()}</td>
+                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400">${createdDate}</td>
+                        <td class="py-3 px-4">
+                            <button class="p-1 ${banner.is_activated ? 'text-green-500 hover:text-gray-400 dark:text-green-400 dark:hover:text-gray-500' : 'text-gray-400 hover:text-green-600 dark:hover:text-green-400'} mr-1" onclick="toggleBannerActive(${banner.id}, ${banner.is_activated})" title="${banner.is_activated ? '비활성화' : '활성화'}">
+                                <i data-lucide="${banner.is_activated ? 'toggle-right' : 'toggle-left'}" class="w-4 h-4"></i>
+                            </button>
+                            <button class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 mr-1" onclick="showBannerModal(${banner.id})">
+                                <i data-lucide="edit-2" class="w-4 h-4"></i>
+                            </button>
+                            <button class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400" onclick="deleteBanner(${banner.id})">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        document.getElementById('bannersTableBody').innerHTML = tbody;
+        lucide.createIcons();
+    }
+
+    function renderBannerPagination(pageInfo) {
+        const pagination = document.getElementById('bannerPaginationList');
+        pagination.innerHTML = '';
+
+        if (!pageInfo || pageInfo.total_pages <= 1) {
+            document.getElementById('bannersPagination').classList.add('hidden');
+            return;
+        }
+
+        document.getElementById('bannersPagination').classList.remove('hidden');
+
+        const currentPage = pageInfo.page;
+        const totalPages = pageInfo.total_pages;
+        const hasPrevious = currentPage > 1;
+        const hasNext = currentPage < totalPages;
+
+        // Previous
+        pagination.innerHTML += `
+            <li>
+                <button class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md ${!hasPrevious ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}"
+                        onclick="loadBanners(${currentPage - 1})" ${!hasPrevious ? 'disabled' : ''}>
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                </button>
+            </li>
+        `;
+
+        // Page numbers
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, currentPage + 2);
+
+        for (let i = startPage; i <= endPage; i++) {
+            pagination.innerHTML += `
+                <li>
+                    <button class="px-3 py-1.5 text-sm border rounded-md ${i === currentPage ? 'bg-accent-500 text-white border-accent-500' : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}"
+                            onclick="loadBanners(${i})">${i}</button>
+                </li>
+            `;
+        }
+
+        // Next
+        pagination.innerHTML += `
+            <li>
+                <button class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md ${!hasNext ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}"
+                        onclick="loadBanners(${currentPage + 1})" ${!hasNext ? 'disabled' : ''}>
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </button>
+            </li>
+        `;
+
+        lucide.createIcons();
+    }
+
+    function showBannerModal(id = null) {
+        document.getElementById('bannerId').value = '';
+        document.getElementById('bannerOrganization').value = '';
+        document.getElementById('bannerTitle').value = '';
+        document.getElementById('bannerSubTitle').value = '';
+        document.getElementById('bannerButtonText').value = '';
+        document.getElementById('bannerColorCode').value = '#677CEE';
+        document.getElementById('bannerColorPicker').value = '#677CEE';
+        document.getElementById('bannerLinkUrl').value = '';
+        document.getElementById('bannerImageFile').value = '';
+        document.getElementById('bannerModalTitle').textContent = '배너 등록';
+        document.getElementById('currentBannerImage').classList.add('hidden');
+        document.getElementById('bannerImageRequired').classList.remove('hidden');
+
+        if (id) {
+            const banner = bannersData.find(b => b.id === id);
+            if (banner) {
+                document.getElementById('bannerId').value = banner.id;
+                document.getElementById('bannerOrganization').value = banner.organization;
+                document.getElementById('bannerTitle').value = banner.title;
+                document.getElementById('bannerSubTitle').value = banner.sub_title;
+                document.getElementById('bannerButtonText').value = banner.button_text;
+                document.getElementById('bannerColorCode').value = banner.color_code;
+                document.getElementById('bannerColorPicker').value = banner.color_code;
+                document.getElementById('bannerLinkUrl').value = banner.link_url || '';
+                document.getElementById('bannerModalTitle').textContent = '배너 수정';
+
+                document.getElementById('currentBannerImagePreview').src = banner.image_url;
+                document.getElementById('currentBannerImage').classList.remove('hidden');
+                document.getElementById('bannerImageRequired').classList.add('hidden');
+            }
+        }
+
+        updateBannerPreview();
+        document.getElementById('bannerModal').classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    function closeBannerModal() {
+        document.getElementById('bannerModal').classList.add('hidden');
+    }
+
+    function updateBannerPreview() {
+        const org = document.getElementById('bannerOrganization').value || '조직명';
+        const title = document.getElementById('bannerTitle').value || '제목';
+        const subTitle = document.getElementById('bannerSubTitle').value || '부제목';
+        const btnText = document.getElementById('bannerButtonText').value || '버튼';
+        const color = safeColor(document.getElementById('bannerColorCode').value, '#677CEE');
+
+        document.getElementById('bannerPreviewOrg').textContent = org;
+        document.getElementById('bannerPreviewTitle').textContent = title;
+        document.getElementById('bannerPreviewSubTitle').textContent = subTitle;
+        document.getElementById('bannerPreviewBtn').textContent = btnText;
+        document.getElementById('bannerPreviewBtn').style.setProperty('--preview-color', color);
+    }
+
+    function previewBannerImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('bannerPreviewImage').src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    async function saveBanner() {
+        const id = document.getElementById('bannerId').value;
+        const organization = document.getElementById('bannerOrganization').value.trim();
+        const title = document.getElementById('bannerTitle').value.trim();
+        const subTitle = document.getElementById('bannerSubTitle').value.trim();
+        const buttonText = document.getElementById('bannerButtonText').value.trim();
+        const colorCode = document.getElementById('bannerColorCode').value.trim();
+        const linkUrl = document.getElementById('bannerLinkUrl').value.trim();
+        const imageFile = document.getElementById('bannerImageFile').files[0];
+
+        if (!organization || !title || !subTitle || !buttonText || !colorCode) {
+            showAlert('필수 항목을 모두 입력해주세요', 'warning');
+            return;
+        }
+
+        if (!id && !imageFile) {
+            showAlert('이미지를 선택해주세요', 'warning');
+            return;
+        }
+
+        const formData = new FormData();
+        const requestBlob = new Blob([JSON.stringify({
+            organization: organization,
+            title: title,
+            sub_title: subTitle,
+            button_text: buttonText,
+            color_code: colorCode,
+            link_url: linkUrl || null,
+            is_activated: id ? undefined : false
+        })], { type: 'application/json' });
+
+        formData.append('request', requestBlob);
+        if (imageFile) {
+            formData.append('image_file', imageFile);
+        }
+
+        const url = id ? `/api/v1/banners/${id}` : '/api/v1/banners/register';
+        const method = id ? 'PATCH' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.is_success) {
+                closeBannerModal();
+                loadBanners(currentBannerPage);
+                showAlert(id ? '배너가 수정되었습니다' : '배너가 등록되었습니다', 'success');
+            } else {
+                showAlert(data.message || '배너 저장 실패', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('배너 저장 실패', 'error');
+        }
+    }
+
+    async function deleteBanner(id) {
+        const confirmed = await showConfirm('이 배너를 삭제하시겠습니까?', '배너 삭제');
+        if (!confirmed) return;
+
+        fetch(`/api/v1/banners/${id}`, { method: 'DELETE' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success) {
+                    loadBanners(currentBannerPage);
+                    showAlert('배너가 삭제되었습니다', 'success');
+                } else {
+                    showAlert(data.message || '배너 삭제 실패', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('배너 삭제 실패', 'error');
+            });
+    }
+
+    async function toggleBannerActive(id, currentState) {
+        const formData = new FormData();
+        const requestBlob = new Blob([JSON.stringify({
+            is_activated: !currentState
+        })], { type: 'application/json' });
+        formData.append('request', requestBlob);
+
+        try {
+            const response = await fetch(`/api/v1/banners/${id}`, {
+                method: 'PATCH',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.is_success) {
+                loadBanners(currentBannerPage);
+                showAlert(`배너가 ${!currentState ? '활성화' : '비활성화'}되었습니다`, 'success');
+            } else {
+                showAlert(data.message || '상태 변경 실패', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('상태 변경 실패', 'error');
+        }
+    }
+
+    // ==================== Bar Banners ====================
+    let currentBarBannerPage = 1;
+    let barBannersData = [];
+
+    function loadBarBanners(page = 1) {
+        currentBarBannerPage = page;
+        fetch(`/api/v1/bar-banners/all?page=${page}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    barBannersData = data.payload.bar_banners || [];
+                    renderBarBannerTable(data.payload);
+                    renderBarBannerPagination(data.payload.page_info);
+                    updateBarBannerStats(barBannersData);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading bar banners:', error);
+                showAlert('띠배너 목록을 불러오는데 실패했습니다', 'error');
+            });
+    }
+
+    function updateBarBannerStats(banners) {
+        const total = banners.length;
+        const active = banners.filter(b => b.is_activated).length;
+        const inactive = total - active;
+
+        document.getElementById('barStatsTotal').textContent = total;
+        document.getElementById('barStatsActive').textContent = active;
+        document.getElementById('barStatsInactive').textContent = inactive;
+    }
+
+    function renderBarBannerTable(data) {
+        const banners = data.bar_banners || [];
+        let tbody = '';
+
+        if (banners.length === 0) {
+            tbody = '<tr><td colspan="6" class="text-center text-gray-400 dark:text-gray-500 py-8">띠배너가 없습니다</td></tr>';
+        } else {
+            banners.forEach(banner => {
+                const statusClass = banner.is_activated
+                    ? 'px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded'
+                    : 'px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded';
+                const statusText = banner.is_activated ? '활성' : '비활성';
+                const createdDate = banner.created_date ? banner.created_date.substring(0, 10) : '-';
+                const korText = escapeHtml(banner.content_kor);
+                const engText = escapeHtml(banner.content_eng);
+                const truncatedKor = korText.length > 30 ? korText.substring(0, 30) + '...' : korText;
+                const truncatedEng = engText.length > 30 ? engText.substring(0, 30) + '...' : engText;
+                const bgColor = safeColor(banner.background_color_code, '#FFD700');
+                const txtColor = safeColor(banner.text_color_code, '#FFFFFF');
+
+                tbody += `
+                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <td class="py-3 px-4 text-gray-900 dark:text-white">${truncatedKor}</td>
+                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400">${truncatedEng}</td>
+                        <td class="py-3 px-4">
+                            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded" style="background-color: ${bgColor};">
+                                <span class="text-xs font-medium" style="color: ${txtColor};">미리보기</span>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4"><span class="${statusClass}">${statusText}</span></td>
+                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400">${createdDate}</td>
+                        <td class="py-3 px-4">
+                            <button class="p-1 ${banner.is_activated ? 'text-green-500 hover:text-gray-400 dark:text-green-400 dark:hover:text-gray-500' : 'text-gray-400 hover:text-green-600 dark:hover:text-green-400'} mr-1" onclick="toggleBarBannerActive(${banner.id}, ${banner.is_activated})" title="${banner.is_activated ? '비활성화' : '활성화'}">
+                                <i data-lucide="${banner.is_activated ? 'toggle-right' : 'toggle-left'}" class="w-4 h-4"></i>
+                            </button>
+                            <button class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 mr-1" onclick="showBarBannerModal(${banner.id})">
+                                <i data-lucide="edit-2" class="w-4 h-4"></i>
+                            </button>
+                            <button class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400" onclick="deleteBarBanner(${banner.id})">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        document.getElementById('barBannersTableBody').innerHTML = tbody;
+        lucide.createIcons();
+    }
+
+    function renderBarBannerPagination(pageInfo) {
+        const pagination = document.getElementById('barBannerPaginationList');
+        pagination.innerHTML = '';
+
+        if (!pageInfo || pageInfo.total_pages <= 1) {
+            document.getElementById('barBannersPagination').classList.add('hidden');
+            return;
+        }
+
+        document.getElementById('barBannersPagination').classList.remove('hidden');
+
+        const currentPage = pageInfo.page;
+        const totalPages = pageInfo.total_pages;
+        const hasPrevious = currentPage > 1;
+        const hasNext = currentPage < totalPages;
+
+        // Previous
+        pagination.innerHTML += `
+            <li>
+                <button class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md ${!hasPrevious ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}"
+                        onclick="loadBarBanners(${currentPage - 1})" ${!hasPrevious ? 'disabled' : ''}>
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                </button>
+            </li>
+        `;
+
+        // Page numbers
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, currentPage + 2);
+
+        for (let i = startPage; i <= endPage; i++) {
+            pagination.innerHTML += `
+                <li>
+                    <button class="px-3 py-1.5 text-sm border rounded-md ${i === currentPage ? 'bg-accent-500 text-white border-accent-500' : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}"
+                            onclick="loadBarBanners(${i})">${i}</button>
+                </li>
+            `;
+        }
+
+        // Next
+        pagination.innerHTML += `
+            <li>
+                <button class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md ${!hasNext ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}"
+                        onclick="loadBarBanners(${currentPage + 1})" ${!hasNext ? 'disabled' : ''}>
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </button>
+            </li>
+        `;
+
+        lucide.createIcons();
+    }
+
+    function showBarBannerModal(id = null) {
+        document.getElementById('barBannerId').value = '';
+        document.getElementById('barBannerContentKor').value = '';
+        document.getElementById('barBannerContentEng').value = '';
+        document.getElementById('barBannerBgColor').value = '#FFD700';
+        document.getElementById('barBannerBgColorPicker').value = '#FFD700';
+        document.getElementById('barBannerTextColor').value = '#FFFFFF';
+        document.getElementById('barBannerTextColorPicker').value = '#FFFFFF';
+        document.getElementById('barBannerLinkUrl').value = '';
+        document.getElementById('barBannerModalTitle').textContent = '띠배너 등록';
+
+        if (id) {
+            const banner = barBannersData.find(b => b.id === id);
+            if (banner) {
+                document.getElementById('barBannerId').value = banner.id;
+                document.getElementById('barBannerContentKor').value = banner.content_kor;
+                document.getElementById('barBannerContentEng').value = banner.content_eng;
+                document.getElementById('barBannerBgColor').value = banner.background_color_code;
+                document.getElementById('barBannerBgColorPicker').value = banner.background_color_code;
+                document.getElementById('barBannerTextColor').value = banner.text_color_code;
+                document.getElementById('barBannerTextColorPicker').value = banner.text_color_code;
+                document.getElementById('barBannerLinkUrl').value = banner.link_url || '';
+                document.getElementById('barBannerModalTitle').textContent = '띠배너 수정';
+            }
+        }
+
+        updateBarBannerPreview();
+        document.getElementById('barBannerModal').classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    function closeBarBannerModal() {
+        document.getElementById('barBannerModal').classList.add('hidden');
+    }
+
+    function updateBarBannerPreview() {
+        const contentKor = document.getElementById('barBannerContentKor').value || '미리보기 텍스트';
+        const bgColor = safeColor(document.getElementById('barBannerBgColor').value, '#FFD700');
+        const textColor = safeColor(document.getElementById('barBannerTextColor').value, '#FFFFFF');
+
+        const preview = document.getElementById('barBannerPreview');
+        const text = document.getElementById('barPreviewText');
+        const arrow = document.getElementById('barPreviewArrow');
+
+        preview.style.backgroundColor = bgColor;
+        text.style.color = textColor;
+        text.textContent = contentKor;
+        arrow.style.color = textColor;
+
+        lucide.createIcons();
+    }
+
+    async function saveBarBanner() {
+        const id = document.getElementById('barBannerId').value;
+        const contentKor = document.getElementById('barBannerContentKor').value.trim();
+        const contentEng = document.getElementById('barBannerContentEng').value.trim();
+        const bgColor = document.getElementById('barBannerBgColor').value.trim();
+        const textColor = document.getElementById('barBannerTextColor').value.trim();
+        const linkUrl = document.getElementById('barBannerLinkUrl').value.trim();
+
+        if (!contentKor || !contentEng || !bgColor || !textColor) {
+            showAlert('필수 항목을 모두 입력해주세요', 'warning');
+            return;
+        }
+
+        const url = id ? `/api/v1/bar-banners/${id}` : '/api/v1/bar-banners/register';
+        const method = id ? 'PATCH' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content_kor: contentKor,
+                    content_eng: contentEng,
+                    background_color_code: bgColor,
+                    text_color_code: textColor,
+                    link_url: linkUrl || null,
+                    is_activated: id ? undefined : false
+                })
+            });
+            const data = await response.json();
+
+            if (data.is_success) {
+                closeBarBannerModal();
+                loadBarBanners(currentBarBannerPage);
+                showAlert(id ? '띠배너가 수정되었습니다' : '띠배너가 등록되었습니다', 'success');
+            } else {
+                showAlert(data.message || '띠배너 저장 실패', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('띠배너 저장 실패', 'error');
+        }
+    }
+
+    async function deleteBarBanner(id) {
+        const confirmed = await showConfirm('이 띠배너를 삭제하시겠습니까?', '띠배너 삭제');
+        if (!confirmed) return;
+
+        fetch(`/api/v1/bar-banners/${id}`, { method: 'DELETE' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success) {
+                    loadBarBanners(currentBarBannerPage);
+                    showAlert('띠배너가 삭제되었습니다', 'success');
+                } else {
+                    showAlert(data.message || '띠배너 삭제 실패', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('띠배너 삭제 실패', 'error');
+            });
+    }
+
+    async function toggleBarBannerActive(id, currentState) {
+        try {
+            const response = await fetch(`/api/v1/bar-banners/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    is_activated: !currentState
+                })
+            });
+            const data = await response.json();
+
+            if (data.is_success) {
+                loadBarBanners(currentBarBannerPage);
+                showAlert(`띠배너가 ${!currentState ? '활성화' : '비활성화'}되었습니다`, 'success');
+            } else {
+                showAlert(data.message || '상태 변경 실패', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('상태 변경 실패', 'error');
+        }
+    }
+
+    // ==================== Modal Backdrop Clicks ====================
+    document.getElementById('bannerModal').addEventListener('click', function(e) {
+        if (e.target === this) closeBannerModal();
+    });
+
+    document.getElementById('barBannerModal').addEventListener('click', function(e) {
+        if (e.target === this) closeBarBannerModal();
+    });
+
+    // ==================== Initialize ====================
+    document.addEventListener('DOMContentLoaded', function() {
+        loadBanners();
+    });
+
+    // Close modals on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeBannerModal();
+            closeBarBannerModal();
+        }
+    });
+</script>
+</th:block>
+</body>
+</html>
