@@ -72,3 +72,8 @@ test:
     enabled: true
     secret-key: test-api-secret-key
     user-id: 1
+
+app:
+  sync:
+    target-url: "http://localhost:8089"
+    api-key: test-sync-api-key

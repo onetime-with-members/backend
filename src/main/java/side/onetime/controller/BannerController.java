@@ -44,7 +44,7 @@ public class BannerController {
      * @return 성공 응답 메시지
      */
     @IsAdmin
-    @PostMapping(value = "/banners/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<SuccessStatus>> registerBanner(
             @Valid @RequestPart(value = "request") RegisterBannerRequest request,
             @RequestPart(value = "image_file") MultipartFile imageFile) {
@@ -61,7 +61,7 @@ public class BannerController {
      * @return 배너 응답 객체
      */
     @IsAdmin
-    @GetMapping("/banners/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<GetBannerResponse>> getBanner(@PathVariable Long id) {
         GetBannerResponse response = bannerService.getBanner(id);
         return ApiResponse.onSuccess(SuccessStatus._GET_BANNER, response);
@@ -75,7 +75,7 @@ public class BannerController {
      * @return 배너 응답 객체 리스트
      */
     @IsAdmin
-    @GetMapping("/banners/all")
+    @GetMapping("/all")
     public ResponseEntity<ApiResponse<GetAllBannersResponse>> getAllBanners(
             @RequestParam(value = "page", defaultValue = "1") @Min(1) int page
     ) {
@@ -90,7 +90,7 @@ public class BannerController {
      * @return 활성화된 배너 응답 객체 리스트
      */
     @PublicApi
-    @GetMapping("/banners/activated/all")
+    @GetMapping("/activated/all")
     public ResponseEntity<ApiResponse<GetAllActivatedBannersResponse>> getAllActivatedBanners() {
         GetAllActivatedBannersResponse response = bannerService.getAllActivatedBanners();
         return ApiResponse.onSuccess(SuccessStatus._GET_ALL_ACTIVATED_BANNERS, response);
@@ -109,7 +109,7 @@ public class BannerController {
      * @return 성공 응답 메시지
      */
     @IsAdmin
-    @PatchMapping(value = "/banners/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<SuccessStatus>> updateBanner(
             @PathVariable Long id,
             @Valid @RequestPart(value = "request") UpdateBannerRequest request,
@@ -129,7 +129,7 @@ public class BannerController {
      * @return 성공 응답 메시지
      */
     @IsAdmin
-    @DeleteMapping("/banners/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<SuccessStatus>> deleteBanner(@PathVariable Long id) {
         bannerService.deleteBanner(id);
         return ApiResponse.onSuccess(SuccessStatus._DELETE_BANNER);
@@ -144,7 +144,7 @@ public class BannerController {
      * @return 성공 응답 메시지
      */
     @PublicApi
-    @PatchMapping("/banners/{id}/clicks")
+    @PatchMapping("/{id}/clicks")
     public ResponseEntity<ApiResponse<SuccessStatus>> increaseBannerClickCount(@PathVariable Long id) {
         bannerService.increaseBannerClickCount(id);
         return ApiResponse.onSuccess(SuccessStatus._INCREASE_BANNER_CLICK_COUNT);
