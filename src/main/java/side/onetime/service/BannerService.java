@@ -194,7 +194,7 @@ public class BannerService {
      * 운영 서버의 스테이징 저장 API(/api/v1/banners/staging)를 호출하여 데이터를 전달합니다.
      * 전달된 데이터는 운영 서버의 스테이징 영역에 보관됩니다.
      */
-    @Transactional
+    @Transactional(readOnly = true)
     public void exportBanners() {
         adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
                 .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
