@@ -1,6 +1,11 @@
 package side.onetime.admin;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.mockito.ArgumentMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -9,11 +14,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import side.onetime.configuration.AdminControllerTestConfig;
 import side.onetime.controller.AdminEmailController;
 import side.onetime.domain.enums.EmailLogStatus;
 import side.onetime.dto.admin.email.request.CreateEmailTemplateRequest;
-import side.onetime.dto.admin.email.request.SendByTemplateRequest;
 import side.onetime.dto.admin.email.request.SendEmailRequest;
 import side.onetime.dto.admin.email.request.SendToGroupRequest;
 import side.onetime.dto.admin.email.request.UpdateEmailTemplateRequest;
@@ -23,13 +30,6 @@ import side.onetime.dto.admin.email.response.EmailLogStatsResponse;
 import side.onetime.dto.admin.email.response.EmailTemplateResponse;
 import side.onetime.dto.admin.email.response.SendEmailResponse;
 import side.onetime.service.EmailService;
-
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AdminEmailController.class)
 public class AdminEmailControllerTest extends AdminControllerTestConfig {
@@ -43,7 +43,7 @@ public class AdminEmailControllerTest extends AdminControllerTestConfig {
     // ==================== Email Sending ====================
 
     @Test
-    @DisplayName("단일/다중 이메일을 발송한다")
+    @DisplayName("단일/다중 이메일을 발송 대기열에 등록한다")
     public void sendEmail() throws Exception {
         // given
         SendEmailRequest request = new SendEmailRequest(
@@ -53,7 +53,7 @@ public class AdminEmailControllerTest extends AdminControllerTestConfig {
                 "TEXT",
                 List.of(1L, 2L)
         );
-        SendEmailResponse response = SendEmailResponse.success(2);
+        SendEmailResponse response = SendEmailResponse.queued(2);
 
         // when
         Mockito.when(emailService.sendEmail(any(SendEmailRequest.class))).thenReturn(response);
@@ -65,14 +65,13 @@ public class AdminEmailControllerTest extends AdminControllerTestConfig {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.is_success").value(true))
                 .andExpect(jsonPath("$.payload.success").value(true))
-                .andExpect(jsonPath("$.payload.sentCount").value(2))
-                .andExpect(jsonPath("$.payload.failedCount").value(0));
+                .andExpect(jsonPath("$.payload.queuedCount").value(2));
 
         Mockito.verify(emailService).sendEmail(any(SendEmailRequest.class));
     }
 
     @Test
-    @DisplayName("마케팅 그룹에 이메일을 발송한다")
+    @DisplayName("마케팅 그룹에 이메일을 발송 대기열에 등록한다")
     public void sendToMarketingGroup() throws Exception {
         // given
         SendToGroupRequest request = new SendToGroupRequest(
@@ -82,7 +81,7 @@ public class AdminEmailControllerTest extends AdminControllerTestConfig {
                 "TEXT",
                 100
         );
-        SendEmailResponse response = SendEmailResponse.success(50);
+        SendEmailResponse response = SendEmailResponse.queued(50);
 
         // when
         Mockito.when(emailService.sendToMarketingGroup(any(SendToGroupRequest.class))).thenReturn(response);
@@ -94,63 +93,9 @@ public class AdminEmailControllerTest extends AdminControllerTestConfig {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.is_success").value(true))
                 .andExpect(jsonPath("$.payload.success").value(true))
-                .andExpect(jsonPath("$.payload.sentCount").value(50));
+                .andExpect(jsonPath("$.payload.queuedCount").value(50));
 
         Mockito.verify(emailService).sendToMarketingGroup(any(SendToGroupRequest.class));
-    }
-
-    @Test
-    @DisplayName("템플릿으로 이메일을 발송한다")
-    public void sendByTemplate() throws Exception {
-        // given
-        SendByTemplateRequest request = new SendByTemplateRequest(
-                "WELCOME",
-                List.of("hong@example.com"),
-                List.of(1L)
-        );
-        SendEmailResponse response = SendEmailResponse.success(1);
-
-        // when
-        Mockito.when(emailService.sendByTemplate(any(SendByTemplateRequest.class))).thenReturn(response);
-
-        // then
-        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/admin/email/send-by-template")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.is_success").value(true))
-                .andExpect(jsonPath("$.payload.success").value(true))
-                .andExpect(jsonPath("$.payload.sentCount").value(1));
-
-        Mockito.verify(emailService).sendByTemplate(any(SendByTemplateRequest.class));
-    }
-
-    @Test
-    @DisplayName("이메일 발송 일부 실패 시 결과를 반환한다")
-    public void sendEmailPartialFailure() throws Exception {
-        // given
-        SendEmailRequest request = new SendEmailRequest(
-                List.of("hong@example.com", "invalid@invalid.invalid"),
-                "테스트 제목",
-                "테스트 내용입니다.",
-                "TEXT",
-                List.of(1L, 2L)
-        );
-        SendEmailResponse response = SendEmailResponse.of(1, 1, List.of("invalid@invalid.invalid"));
-
-        // when
-        Mockito.when(emailService.sendEmail(any(SendEmailRequest.class))).thenReturn(response);
-
-        // then
-        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/admin/email/send")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.is_success").value(true))
-                .andExpect(jsonPath("$.payload.success").value(false))
-                .andExpect(jsonPath("$.payload.sentCount").value(1))
-                .andExpect(jsonPath("$.payload.failedCount").value(1))
-                .andExpect(jsonPath("$.payload.failedEmails[0]").value("invalid@invalid.invalid"));
     }
 
     // ==================== Email Logs ====================

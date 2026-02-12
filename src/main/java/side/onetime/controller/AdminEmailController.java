@@ -17,7 +17,6 @@ import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import side.onetime.dto.admin.email.request.CreateEmailTemplateRequest;
-import side.onetime.dto.admin.email.request.SendByTemplateRequest;
 import side.onetime.dto.admin.email.request.SendEmailRequest;
 import side.onetime.dto.admin.email.request.SendTestEmailRequest;
 import side.onetime.dto.admin.email.request.SendToGroupRequest;
@@ -77,19 +76,6 @@ public class AdminEmailController {
     public ResponseEntity<ApiResponse<SendEmailResponse>> sendToMarketingGroup(
             @Valid @RequestBody SendToGroupRequest request) {
         SendEmailResponse response = emailService.sendToMarketingGroup(request);
-        return ApiResponse.onSuccess(SuccessStatus._SEND_EMAIL, response);
-    }
-
-    /**
-     * 템플릿 코드로 이메일 발송 (배치용)
-     *
-     * @param request 템플릿 코드, 수신자 목록, userId 목록
-     * @return 발송 결과 (성공/실패 건수)
-     */
-    @PostMapping("/send-by-template")
-    public ResponseEntity<ApiResponse<SendEmailResponse>> sendByTemplate(
-            @Valid @RequestBody SendByTemplateRequest request) {
-        SendEmailResponse response = emailService.sendByTemplate(request);
         return ApiResponse.onSuccess(SuccessStatus._SEND_EMAIL, response);
     }
 

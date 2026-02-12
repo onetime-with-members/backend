@@ -223,6 +223,7 @@
                     <div class="flex flex-wrap items-center gap-2">
                         <select id="logStatusFilter" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
                             <option value="">전체 상태</option>
+                            <option value="QUEUED">대기중</option>
                             <option value="SENT">발송됨</option>
                             <option value="FAILED">실패</option>
                         </select>
@@ -563,7 +564,7 @@
 
         const btn = this;
         btn.disabled = true;
-        btn.innerHTML = '<span class="animate-spin inline-block mr-1">&#8987;</span> 발송 중...';
+        btn.innerHTML = '<span class="animate-spin inline-block mr-1">&#8987;</span> 등록 중...';
 
         fetch('/api/v1/admin/email/send-test', {
             method: 'POST',
@@ -573,7 +574,7 @@
         .then(response => response.json())
         .then(data => {
             if (data.is_success && data.payload) {
-                showAlert('테스트 이메일이 발송되었습니다', 'success');
+                showAlert('테스트 이메일이 발송 대기열에 등록되었습니다', 'success');
             } else {
                 showAlert(data.message || '테스트 발송 실패', 'error');
             }
@@ -603,7 +604,7 @@
 
         const btn = this;
         btn.disabled = true;
-        btn.innerHTML = '<span class="animate-spin inline-block mr-1">&#8987;</span> 발송 중...';
+        btn.innerHTML = '<span class="animate-spin inline-block mr-1">&#8987;</span> 등록 중...';
 
         fetch('/api/v1/admin/email/send-to-group', {
             method: 'POST',
@@ -614,7 +615,7 @@
         .then(data => {
             if (data.is_success && data.payload) {
                 const r = data.payload;
-                showAlert(`발송: ${r.sentCount}명, 실패: ${r.failedCount}명`, 'success', '발송 완료');
+                showAlert(`${r.queuedCount}건이 발송 대기열에 등록되었습니다`, 'success', '발송 등록 완료');
                 loadEmailLogs();
                 loadEmailStats();
             } else {
@@ -647,7 +648,7 @@
 
         const btn = this;
         btn.disabled = true;
-        btn.innerHTML = '<span class="animate-spin inline-block mr-1">&#8987;</span> 발송 중...';
+        btn.innerHTML = '<span class="animate-spin inline-block mr-1">&#8987;</span> 등록 중...';
 
         fetch('/api/v1/admin/email/send', {
             method: 'POST',
@@ -658,8 +659,8 @@
         .then(data => {
             if (data.is_success && data.payload) {
                 const r = data.payload;
-                showAlert(`발송: ${r.sentCount}명, 실패: ${r.failedCount}명`, 'success', '발송 완료');
-                if (r.sentCount > 0) {
+                showAlert(`${r.queuedCount}건이 발송 대기열에 등록되었습니다`, 'success', '발송 등록 완료');
+                if (r.queuedCount > 0) {
                     selectedUsers.clear();
                     updateSelectedUI();
                     loadEmailLogs();
@@ -881,7 +882,8 @@
             tbody = '<tr><td colspan="6" class="text-center text-gray-400 dark:text-gray-500 py-8">발송 로그가 없습니다</td></tr>';
         } else {
             logs.forEach((log, idx) => {
-                const statusClass = log.status === 'SENT' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                const statusClass = log.status === 'QUEUED' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' :
+                                   log.status === 'SENT' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
                                    log.status === 'FAILED' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
                                    log.status === 'DELIVERED' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
                                    log.status === 'BOUNCED' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';

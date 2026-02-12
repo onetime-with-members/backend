@@ -1,27 +1,16 @@
 package side.onetime.dto.admin.email.response;
 
-import java.util.List;
-
 public record SendEmailResponse(
         boolean success,
-        int sentCount,
-        int failedCount,
-        List<String> failedEmails
+        int queuedCount,
+        String message
 ) {
-    public static SendEmailResponse of(int sentCount, int failedCount, List<String> failedEmails) {
-        return new SendEmailResponse(
-                failedCount == 0,
-                sentCount,
-                failedCount,
-                failedEmails
-        );
+    public static SendEmailResponse queued(int queuedCount) {
+        return new SendEmailResponse(true, queuedCount,
+                queuedCount + "건의 이메일이 발송 대기열에 등록되었습니다.");
     }
 
-    public static SendEmailResponse success(int sentCount) {
-        return new SendEmailResponse(true, sentCount, 0, List.of());
-    }
-
-    public static SendEmailResponse failure(List<String> failedEmails) {
-        return new SendEmailResponse(false, 0, failedEmails.size(), failedEmails);
+    public static SendEmailResponse empty() {
+        return new SendEmailResponse(true, 0, "발송 대상이 없습니다.");
     }
 }
