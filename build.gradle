@@ -118,6 +118,11 @@ ext {
 tasks.named('test') {
     useJUnitPlatform()
     outputs.dir snippetsDir
+    testLogging {
+        events "failed"
+        exceptionFormat "full"
+        showStandardStreams false
+    }
 }
 
 sourceSets {
