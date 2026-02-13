@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import side.onetime.auth.annotation.PublicApi;
 import side.onetime.dto.test.request.TestLoginRequest;
 import side.onetime.dto.test.response.TestTokenResponse;
 import side.onetime.global.common.ApiResponse;
@@ -32,6 +33,7 @@ public class TestAuthController {
      * @param request 시크릿 키를 포함한 요청 객체
      * @return Access Token과 Refresh Token을 포함하는 응답 객체
      */
+    @PublicApi
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<TestTokenResponse>> testLogin(
             @Valid @RequestBody TestLoginRequest request) {
@@ -49,6 +51,7 @@ public class TestAuthController {
      * @param request 시크릿 키를 포함한 요청 객체
      * @return 만료된 Access Token을 포함하는 응답 객체
      */
+    @PublicApi
     @PostMapping("/expired-token")
     public ResponseEntity<ApiResponse<TestTokenResponse>> getExpiredToken(
             @Valid @RequestBody TestLoginRequest request) {

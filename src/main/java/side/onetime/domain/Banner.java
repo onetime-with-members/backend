@@ -17,6 +17,9 @@ public class Banner extends BaseEntity {
     @Column(name = "banners_id")
     private Long id;
 
+    @Column(name = "banner_staging_id", unique = true)
+    private Long bannerStagingId;
+
     @Column(name = "organization", nullable = false, length = 200)
     private String organization;
 
@@ -48,7 +51,8 @@ public class Banner extends BaseEntity {
     private Long clickCount;
 
     @Builder
-    public Banner(String organization, String title, String subTitle, String buttonText, String colorCode, String imageUrl, String linkUrl) {
+    public Banner(Long bannerStagingId, String organization, String title, String subTitle, String buttonText, String colorCode, String imageUrl, String linkUrl) {
+        this.bannerStagingId = bannerStagingId;
         this.organization = organization;
         this.title = title;
         this.subTitle = subTitle;

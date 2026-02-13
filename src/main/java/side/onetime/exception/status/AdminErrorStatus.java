@@ -22,6 +22,9 @@ public enum AdminErrorStatus implements BaseErrorCode {
     _NOT_FOUND_ACTIVATED_BAR_BANNER(HttpStatus.NOT_FOUND, "ADMIN-USER-008", "활성화된 띠배너를 찾을 수 없습니다."),
     _NOT_FOUND_BANNER(HttpStatus.NOT_FOUND, "ADMIN-USER-009", "배너를 찾을 수 없습니다."),
     _FAILED_UPLOAD_BANNER_IMAGE(HttpStatus.INTERNAL_SERVER_ERROR, "ADMIN-USER-010", "배너 이미지 업로드 하는 과정에서 문제가 발생했습니다."),
+    _FAILED_EXPORT_TRANSMISSION(HttpStatus.BAD_GATEWAY, "ADMIN-USER-011", "운영 서버로 배너 데이터 전송 중 오류가 발생했습니다."),
+    _INVALID_API_KEY(HttpStatus.UNAUTHORIZED, "ADMIN-USER-012", "유효하지 않은 서버 인증 키입니다."),
+    _SYNC_DISABLED_ENVIRONMENT(HttpStatus.BAD_REQUEST, "ADMIN-USER-013", "현재 환경에서는 외부 서버 동기화 기능을 지원하지 않습니다."),
     ;
 
     private final HttpStatus httpStatus;

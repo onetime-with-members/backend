@@ -1,9 +1,10 @@
 package side.onetime.global.config;
 
-import java.util.Arrays;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -13,73 +14,71 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import lombok.RequiredArgsConstructor;
 import side.onetime.auth.exception.CustomAccessDeniedHandler;
 import side.onetime.auth.exception.CustomAuthenticationEntryPoint;
 import side.onetime.auth.handler.OAuthLoginFailureHandler;
 import side.onetime.auth.handler.OAuthLoginSuccessHandler;
 import side.onetime.global.filter.JwtFilter;
 
+import java.util.Arrays;
+
 @RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
-
+	
 	private final JwtFilter jwtFilter;
 	private final OAuthLoginSuccessHandler oAuthLoginSuccessHandler;
 	private final OAuthLoginFailureHandler oAuthLoginFailureHandler;
 	private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 	private final CustomAccessDeniedHandler customAccessDeniedHandler;
-
+	
 	private static final String[] SWAGGER_URLS = {
-		"/swagger-ui/**", "/v3/api-docs/**"
+		"/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html"
 	};
 
-	private static final String[] PUBLIC_URLS = {
-		"/",
-		"/error",
-		"/favicon.ico",
-		"/login/**",
-		"/api/v1/events/**",
-		"/api/v1/schedules/**",
-		"/api/v1/members/**",
-		"/api/v1/urls/**",
-		"/api/v1/tokens/**",
-		"/api/v1/users/onboarding",
-		"/api/v1/users/logout",
-		"/api/v1/admin/register",
-		"/api/v1/admin/login",
+	/**
+	 * [GET 요청]에 한해서만 Public인 URL
+	 */
+	private static final String[] PUBLIC_GET_URLS = {
+		"/api/v1/events/**",            // 이벤트 조회, QR, 참여자 조회 등
+		"/api/v1/schedules/**",         // 스케줄 조회
 		"/api/v1/banners/activated/all",
 		"/api/v1/bar-banners/activated/all",
+	};
+	
+	/**
+	 * [POST 요청]에 한해서만 Public인 URL
+	 */
+	private static final String[] PUBLIC_POST_URLS = {
+		"/api/v1/users/onboarding",
+		"/api/v1/admin/register",
+		"/api/v1/admin/login",
+		"/api/v1/members/action-register",
+		"/api/v1/members/action-login",
+		"/api/v1/members/name/action-check",
+		"/api/v1/tokens/action-reissue",
+		"/api/v1/urls/action-shorten",
+		"/api/v1/urls/action-original",
+		"/api/v1/events",                         // 익명 이벤트 생성
+		"/api/v1/events/*/most/filtering",        // 필터링 조회
+		"/api/v1/schedules/day",                  // 스케줄 등록
+		"/api/v1/schedules/date",                 // 스케줄 등록
+		"/api/v1/schedules/day/*/filtering",      // 스케줄 필터링
+		"/api/v1/schedules/date/*/filtering",     // 스케줄 필터링
+        "/api/v1/banners/staging",
+        "/api/v1/bar-banners/staging",
+	};
+
+	/**
+	 * [PATCH 요청]에 한해서만 Public인 URL
+	 */
+	private static final String[] PUBLIC_PATCH_URLS = {
 		"/api/v1/banners/*/clicks",
-		"/api/v1/test/**",
-		"/actuator/health",
-		// Admin page static resources
-		"/admin/login",
-		"/admin/css/**",
-		"/admin/js/**",
-		"/admin/vendor/**"
+		"/api/v1/events/*"
 	};
-
-	private static final String[] AUTHENTICATED_USER_URLS = {
-		"/api/v1/users/**",
-		"/api/v1/fixed-schedules/**",
-	};
-
-	private static final String[] AUTHENTICATED_ADMIN_URLS = {
-		"/api/v1/admin/**",
-		"/api/v1/banners/**",
-		"/api/v1/bar-banners/**",
-	};
-
-	private static final String[] ADMIN_PAGE_URLS = {
-		"/admin/dashboard",
-		"/admin/statistics/**",
-		"/admin/email",
-		"/admin/logout"
-	};
-
+	
 	private static final String[] ALLOWED_ORIGINS = {
 		"http://localhost:5173",
 		"http://localhost:3000",
@@ -92,13 +91,6 @@ public class SecurityConfig {
 		"https://discord.onetime.run",
 	};
 
-	/**
-	 * CORS 설정을 구성하는 메서드.
-	 *
-	 * 허용된 Origin, Method, Header 등을 설정하고, 인증 관련 헤더를 노출합니다.
-	 *
-	 * @return CORS 설정 객체
-	 */
 	@Bean
 	CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
@@ -108,26 +100,12 @@ public class SecurityConfig {
 		config.setAllowCredentials(true);
 		config.setExposedHeaders(Arrays.asList("Authorization", "Set-Cookie"));
 		config.setMaxAge(3600L);
-
+		
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", config);
 		return source;
 	}
 
-	/**
-	 * Spring Security의 필터 체인을 구성하는 메서드.
-	 *
-	 * - HTTP 기본 인증 비활성화
-	 * - CSRF 비활성화
-	 * - CORS 설정 적용
-	 * - 요청 경로별 인증 정책 설정
-	 * - OAuth2 로그인 성공/실패 핸들러 설정
-	 * - JwtFilter를 Security Filter Chain에 추가
-	 *
-	 * @param httpSecurity HttpSecurity 객체
-	 * @return SecurityFilterChain 객체
-	 * @throws Exception 필터 체인 구성 실패 시 예외 발생
-	 */
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
 		httpSecurity
@@ -135,12 +113,19 @@ public class SecurityConfig {
 			.cors(corsConfigurer -> corsConfigurer.configurationSource(corsConfigurationSource()))
 			.csrf(AbstractHttpConfigurer::disable)
 			.authorizeHttpRequests(authorize -> authorize
+				// 1. 인프라 & Swagger (메서드 상관없이 허용)
 				.requestMatchers(SWAGGER_URLS).permitAll()
-				.requestMatchers(PUBLIC_URLS).permitAll()
-				.requestMatchers(AUTHENTICATED_USER_URLS).hasRole("USER")
-				.requestMatchers(AUTHENTICATED_ADMIN_URLS).hasRole("ADMIN")
-				.requestMatchers(ADMIN_PAGE_URLS).hasRole("ADMIN")
-				.anyRequest().authenticated()
+				.requestMatchers("/actuator/health", "/", "/api/v1/test/**").permitAll()
+				// 2. GET Public
+				.requestMatchers(HttpMethod.GET, PUBLIC_GET_URLS).permitAll()
+				// 3. POST Public
+				.requestMatchers(HttpMethod.POST, PUBLIC_POST_URLS).permitAll()
+				// 4. PATCH Public
+				.requestMatchers(HttpMethod.PATCH, PUBLIC_PATCH_URLS).permitAll()
+				// 5. Safety-Net: 위에서 허용되지 않은 /api/** 요청은 인증 필요
+				.requestMatchers("/api/**").authenticated()
+				// 6. 그 외 (정적 리소스 등)
+				.anyRequest().permitAll()
 			)
 			.oauth2Login(oauth -> oauth
 				.successHandler(oAuthLoginSuccessHandler)
@@ -151,7 +136,7 @@ public class SecurityConfig {
 				.accessDeniedHandler(customAccessDeniedHandler)
 			)
 			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
+		
 		return httpSecurity.build();
 	}
 }

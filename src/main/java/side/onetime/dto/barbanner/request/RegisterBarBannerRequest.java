@@ -1,4 +1,4 @@
-package side.onetime.dto.banner.request;
+package side.onetime.dto.barbanner.request;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;

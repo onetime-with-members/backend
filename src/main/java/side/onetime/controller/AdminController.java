@@ -1,7 +1,5 @@
 package side.onetime.controller;
 
-import java.util.List;
-
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +15,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import side.onetime.auth.annotation.IsAdmin;
+import side.onetime.auth.annotation.IsMasterAdmin;
+import side.onetime.auth.annotation.PublicApi;
 import side.onetime.dto.admin.request.LoginAdminUserRequest;
 import side.onetime.dto.admin.request.RegisterAdminUserRequest;
 import side.onetime.dto.admin.request.UpdateAdminUserStatusRequest;
@@ -53,6 +54,7 @@ public class AdminController {
      * @param request 관리자 이름, 이메일, 비밀번호 정보를 담은 요청 객체
      * @return 성공 응답 메시지
      */
+    @PublicApi
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<SuccessStatus>> registerAdminUser(
             @Valid @RequestBody RegisterAdminUserRequest request) {
@@ -71,6 +73,7 @@ public class AdminController {
      * @param httpRequest HTTP 요청 객체 (브라우저 정보 추출용)
      * @return 액세스 토큰, 리프레시 토큰 응답
      */
+    @PublicApi
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginAdminUserResponse>> loginAdminUser(
             @Valid @RequestBody LoginAdminUserRequest request,
@@ -114,6 +117,7 @@ public class AdminController {
      *
      * @return 관리자 프로필 정보가 포함된 응답 객체
      */
+    @IsAdmin
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<GetAdminUserProfileResponse>> getAdminUserProfile() {
 
@@ -131,6 +135,7 @@ public class AdminController {
      *
      * @return 전체 관리자 프로필 목록이 포함된 응답 객체
      */
+    @IsMasterAdmin
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<AdminUserDetailResponse>>> getAllAdminUserDetail() {
 
@@ -148,6 +153,7 @@ public class AdminController {
      * @param request 수정할 관리자 ID와 변경할 권한 상태를 담은 요청 객체
      * @return 성공 응답 메시지
      */
+    @IsMasterAdmin
     @PatchMapping("/status")
     public ResponseEntity<ApiResponse<SuccessStatus>> updateAdminUserStatus(
             @Valid @RequestBody UpdateAdminUserStatusRequest request) {
@@ -164,6 +170,7 @@ public class AdminController {
      *
      * @return 성공 응답 메시지
      */
+    @IsAdmin
     @PostMapping("/withdraw")
     public ResponseEntity<ApiResponse<SuccessStatus>> withdrawAdminUser() {
 
@@ -182,6 +189,7 @@ public class AdminController {
      * @param sorting 정렬 방향 ("asc" 또는 "desc")
      * @return 이벤트 목록 및 페이지 정보가 포함된 응답 DTO
      */
+    @IsAdmin
     @GetMapping("/dashboard/events")
     public ResponseEntity<ApiResponse<GetAllDashboardEventsResponse>> getAllDashboardEvents(
             @RequestParam(value = "page", defaultValue = "1") @Min(1) int page,
@@ -204,6 +212,7 @@ public class AdminController {
      * @param sorting 정렬 방향 ("asc" 또는 "desc")
      * @return 사용자 목록 및 페이지 정보가 포함된 응답 DTO
      */
+    @IsAdmin
     @GetMapping("/dashboard/users")
     public ResponseEntity<ApiResponse<GetAllDashboardUsersResponse>> getAllDashboardUsers(
             @RequestParam(value = "page", defaultValue = "1") @Min(1) int page,

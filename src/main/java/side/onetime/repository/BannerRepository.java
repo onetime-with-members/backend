@@ -29,4 +29,8 @@ public interface BannerRepository extends JpaRepository<Banner, Long> {
             AND b.isDeleted = false
     """)
     void increaseClickCount(@Param("id") Long id);
+
+    List<Banner> findAllByIsDeletedFalse();
+
+    Optional<Banner> findByBannerStagingIdAndIsDeletedFalse(Long bannerStagingId);
 }
