@@ -1,7 +1,6 @@
 package side.onetime.global.config;
 
-import java.util.Arrays;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -15,13 +14,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import lombok.RequiredArgsConstructor;
 import side.onetime.auth.exception.CustomAccessDeniedHandler;
 import side.onetime.auth.exception.CustomAuthenticationEntryPoint;
 import side.onetime.auth.handler.OAuthLoginFailureHandler;
 import side.onetime.auth.handler.OAuthLoginSuccessHandler;
 import side.onetime.global.filter.JwtFilter;
+
+import java.util.Arrays;
 
 @RequiredArgsConstructor
 @Configuration
@@ -38,7 +37,7 @@ public class SecurityConfig {
 	private static final String[] SWAGGER_URLS = {
 		"/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html"
 	};
-	
+
 	/**
 	 * [GET 요청]에 한해서만 Public인 URL
 	 */
@@ -68,8 +67,10 @@ public class SecurityConfig {
 		"/api/v1/schedules/date",                 // 스케줄 등록
 		"/api/v1/schedules/day/*/filtering",      // 스케줄 필터링
 		"/api/v1/schedules/date/*/filtering",     // 스케줄 필터링
+        "/api/v1/banners/staging",
+        "/api/v1/bar-banners/staging",
 	};
-	
+
 	/**
 	 * [PATCH 요청]에 한해서만 Public인 URL
 	 */
@@ -89,7 +90,7 @@ public class SecurityConfig {
 		"https://dev-admin.onetime-with-members.workers.dev",
 		"https://discord.onetime.run",
 	};
-	
+
 	@Bean
 	CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
@@ -104,7 +105,7 @@ public class SecurityConfig {
 		source.registerCorsConfiguration("/**", config);
 		return source;
 	}
-	
+
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
 		httpSecurity

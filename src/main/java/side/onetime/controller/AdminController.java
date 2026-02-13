@@ -1,35 +1,24 @@
 package side.onetime.controller;
 
-import java.util.List;
-
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import side.onetime.auth.annotation.IsAdmin;
 import side.onetime.auth.annotation.IsMasterAdmin;
 import side.onetime.auth.annotation.PublicApi;
 import side.onetime.dto.admin.request.LoginAdminUserRequest;
 import side.onetime.dto.admin.request.RegisterAdminUserRequest;
 import side.onetime.dto.admin.request.UpdateAdminUserStatusRequest;
-import side.onetime.dto.admin.response.AdminUserDetailResponse;
-import side.onetime.dto.admin.response.GetAdminUserProfileResponse;
-import side.onetime.dto.admin.response.GetAllDashboardEventsResponse;
-import side.onetime.dto.admin.response.GetAllDashboardUsersResponse;
-import side.onetime.dto.admin.response.LoginAdminUserResponse;
+import side.onetime.dto.admin.response.*;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.AdminService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/admin")

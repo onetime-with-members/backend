@@ -17,6 +17,9 @@ public class BarBanner extends BaseEntity {
     @Column(name = "bar_banners_id")
     private Long id;
 
+    @Column(name = "bar_banner_staging_id", unique = true)
+    private Long barBannerStagingId;
+
     @Column(name = "content_kor", nullable = false, length = 200)
     private String contentKor;
 
@@ -39,7 +42,8 @@ public class BarBanner extends BaseEntity {
     private String linkUrl;
 
     @Builder
-    public BarBanner(String contentKor, String contentEng, String backgroundColorCode, String textColorCode, String linkUrl) {
+    public BarBanner(Long barBannerStagingId, String contentKor, String contentEng, String backgroundColorCode, String textColorCode, String linkUrl) {
+        this.barBannerStagingId = barBannerStagingId;
         this.contentKor = contentKor;
         this.contentEng = contentEng;
         this.backgroundColorCode = backgroundColorCode;
