@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import side.onetime.auth.annotation.IsAdmin;
 import side.onetime.dto.admin.email.response.UserSearchResult;
 import side.onetime.dto.admin.response.GetAllDashboardEventsResponse;
 import side.onetime.dto.admin.response.GetAllDashboardUsersResponse;
@@ -45,6 +46,7 @@ import side.onetime.util.DateUtil;
 @RestController
 @RequestMapping("/api/v1/admin/statistics")
 @RequiredArgsConstructor
+@IsAdmin
 public class AdminStatisticsController {
 
     private final StatisticsService statisticsService;

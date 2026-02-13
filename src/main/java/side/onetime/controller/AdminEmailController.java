@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import side.onetime.auth.annotation.IsAdmin;
 import side.onetime.dto.admin.email.request.CreateEmailTemplateRequest;
 import side.onetime.dto.admin.email.request.SendEmailRequest;
 import side.onetime.dto.admin.email.request.SendTestEmailRequest;
@@ -36,6 +37,7 @@ import side.onetime.service.EmailService;
 @RestController
 @RequestMapping("/api/v1/admin/email")
 @RequiredArgsConstructor
+@IsAdmin
 public class AdminEmailController {
 
     private final EmailService emailService;
@@ -115,8 +117,6 @@ public class AdminEmailController {
         EmailLogStatsResponse response = emailService.getEmailStats();
         return ApiResponse.onSuccess(SuccessStatus._GET_EMAIL_STATS, response);
     }
-
-    // ==================== Template CRUD ====================
 
     /**
      * 템플릿 목록 조회

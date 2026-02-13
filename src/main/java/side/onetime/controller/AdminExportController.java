@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import side.onetime.auth.annotation.IsAdmin;
 import side.onetime.dto.admin.statistics.response.MarketingTargetDetailResponse;
 import side.onetime.service.ExportService;
 
@@ -29,6 +30,7 @@ import side.onetime.service.ExportService;
 @RestController
 @RequestMapping("/api/v1/admin/export")
 @RequiredArgsConstructor
+@IsAdmin
 public class AdminExportController {
 
     private final ExportService exportService;

@@ -1,5 +1,7 @@
 package side.onetime.controller;
 
+import java.util.List;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -97,6 +99,7 @@ public class AdminController {
      * @param httpRequest HTTP 요청 객체
      * @return 새 액세스 토큰, 리프레시 토큰 응답
      */
+	@IsAdmin
     @PostMapping("/action-reissue")
     public ResponseEntity<ApiResponse<ReissueTokenResponse>> reissueAdminToken(
             @Valid @RequestBody ReissueTokenRequest request,
