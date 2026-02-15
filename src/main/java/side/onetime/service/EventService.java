@@ -69,12 +69,14 @@ import side.onetime.util.UserAuthorizationUtil;
 @Service
 @RequiredArgsConstructor
 public class EventService {
+
     private static final int MAX_MOST_POSSIBLE_TIMES_SIZE = 10;
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
     private static final Map<String, Integer> DAY_ORDER = Map.of(
             "일", 0, "월", 1, "화", 2, "수", 3, "목", 4, "금", 5, "토", 6
     );
+    
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
     private final EventParticipationRepository eventParticipationRepository;
@@ -525,16 +527,12 @@ public class EventService {
      * @return 스케줄과 참여자 이름의 매핑 데이터
      */
     private Map<Schedule, List<String>> buildScheduleToNamesMap(List<Selection> selections, Category category) {
-        Map<String, Integer> dayOrderIndex = Map.of(
-                "일", 0, "월", 1, "화", 2, "수", 3, "목", 4, "금", 5, "토", 6
-        );
-
         // Comparator 정의
         Comparator<Schedule> scheduleComparator = (s1, s2) -> {
             if (category == Category.DAY) {
                 int cmp = Integer.compare(
-                        dayOrderIndex.getOrDefault(s1.getDay(), 7),
-                        dayOrderIndex.getOrDefault(s2.getDay(), 7)
+                        DAY_ORDER.getOrDefault(s1.getDay(), 7),
+                        DAY_ORDER.getOrDefault(s2.getDay(), 7)
                 );
                 if (cmp != 0) return cmp;
             } else {
