@@ -578,8 +578,8 @@ public class EventControllerTest extends ControllerTestConfig {
     public void confirmEvent() throws Exception {
         // given
         UUID eventId = UUID.randomUUID();
-        LocalDateTime confirmedAt = LocalDateTime.of(2026, 2, 5, 14, 0, 0);
-        ConfirmEventResponse response = ConfirmEventResponse.of(eventId, EventStatus.CONFIRMED, confirmedAt);
+        LocalDateTime createdDate = LocalDateTime.of(2026, 2, 5, 14, 0, 0);
+        ConfirmEventResponse response = ConfirmEventResponse.of(eventId, EventStatus.CONFIRMED, createdDate);
 
         Mockito.when(eventService.confirmEvent(anyString(), any(ConfirmEventRequest.class), any()))
                 .thenReturn(response);
@@ -610,7 +610,7 @@ public class EventControllerTest extends ControllerTestConfig {
                 .andExpect(jsonPath("$.message").value("이벤트 확정에 성공했습니다."))
                 .andExpect(jsonPath("$.payload.event_id").value(eventId.toString()))
                 .andExpect(jsonPath("$.payload.event_status").value("CONFIRMED"))
-                .andExpect(jsonPath("$.payload.confirmed_at").exists())
+                .andExpect(jsonPath("$.payload.created_date").exists())
 
                 // docs
                 .andDo(MockMvcRestDocumentationWrapper.document("event/confirm",
@@ -639,7 +639,7 @@ public class EventControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("payload").type(JsonFieldType.OBJECT).description("응답 데이터"),
                                                 fieldWithPath("payload.event_id").type(JsonFieldType.STRING).description("확정된 이벤트 ID"),
                                                 fieldWithPath("payload.event_status").type(JsonFieldType.STRING).description("이벤트 상태 (CONFIRMED)"),
-                                                fieldWithPath("payload.confirmed_at").type(JsonFieldType.STRING).description("확정 시각")
+                                                fieldWithPath("payload.created_date").type(JsonFieldType.STRING).description("확정 시각")
                                         )
                                         .requestSchema(Schema.schema("ConfirmEventRequestSchema"))
                                         .responseSchema(Schema.schema("ConfirmEventResponseSchema"))

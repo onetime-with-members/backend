@@ -165,8 +165,6 @@ public class EventService {
             }
         }
 
-        LocalDateTime confirmedAt = LocalDateTime.now();
-
         // EventConfirmation 저장
         EventConfirmation confirmation = EventConfirmation.builder()
                 .eventId(event.getId())
@@ -179,7 +177,6 @@ public class EventService {
                 .endTime(confirmEventRequest.endTime())
                 .confirmerRole(confirmerRole)
                 .selectionSource(confirmEventRequest.selectionSource())
-                .confirmedAt(confirmedAt)
                 .build();
         try {
             eventConfirmationRepository.save(confirmation);
@@ -190,7 +187,7 @@ public class EventService {
         // Event 상태 변경
         event.updateStatus(EventStatus.CONFIRMED);
 
-        return ConfirmEventResponse.of(event.getEventId(), EventStatus.CONFIRMED, confirmedAt);
+        return ConfirmEventResponse.of(event.getEventId(), EventStatus.CONFIRMED, confirmation.getCreatedDate());
     }
 
     /**

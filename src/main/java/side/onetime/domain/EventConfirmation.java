@@ -1,7 +1,5 @@
 package side.onetime.domain;
 
-import java.time.LocalDateTime;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -60,14 +58,10 @@ public class EventConfirmation extends BaseEntity {
     @Column(name = "selection_source", nullable = false, length = 20)
     private SelectionSource selectionSource;
 
-    @Column(name = "confirmed_at", nullable = false)
-    private LocalDateTime confirmedAt;
-
     @Builder
     public EventConfirmation(Long eventId, Long userId, String startDate, String endDate,
                              String startDay, String endDay, String startTime, String endTime,
-                             ParticipationRole confirmerRole, SelectionSource selectionSource,
-                             LocalDateTime confirmedAt) {
+                             ParticipationRole confirmerRole, SelectionSource selectionSource) {
         this.eventId = eventId;
         this.userId = userId;
         this.startDate = startDate;
@@ -78,6 +72,5 @@ public class EventConfirmation extends BaseEntity {
         this.endTime = endTime;
         this.confirmerRole = confirmerRole;
         this.selectionSource = selectionSource;
-        this.confirmedAt = confirmedAt;
     }
 }

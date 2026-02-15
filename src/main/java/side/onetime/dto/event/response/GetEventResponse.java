@@ -35,7 +35,7 @@ public record GetEventResponse(
             String endDay,
             String startTime,
             String endTime,
-            LocalDateTime confirmedAt
+            LocalDateTime createdDate
     ) {
         public static ConfirmationDto from(EventConfirmation confirmation) {
             return new ConfirmationDto(
@@ -45,7 +45,7 @@ public record GetEventResponse(
                     confirmation.getEndDay(),
                     confirmation.getStartTime(),
                     confirmation.getEndTime(),
-                    confirmation.getConfirmedAt()
+                    confirmation.getCreatedDate()
             );
         }
     }

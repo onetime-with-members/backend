@@ -14,9 +14,9 @@ import side.onetime.domain.enums.EventStatus;
 public record ConfirmEventResponse(
         UUID eventId,
         EventStatus eventStatus,
-        LocalDateTime confirmedAt
+        LocalDateTime createdDate
 ) {
-    public static ConfirmEventResponse of(UUID eventId, EventStatus eventStatus, LocalDateTime confirmedAt) {
-        return new ConfirmEventResponse(eventId, eventStatus, confirmedAt);
+    public static ConfirmEventResponse of(UUID eventId, EventStatus eventStatus, LocalDateTime createdDate) {
+        return new ConfirmEventResponse(eventId, eventStatus, createdDate);
     }
 }
