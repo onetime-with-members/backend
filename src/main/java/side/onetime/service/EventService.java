@@ -3,7 +3,6 @@ package side.onetime.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -71,8 +70,6 @@ import side.onetime.util.UserAuthorizationUtil;
 public class EventService {
 
     private static final int MAX_MOST_POSSIBLE_TIMES_SIZE = 10;
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
     private static final Map<String, Integer> DAY_ORDER = Map.of(
             "일", 0, "월", 1, "화", 2, "수", 3, "목", 4, "금", 5, "토", 6
     );
@@ -203,8 +200,8 @@ public class EventService {
             if (request.startDate() == null || request.endDate() == null) {
                 throw new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST);
             }
-            LocalDate startDate = LocalDate.parse(request.startDate(), DATE_FORMATTER);
-            LocalDate endDate = LocalDate.parse(request.endDate(), DATE_FORMATTER);
+            LocalDate startDate = DateUtil.parseDate(request.startDate());
+            LocalDate endDate = DateUtil.parseDate(request.endDate());
             if (startDate.isAfter(endDate)) {
                 throw new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST);
             }
@@ -219,8 +216,8 @@ public class EventService {
             }
         }
 
-        LocalTime startTime = LocalTime.parse(request.startTime(), TIME_FORMATTER);
-        LocalTime endTime = LocalTime.parse(request.endTime(), TIME_FORMATTER);
+        LocalTime startTime = DateUtil.parseTime(request.startTime());
+        LocalTime endTime = DateUtil.parseTime(request.endTime());
         if (!startTime.isBefore(endTime)) {
             throw new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST);
         }
