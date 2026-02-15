@@ -18,7 +18,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import side.onetime.auth.annotation.IsAdmin;
 import side.onetime.auth.dto.CustomAdminDetails;
 import side.onetime.dto.admin.request.LoginAdminUserRequest;
 import side.onetime.dto.admin.response.LoginAdminUserResponse;
@@ -38,7 +37,6 @@ import side.onetime.util.JwtUtil;
 @Controller
 @RequestMapping("/admin")
 @RequiredArgsConstructor
-@IsAdmin
 public class AdminPageController {
 
     private final AdminService adminService;
