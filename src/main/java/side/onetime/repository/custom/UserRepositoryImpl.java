@@ -60,7 +60,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
                 .from(eventParticipation)
                 .where(
                         eventParticipation.user.eq(activeUser)
-                                .and(eventParticipation.participationRole.ne(ParticipationRole.PARTICIPANT))
+                                .and(eventParticipation.participationRole.in(ParticipationRole.CREATOR, ParticipationRole.CREATOR_AND_PARTICIPANT))
                 )
                 .fetch();
         LocalDateTime deletedTime = LocalDateTime.now();
