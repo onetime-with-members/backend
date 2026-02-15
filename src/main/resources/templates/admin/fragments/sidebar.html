@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<aside th:fragment="sidebar" class="w-56 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-colors duration-200">
+<aside th:fragment="sidebar" class="w-56 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-colors duration-200 sticky top-0 h-screen overflow-y-auto">
     <!-- Logo -->
     <div class="h-14 flex items-center px-4 border-b border-gray-200 dark:border-gray-700">
         <a th:href="@{/admin/dashboard}" class="flex items-center gap-2">
