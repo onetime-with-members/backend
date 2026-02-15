@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import side.onetime.auth.annotation.PublicApi;
 import side.onetime.dto.token.request.ReissueTokenRequest;
 import side.onetime.dto.token.response.ReissueTokenResponse;
 import side.onetime.global.common.ApiResponse;
@@ -31,6 +32,7 @@ public class TokenController {
      * @param httpRequest HttpServletRequest (IP, User-Agent 추출용)
      * @return 재발행된 액세스 토큰과 리프레쉬 토큰을 포함하는 응답 객체
      */
+    @PublicApi
     @PostMapping("/action-reissue")
     public ResponseEntity<ApiResponse<ReissueTokenResponse>> reissueToken(
             @Valid @RequestBody ReissueTokenRequest reissueAccessTokenRequest,

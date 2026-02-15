@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import side.onetime.auth.annotation.IsUser;
+import side.onetime.auth.annotation.PublicApi;
 import side.onetime.dto.event.request.ConfirmEventRequest;
 import side.onetime.dto.event.request.CreateEventRequest;
 import side.onetime.dto.event.request.ModifyEventRequest;
@@ -50,6 +52,7 @@ public class EventController {
      * @param authorizationHeader 인증된 유저의 토큰 (선택 사항)
      * @return 생성된 이벤트의 ID
      */
+    @PublicApi
     @PostMapping
     public ResponseEntity<ApiResponse<CreateEventResponse>> createEvent(
             @Valid @RequestBody CreateEventRequest createEventRequest,
@@ -75,6 +78,7 @@ public class EventController {
      * @param eventId 조회할 이벤트의 ID
      * @return 조회한 이벤트의 세부 정보
      */
+    @PublicApi
     @GetMapping("/{event_id}")
     public ResponseEntity<ApiResponse<GetEventResponse>> getEvent(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
@@ -93,6 +97,7 @@ public class EventController {
      * @param eventId 참여자 목록을 조회할 이벤트의 ID
      * @return 해당 이벤트에 참여한 멤버, 유저의 이름 및 ID 목록
      */
+    @PublicApi
     @GetMapping("/{event_id}/participants")
     public ResponseEntity<ApiResponse<GetParticipantsResponse>> getParticipants(
             @PathVariable("event_id") String eventId) {
@@ -109,6 +114,7 @@ public class EventController {
      * @param eventId 조회할 이벤트의 ID
      * @return 가능 인원이 많은 시간대와 관련 세부 정보
      */
+    @PublicApi
     @GetMapping("/{event_id}/most")
     public ResponseEntity<ApiResponse<List<GetMostPossibleTime>>> getMostPossibleTime(
             @PathVariable("event_id") String eventId) {
@@ -126,6 +132,7 @@ public class EventController {
      * @param getFilteredSchedulesRequest 필터링할 스케줄 요청 객체 (유저 ID 목록, 멤버 ID 목록)
      * @return 필터링한 참여자의 시간대와 관련 세부 정보
      */
+    @PublicApi
     @PostMapping("/{event_id}/most/filtering")
     public ResponseEntity<ApiResponse<List<GetMostPossibleTime>>> getFilteredMostPossibleTimes(
             @PathVariable("event_id") String eventId,
@@ -147,6 +154,7 @@ public class EventController {
      * @param createdDate 마지막으로 조회한 이벤트 생성일
      * @return 유저가 참여한 이벤트 목록 및 페이지(커서) 정보가 포함된 응답 DTO
      */
+    @IsUser
     @GetMapping("/user/all")
     public ResponseEntity<ApiResponse<GetParticipatedEventsResponse>> getParticipatedEventsByCursor(
             @RequestParam(value = "size", defaultValue = "2") @Min(1) int size,
@@ -164,6 +172,7 @@ public class EventController {
      * @param eventId 삭제할 이벤트의 ID
      * @return 삭제 성공 여부
      */
+    @IsUser
     @DeleteMapping("/{event_id}")
     public ResponseEntity<ApiResponse<SuccessStatus>> removeUserCreatedEvent(
             @PathVariable("event_id") String eventId) {
@@ -187,6 +196,7 @@ public class EventController {
      * @param modifyEventRequest 새로운 이벤트 정보가 담긴 요청 데이터 (제목, 시간, 범위 등)
      * @return 수정 성공 여부
      */
+    @PublicApi
     @PatchMapping("/{event_id}")
     public ResponseEntity<ApiResponse<SuccessStatus>> modifyEvent(
             @PathVariable("event_id") String eventId,
@@ -225,6 +235,7 @@ public class EventController {
      * @param eventId QR Code를 조회할 이벤트의 ID
      * @return QR Code 이미지 URL
      */
+    @PublicApi
     @GetMapping("/qr/{event_id}")
     public ResponseEntity<ApiResponse<GetEventQrCodeResponse>> getEventQrCode(
             @PathVariable("event_id") String eventId) {

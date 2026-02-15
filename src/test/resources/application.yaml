@@ -13,15 +13,50 @@ spring:
         format_sql: true
     show-sql: true
 
+  cloud:
+    aws:
+      credentials:
+        access-key: test-access-key
+        secret-key: test-secret-key
+      region:
+        static: ap-northeast-2
+      s3:
+        bucket: test-bucket
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-client-id
+            client-secret: test-client-secret
+            scope:
+              - email
+              - profile
+            redirect-uri: http://localhost:8080/login/oauth2/code/google
+
 jwt:
   secret: test-secret-key-for-testing-purpose-only-should-be-256-bits-long
-  expiration:
-    access: 1800000
-    refresh: 1209600000
-    register: 300000
   redirect:
     access: "http://localhost:3000/auth?is_member=%s&access_token=%s&refresh_token=%s"
     register: "http://localhost:3000/auth?is_member=false&register_token=%s&name=%s"
+
+  access-token:
+    expiration-time: 1800000
+
+  admin-user-access-token:
+    expiration-time: 3600000
+
+  refresh-token:
+    expiration-time: 1209600000
+
+  register-token:
+    expiration-time: 300000
+
+  browser-id-salt: test-salt-value
+
+scheduling:
+  cron: "-"
 
 refresh-token:
   cleanup:
@@ -29,7 +64,16 @@ refresh-token:
     hard-delete-cron: "0 30 3 * * *"
     retention-days: 30
 
+qr:
+  event-base-url: "http://localhost:3000/events"
+
 test:
   auth:
     enabled: true
     secret-key: test-api-secret-key
+    user-id: 1
+
+app:
+  sync:
+    target-url: "http://localhost:8089"
+    api-key: test-sync-api-key
