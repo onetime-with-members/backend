@@ -178,7 +178,7 @@ public class EventService {
                 .selectionSource(confirmEventRequest.selectionSource())
                 .build();
         try {
-            eventConfirmationRepository.save(confirmation);
+            eventConfirmationRepository.saveAndFlush(confirmation);
         } catch (DataIntegrityViolationException e) {
             throw new CustomException(EventErrorStatus._ALREADY_CONFIRMED_EVENT);
         }
