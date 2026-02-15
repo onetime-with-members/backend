@@ -47,6 +47,8 @@ import side.onetime.dto.event.response.GetParticipatedEventResponse;
 import side.onetime.dto.event.response.GetParticipatedEventsResponse;
 import side.onetime.dto.event.response.PageCursorInfo;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
+import side.onetime.exception.CustomException;
+import side.onetime.exception.status.EventErrorStatus;
 import side.onetime.service.EventService;
 
 @WebMvcTest(EventController.class)
@@ -643,6 +645,122 @@ public class EventControllerTest extends ControllerTestConfig {
                                         )
                                         .requestSchema(Schema.schema("ConfirmEventRequestSchema"))
                                         .responseSchema(Schema.schema("ConfirmEventResponseSchema"))
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("[FAILED] 이미 확정된 이벤트를 다시 확정하려고 한다.")
+    public void confirmEvent_Fail_AlreadyConfirmed() throws Exception {
+        // given
+        UUID eventId = UUID.randomUUID();
+
+        Mockito.when(eventService.confirmEvent(anyString(), any(ConfirmEventRequest.class), any()))
+                .thenThrow(new CustomException(EventErrorStatus._ALREADY_CONFIRMED_EVENT));
+
+        ConfirmEventRequest request = new ConfirmEventRequest(
+                "2026.02.05", "2026.02.07", null, null, "18:00", "20:00", SelectionSource.RECOMMENDED
+        );
+        String requestContent = new ObjectMapper().writeValueAsString(request);
+
+        // when & then
+        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/events/{event_id}/confirm", eventId)
+                        .content(requestContent)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.is_success").value(false))
+                .andExpect(jsonPath("$.code").value("EVENT-006"))
+                .andExpect(jsonPath("$.message").value("이미 확정된 이벤트입니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("event/confirm-fail-already-confirmed",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Event API")
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("에러 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지")
+                                        )
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("[FAILED] 유효하지 않은 확정 요청을 보낸다.")
+    public void confirmEvent_Fail_InvalidRequest() throws Exception {
+        // given
+        UUID eventId = UUID.randomUUID();
+
+        Mockito.when(eventService.confirmEvent(anyString(), any(ConfirmEventRequest.class), any()))
+                .thenThrow(new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST));
+
+        ConfirmEventRequest request = new ConfirmEventRequest(
+                null, null, null, null, "20:00", "18:00", SelectionSource.MANUAL
+        );
+        String requestContent = new ObjectMapper().writeValueAsString(request);
+
+        // when & then
+        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/events/{event_id}/confirm", eventId)
+                        .content(requestContent)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.is_success").value(false))
+                .andExpect(jsonPath("$.code").value("EVENT-007"))
+                .andExpect(jsonPath("$.message").value("유효하지 않은 확정 요청입니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("event/confirm-fail-invalid-request",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Event API")
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("에러 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지")
+                                        )
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("[FAILED] 확정된 이벤트를 수정하려고 한다.")
+    public void modifyEvent_Fail_ConfirmedEvent() throws Exception {
+        // given
+        String eventId = UUID.randomUUID().toString();
+        ModifyEventRequest request = new ModifyEventRequest(
+                "수정된 이벤트 제목", "09:00", "18:00", List.of("2024.12.10")
+        );
+        String requestContent = new ObjectMapper().writeValueAsString(request);
+
+        Mockito.doThrow(new CustomException(EventErrorStatus._CANNOT_MODIFY_CONFIRMED_EVENT))
+                .when(eventService).modifyEvent(anyString(), any(ModifyEventRequest.class));
+
+        // when & then
+        mockMvc.perform(RestDocumentationRequestBuilders.patch("/api/v1/events/{event_id}", eventId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestContent)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.is_success").value(false))
+                .andExpect(jsonPath("$.code").value("EVENT-008"))
+                .andExpect(jsonPath("$.message").value("확정된 이벤트는 수정할 수 없습니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("event/modify-fail-confirmed-event",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Event API")
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("에러 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지")
+                                        )
                                         .build()
                         )
                 ));
