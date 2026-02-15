@@ -50,7 +50,7 @@ public record GetEventResponse(
         }
     }
 
-    public static GetEventResponse of(Event event, List<String> ranges, ParticipationRole participationRole, EventConfirmation confirmation) {
+    public static GetEventResponse of(Event event, List<String> ranges, ParticipationRole participationRole, EventConfirmation eventConfirmation) {
         return new GetEventResponse(
                 String.valueOf(event.getEventId()),
                 event.getTitle(),
@@ -60,7 +60,7 @@ public record GetEventResponse(
                 ranges,
                 event.getStatus(),
                 ParticipationRole.PARTICIPANT == participationRole || participationRole == null ? participationRole : ParticipationRole.CREATOR,
-                confirmation != null ? ConfirmationDto.from(confirmation) : null
+                eventConfirmation != null ? ConfirmationDto.from(eventConfirmation) : null
         );
     }
 }
