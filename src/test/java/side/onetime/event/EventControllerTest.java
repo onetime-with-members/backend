@@ -619,7 +619,7 @@ public class EventControllerTest extends ControllerTestConfig {
                         resource(
                                 ResourceSnippetParameters.builder()
                                         .tag("Event API")
-                                        .description("이벤트를 확정한다. 확정 후에는 이벤트 수정/삭제, 스케줄 수정이 불가하다.")
+                                        .description("이벤트를 확정한다.")
                                         .pathParameters(
                                                 parameterWithName("event_id").description("확정할 이벤트의 ID [예시 : dd099816-2b09-4625-bf95-319672c25659]")
                                         )
