@@ -17,6 +17,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -182,7 +183,7 @@ public class EventService {
                 .build();
         try {
             eventConfirmationRepository.save(confirmation);
-        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+        } catch (DataIntegrityViolationException e) {
             throw new CustomException(EventErrorStatus._ALREADY_CONFIRMED_EVENT);
         }
 

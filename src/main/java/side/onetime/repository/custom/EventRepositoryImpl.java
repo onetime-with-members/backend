@@ -4,7 +4,6 @@ import static side.onetime.domain.QEvent.*;
 import static side.onetime.domain.QEventParticipation.*;
 import static side.onetime.domain.QMember.*;
 import static side.onetime.domain.QSchedule.*;
-import static side.onetime.domain.QEventConfirmation.*;
 import static side.onetime.domain.QSelection.*;
 
 import java.time.LocalDateTime;
@@ -38,7 +37,7 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
      *
      * 이벤트에 연결된 모든 관련 데이터를 삭제합니다.
      * 삭제 순서는 외래 키 제약 조건을 고려하여,
-     * Selection → EventParticipation → Schedule → Member → Event 순으로 진행됩니다.
+     * Selection → EventParticipation → Schedule → Member 순으로 삭제 후 Event를 DELETED 처리합니다.
      *
      * @param e 삭제할 Event 객체
      */
@@ -58,10 +57,6 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
 
         queryFactory.delete(member)
                 .where(member.event.eq(e))
-                .execute();
-
-        queryFactory.delete(eventConfirmation)
-                .where(eventConfirmation.eventId.eq(e.getId()))
                 .execute();
 
         queryFactory.update(event)
