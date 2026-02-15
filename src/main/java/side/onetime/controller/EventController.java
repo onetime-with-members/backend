@@ -209,7 +209,7 @@ public class EventController {
     /**
      * 이벤트 확정 API.
      *
-     * 이 API는 이벤트를 확정합니다. 확정 후에는 이벤트 수정/삭제, 스케줄 수정이 불가합니다.
+     * 이벤트를 확정합니다. 확정 후에는 이벤트 수정/삭제, 스케줄 수정이 불가합니다.
      * 인증된 유저와 비회원 모두 확정할 수 있습니다.
      *
      * @param eventId 확정할 이벤트의 ID
@@ -217,6 +217,7 @@ public class EventController {
      * @param authorizationHeader 인증된 유저의 토큰 (선택 사항)
      * @return 확정된 이벤트 정보
      */
+	@PublicApi
     @PostMapping("/{event_id}/confirm")
     public ResponseEntity<ApiResponse<ConfirmEventResponse>> confirmEvent(
             @PathVariable("event_id") String eventId,

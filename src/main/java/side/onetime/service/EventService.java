@@ -79,10 +79,10 @@ public class EventService {
     private final EventParticipationRepository eventParticipationRepository;
     private final ScheduleRepository scheduleRepository;
     private final SelectionRepository selectionRepository;
-    private final ScheduleBatchRepository scheduleBatchRepository;
-    private final JwtUtil jwtUtil;
-    private final S3Util s3Util;
-    private final EventConfirmationRepository eventConfirmationRepository;
+	private final EventConfirmationRepository eventConfirmationRepository;
+	private final ScheduleBatchRepository scheduleBatchRepository;
+	private final JwtUtil jwtUtil;
+	private final S3Util s3Util;
     private final QrUtil qrUtil;
 
     /**
