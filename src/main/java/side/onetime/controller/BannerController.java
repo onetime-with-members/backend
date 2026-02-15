@@ -1,15 +1,28 @@
 package side.onetime.controller;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import lombok.RequiredArgsConstructor;
 import side.onetime.auth.annotation.IsAdmin;
 import side.onetime.auth.annotation.PublicApi;
 import side.onetime.dto.banner.request.ExportBannerRequest;
@@ -21,8 +34,6 @@ import side.onetime.dto.banner.response.GetBannerResponse;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.BannerService;
-
-import java.util.List;
 
 
 @RestController
@@ -176,6 +187,20 @@ public class BannerController {
     public ResponseEntity<ApiResponse<SuccessStatus>> importBanners() {
         bannerService.importBanners();
         return ApiResponse.onSuccess(SuccessStatus._IMPORT_BANNERS);
+    }
+
+    /**
+     * 배너 스테이징 건수 조회 API.
+     *
+     * 스테이징 테이블에 동기화 대기 중인 배너 데이터가 있는지 확인합니다.
+     *
+     * @return 스테이징 배너 건수
+     */
+    @IsAdmin
+    @GetMapping("/staging/count")
+    public ResponseEntity<ApiResponse<Long>> getBannerStagingCount() {
+        long count = bannerService.getBannerStagingCount();
+        return ApiResponse.onSuccess(SuccessStatus._OK, count);
     }
 
     /**

@@ -33,6 +33,16 @@
     <div id="tabContents">
         <!-- Tab 1: Carousel Banners -->
         <div id="carouselBanners" class="tab-content">
+            <!-- Staging Alert -->
+            <div id="bannerStagingAlert" class="hidden mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg flex items-center justify-between">
+                <div class="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
+                    <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                    <span>동기화 대기 중인 배너 데이터가 <strong id="bannerStagingCount">0</strong>건 있습니다.</span>
+                </div>
+                <button type="button" class="px-3 py-1 text-xs font-medium bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors" onclick="importBanners()">
+                    불러오기
+                </button>
+            </div>
             <!-- Stats Cards -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
@@ -60,10 +70,20 @@
                         <i data-lucide="image" class="w-4 h-4"></i>
                         배너
                     </h3>
-                    <button type="button" class="px-3 py-1.5 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2" onclick="showBannerModal()">
-                        <i data-lucide="plus" class="w-4 h-4"></i>
-                        배너 등록
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2" onclick="exportBanners()">
+                            <i data-lucide="upload" class="w-4 h-4"></i>
+                            내보내기
+                        </button>
+                        <button type="button" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2" onclick="importBanners()">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            불러오기
+                        </button>
+                        <button type="button" class="px-3 py-1.5 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2" onclick="showBannerModal()">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            배너 등록
+                        </button>
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
@@ -94,6 +114,16 @@
 
         <!-- Tab 2: Bar Banners -->
         <div id="barBanners" class="tab-content hidden">
+            <!-- Staging Alert -->
+            <div id="barBannerStagingAlert" class="hidden mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg flex items-center justify-between">
+                <div class="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
+                    <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                    <span>동기화 대기 중인 띠배너 데이터가 <strong id="barBannerStagingCount">0</strong>건 있습니다.</span>
+                </div>
+                <button type="button" class="px-3 py-1 text-xs font-medium bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors" onclick="importBarBanners()">
+                    불러오기
+                </button>
+            </div>
             <!-- Stats Cards -->
             <div class="grid grid-cols-3 gap-4 mb-6">
                 <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
@@ -117,10 +147,20 @@
                         <i data-lucide="bar-chart-horizontal" class="w-4 h-4"></i>
                         띠배너
                     </h3>
-                    <button type="button" class="px-3 py-1.5 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2" onclick="showBarBannerModal()">
-                        <i data-lucide="plus" class="w-4 h-4"></i>
-                        띠배너 등록
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2" onclick="exportBarBanners()">
+                            <i data-lucide="upload" class="w-4 h-4"></i>
+                            내보내기
+                        </button>
+                        <button type="button" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2" onclick="importBarBanners()">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            불러오기
+                        </button>
+                        <button type="button" class="px-3 py-1.5 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2" onclick="showBarBannerModal()">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            띠배너 등록
+                        </button>
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
@@ -917,6 +957,118 @@
         }
     }
 
+    // ==================== Staging Status Check ====================
+    function checkBannerStagingStatus() {
+        fetch('/api/v1/banners/staging/count')
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success && data.payload > 0) {
+                    document.getElementById('bannerStagingCount').textContent = data.payload;
+                    document.getElementById('bannerStagingAlert').classList.remove('hidden');
+                    lucide.createIcons();
+                } else {
+                    document.getElementById('bannerStagingAlert').classList.add('hidden');
+                }
+            })
+            .catch(() => {});
+    }
+
+    function checkBarBannerStagingStatus() {
+        fetch('/api/v1/bar-banners/staging/count')
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success && data.payload > 0) {
+                    document.getElementById('barBannerStagingCount').textContent = data.payload;
+                    document.getElementById('barBannerStagingAlert').classList.remove('hidden');
+                    lucide.createIcons();
+                } else {
+                    document.getElementById('barBannerStagingAlert').classList.add('hidden');
+                }
+            })
+            .catch(() => {});
+    }
+
+    // ==================== Banner Sync (Export / Import) ====================
+    async function exportBanners() {
+        const confirmed = await showConfirm('모든 배너 데이터를 운영 서버로 내보내시겠습니까?', '배너 내보내기');
+        if (!confirmed) return;
+
+        try {
+            const response = await fetch('/api/v1/banners/export', { method: 'POST' });
+            const data = await response.json();
+
+            if (data.is_success) {
+                showAlert('배너 내보내기가 완료되었습니다', 'success');
+            } else {
+                showAlert(data.message || '배너 내보내기 실패', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('배너 내보내기 실패', 'error');
+        }
+    }
+
+    async function importBanners() {
+        const confirmed = await showConfirm('스테이징 데이터를 배너에 반영하시겠습니까?\n기존 배너 데이터가 교체됩니다.', '배너 불러오기');
+        if (!confirmed) return;
+
+        try {
+            const response = await fetch('/api/v1/banners/import', { method: 'POST' });
+            const data = await response.json();
+
+            if (data.is_success) {
+                loadBanners(1);
+                document.getElementById('bannerStagingAlert').classList.add('hidden');
+                showAlert('배너 불러오기가 완료되었습니다', 'success');
+            } else {
+                showAlert(data.message || '배너 불러오기 실패', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('배너 불러오기 실패', 'error');
+        }
+    }
+
+    async function exportBarBanners() {
+        const confirmed = await showConfirm('모든 띠배너 데이터를 운영 서버로 내보내시겠습니까?', '띠배너 내보내기');
+        if (!confirmed) return;
+
+        try {
+            const response = await fetch('/api/v1/bar-banners/export', { method: 'POST' });
+            const data = await response.json();
+
+            if (data.is_success) {
+                showAlert('띠배너 내보내기가 완료되었습니다', 'success');
+            } else {
+                showAlert(data.message || '띠배너 내보내기 실패', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('띠배너 내보내기 실패', 'error');
+        }
+    }
+
+    async function importBarBanners() {
+        const confirmed = await showConfirm('스테이징 데이터를 띠배너에 반영하시겠습니까?\n기존 띠배너 데이터가 교체됩니다.', '띠배너 불러오기');
+        if (!confirmed) return;
+
+        try {
+            const response = await fetch('/api/v1/bar-banners/import', { method: 'POST' });
+            const data = await response.json();
+
+            if (data.is_success) {
+                loadBarBanners(1);
+                document.getElementById('barBannerStagingAlert').classList.add('hidden');
+                showAlert('띠배너 불러오기가 완료되었습니다', 'success');
+            } else {
+                showAlert(data.message || '띠배너 불러오기 실패', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('띠배너 불러오기 실패', 'error');
+        }
+    }
+
     // ==================== Modal Backdrop Clicks ====================
     document.getElementById('bannerModal').addEventListener('click', function(e) {
         if (e.target === this) closeBannerModal();
@@ -929,6 +1081,8 @@
     // ==================== Initialize ====================
     document.addEventListener('DOMContentLoaded', function() {
         loadBanners();
+        checkBannerStagingStatus();
+        checkBarBannerStagingStatus();
     });
 
     // Close modals on Escape key
