@@ -1,8 +1,14 @@
 package side.onetime.barbanner;
 
-import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
-import com.epages.restdocs.apispec.ResourceSnippetParameters;
-import com.epages.restdocs.apispec.Schema;
+import static com.epages.restdocs.apispec.ResourceDocumentation.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -12,6 +18,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.restdocs.payload.JsonFieldType;
+
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
+import com.epages.restdocs.apispec.ResourceSnippetParameters;
+import com.epages.restdocs.apispec.Schema;
+
 import side.onetime.configuration.AdminControllerTestConfig;
 import side.onetime.controller.BarBannerController;
 import side.onetime.dto.admin.response.PageInfo;
@@ -24,17 +35,6 @@ import side.onetime.dto.barbanner.response.GetBarBannerResponse;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.AdminErrorStatus;
 import side.onetime.service.BarBannerService;
-
-import java.util.List;
-
-import static com.epages.restdocs.apispec.ResourceDocumentation.headerWithName;
-import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
-import static org.mockito.ArgumentMatchers.*;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
-import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(BarBannerController.class)
 public class BarBannerControllerTest extends AdminControllerTestConfig {
@@ -83,7 +83,8 @@ public class BarBannerControllerTest extends AdminControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .requestSchema(Schema.schema("RegisterBarBannerRequest"))
                                         .responseSchema(Schema.schema("CommonSuccessResponse"))
@@ -298,7 +299,8 @@ public class BarBannerControllerTest extends AdminControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .requestSchema(Schema.schema("UpdateBarBannerRequest"))
                                         .responseSchema(Schema.schema("CommonSuccessResponse"))
@@ -332,7 +334,8 @@ public class BarBannerControllerTest extends AdminControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .responseSchema(Schema.schema("CommonSuccessResponse"))
                                         .build()
@@ -362,7 +365,8 @@ public class BarBannerControllerTest extends AdminControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .responseSchema(Schema.schema("CommonSuccessResponse"))
                                         .build()
@@ -392,7 +396,8 @@ public class BarBannerControllerTest extends AdminControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("에러 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .build()
                         )
@@ -421,7 +426,8 @@ public class BarBannerControllerTest extends AdminControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .responseSchema(Schema.schema("CommonSuccessResponse"))
                                         .build()
@@ -472,7 +478,8 @@ public class BarBannerControllerTest extends AdminControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .build()
                         )
@@ -511,7 +518,8 @@ public class BarBannerControllerTest extends AdminControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("에러 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .build()
                         )

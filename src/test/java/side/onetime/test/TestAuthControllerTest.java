@@ -157,7 +157,7 @@ public class TestAuthControllerTest extends ControllerTestConfig {
                 .andExpect(jsonPath("$.code").value("200"))
                 .andExpect(jsonPath("$.message").value("만료된 테스트 토큰이 발급되었습니다."))
                 .andExpect(jsonPath("$.payload.access_token").value(expiredAccessToken))
-                .andExpect(jsonPath("$.payload.refresh_token").doesNotExist())
+                .andExpect(jsonPath("$.payload.refresh_token").value(org.hamcrest.Matchers.nullValue()))
 
                 // docs
                 .andDo(MockMvcRestDocumentationWrapper.document("test/auth/expired-token",

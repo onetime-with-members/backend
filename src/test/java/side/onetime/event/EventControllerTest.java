@@ -182,7 +182,8 @@ public class EventControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("payload.category").type(JsonFieldType.STRING).description("이벤트 카테고리"),
                                                 fieldWithPath("payload.ranges").type(JsonFieldType.ARRAY).description("이벤트 날짜 또는 요일 범위"),
                                                 fieldWithPath("payload.event_status").type(JsonFieldType.STRING).description("이벤트 상태 (ACTIVE, CONFIRMED)"),
-                                                fieldWithPath("payload.participation_role").type(JsonFieldType.STRING).description("유저 역할 (CREATOR, PARTICIPANT, CREATOR_AND_PARTICIPANT)")
+                                                fieldWithPath("payload.participation_role").type(JsonFieldType.STRING).description("유저 역할 (CREATOR, PARTICIPANT, CREATOR_AND_PARTICIPANT)"),
+                                                fieldWithPath("payload.confirmation").type(JsonFieldType.NULL).description("이벤트 확정 정보")
                                         )
                                         .responseSchema(Schema.schema("GetEventResponseSchema"))
                                         .build()
@@ -509,7 +510,8 @@ public class EventControllerTest extends ControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .responseSchema(Schema.schema("RemoveUserCreatedEventResponseSchema"))
                                         .build()
@@ -567,7 +569,8 @@ public class EventControllerTest extends ControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .responseSchema(Schema.schema("ModifyEventResponseSchema"))
                                         .build()
@@ -682,7 +685,8 @@ public class EventControllerTest extends ControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("에러 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .build()
                         )
@@ -721,7 +725,8 @@ public class EventControllerTest extends ControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("에러 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .build()
                         )
@@ -759,7 +764,8 @@ public class EventControllerTest extends ControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("에러 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .build()
                         )
