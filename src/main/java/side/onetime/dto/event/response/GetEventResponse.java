@@ -3,7 +3,6 @@ package side.onetime.dto.event.response;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
@@ -14,7 +13,6 @@ import side.onetime.domain.enums.EventStatus;
 import side.onetime.domain.enums.ParticipationRole;
 
 @JsonNaming(value = PropertyNamingStrategies.SnakeCaseStrategy.class)
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public record GetEventResponse(
         String eventId,
         String title,
@@ -27,7 +25,6 @@ public record GetEventResponse(
         ConfirmationDto confirmation
 ) {
     @JsonNaming(value = PropertyNamingStrategies.SnakeCaseStrategy.class)
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     public record ConfirmationDto(
             String startDate,
             String endDate,
