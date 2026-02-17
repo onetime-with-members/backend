@@ -6,6 +6,7 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -157,7 +158,7 @@ public class TestAuthControllerTest extends ControllerTestConfig {
                 .andExpect(jsonPath("$.code").value("200"))
                 .andExpect(jsonPath("$.message").value("만료된 테스트 토큰이 발급되었습니다."))
                 .andExpect(jsonPath("$.payload.access_token").value(expiredAccessToken))
-                .andExpect(jsonPath("$.payload.refresh_token").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.payload.refresh_token").value(Matchers.nullValue()))
 
                 // docs
                 .andDo(MockMvcRestDocumentationWrapper.document("test/auth/expired-token",
