@@ -159,8 +159,6 @@ public class EventService {
                 ParticipationRole role = eventParticipation.getParticipationRole();
                 confirmerRole = (role == ParticipationRole.CREATOR || role == ParticipationRole.CREATOR_AND_PARTICIPANT)
                         ? ParticipationRole.CREATOR : ParticipationRole.PARTICIPANT;
-            } else {
-                confirmerRole = ParticipationRole.PARTICIPANT;
             }
         }
 
