@@ -56,7 +56,7 @@ public record GetEventResponse(
                 event.getCategory(),
                 ranges,
                 event.getStatus(),
-                ParticipationRole.PARTICIPANT == participationRole || participationRole == null ? participationRole : ParticipationRole.CREATOR,
+                participationRole,
                 eventConfirmation != null ? ConfirmationDto.from(eventConfirmation) : null
         );
     }
