@@ -141,7 +141,7 @@ public class EventService {
                 .orElseThrow(() -> new CustomException(EventErrorStatus._NOT_FOUND_EVENT));
 
         // 이미 확정된 이벤트인지 검증
-        if (event.getStatus() == EventStatus.CONFIRMED) {
+        if (event.isConfirmed()) {
             throw new CustomException(EventErrorStatus._ALREADY_CONFIRMED_EVENT);
         }
 
@@ -711,7 +711,7 @@ public class EventService {
         User user = userRepository.findById(UserAuthorizationUtil.getLoginUserId())
                 .orElseThrow(() -> new CustomException(UserErrorStatus._NOT_FOUND_USER));
         EventParticipation eventParticipation = verifyUserHasEventAccess(user, eventId);
-        if (eventParticipation.getEvent().getStatus() == EventStatus.CONFIRMED) {
+        if (eventParticipation.getEvent().isConfirmed()) {
             throw new CustomException(EventErrorStatus._CANNOT_MODIFY_CONFIRMED_EVENT);
         }
 
@@ -731,7 +731,7 @@ public class EventService {
         Event event = eventRepository.findByEventId(UUID.fromString(eventId))
                 .orElseThrow(() -> new CustomException(EventErrorStatus._NOT_FOUND_EVENT));
 
-        if (event.getStatus() == EventStatus.CONFIRMED) {
+        if (event.isConfirmed()) {
             throw new CustomException(EventErrorStatus._CANNOT_MODIFY_CONFIRMED_EVENT);
         }
 

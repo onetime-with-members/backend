@@ -18,7 +18,6 @@ import side.onetime.domain.Member;
 import side.onetime.domain.Schedule;
 import side.onetime.domain.Selection;
 import side.onetime.domain.User;
-import side.onetime.domain.enums.EventStatus;
 import side.onetime.domain.enums.ParticipationRole;
 import side.onetime.dto.schedule.request.CreateDateScheduleRequest;
 import side.onetime.dto.schedule.request.CreateDayScheduleRequest;
@@ -66,7 +65,7 @@ public class ScheduleService {
     public void createDaySchedulesForAnonymousUser(CreateDayScheduleRequest createDayScheduleRequest) {
         Event event = eventRepository.findByEventId(UUID.fromString(createDayScheduleRequest.eventId()))
                 .orElseThrow(() -> new CustomException(EventErrorStatus._NOT_FOUND_EVENT));
-        if (event.getStatus() == EventStatus.CONFIRMED) {
+        if (event.isConfirmed()) {
             throw new CustomException(EventErrorStatus._CANNOT_MODIFY_CONFIRMED_EVENT);
         }
         Member member = memberRepository.findByMemberId(UUID.fromString(createDayScheduleRequest.memberId()))
@@ -106,7 +105,7 @@ public class ScheduleService {
     public void createDaySchedulesForAuthenticatedUser(CreateDayScheduleRequest createDayScheduleRequest, String authorizationHeader) {
         Event event = eventRepository.findByEventId(UUID.fromString(createDayScheduleRequest.eventId()))
                 .orElseThrow(() -> new CustomException(EventErrorStatus._NOT_FOUND_EVENT));
-        if (event.getStatus() == EventStatus.CONFIRMED) {
+        if (event.isConfirmed()) {
             throw new CustomException(EventErrorStatus._CANNOT_MODIFY_CONFIRMED_EVENT);
         }
         User user = jwtUtil.getUserFromHeader(authorizationHeader);
@@ -158,7 +157,7 @@ public class ScheduleService {
     public void createDateSchedulesForAnonymousUser(CreateDateScheduleRequest createDateScheduleRequest) {
         Event event = eventRepository.findByEventId(UUID.fromString(createDateScheduleRequest.eventId()))
                 .orElseThrow(() -> new CustomException(EventErrorStatus._NOT_FOUND_EVENT));
-        if (event.getStatus() == EventStatus.CONFIRMED) {
+        if (event.isConfirmed()) {
             throw new CustomException(EventErrorStatus._CANNOT_MODIFY_CONFIRMED_EVENT);
         }
         Member member = memberRepository.findByMemberId(UUID.fromString(createDateScheduleRequest.memberId()))
@@ -198,7 +197,7 @@ public class ScheduleService {
     public void createDateSchedulesForAuthenticatedUser(CreateDateScheduleRequest createDateScheduleRequest, String authorizationHeader) {
         Event event = eventRepository.findByEventId(UUID.fromString(createDateScheduleRequest.eventId()))
                 .orElseThrow(() -> new CustomException(EventErrorStatus._NOT_FOUND_EVENT));
-        if (event.getStatus() == EventStatus.CONFIRMED) {
+        if (event.isConfirmed()) {
             throw new CustomException(EventErrorStatus._CANNOT_MODIFY_CONFIRMED_EVENT);
         }
         User user = jwtUtil.getUserFromHeader(authorizationHeader);

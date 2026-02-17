@@ -104,4 +104,8 @@ public class Event extends BaseEntity {
     public void updateStatus(EventStatus status) {
         this.status = status;
     }
+
+    public boolean isConfirmed() {
+        return this.status == EventStatus.CONFIRMED;
+    }
 }
