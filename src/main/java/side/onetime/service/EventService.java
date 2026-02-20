@@ -709,9 +709,6 @@ public class EventService {
         User user = userRepository.findById(UserAuthorizationUtil.getLoginUserId())
                 .orElseThrow(() -> new CustomException(UserErrorStatus._NOT_FOUND_USER));
         EventParticipation eventParticipation = verifyUserHasEventAccess(user, eventId);
-        if (eventParticipation.getEvent().isConfirmed()) {
-            throw new CustomException(EventErrorStatus._CANNOT_MODIFY_CONFIRMED_EVENT);
-        }
 
         eventRepository.deleteEvent(eventParticipation.getEvent());
         s3Util.deleteFile(eventParticipation.getEvent().getQrFileName()); // QR 이미지 삭제
