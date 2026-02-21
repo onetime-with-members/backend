@@ -1,68 +1,34 @@
 package side.onetime.service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import lombok.RequiredArgsConstructor;
-import side.onetime.domain.Event;
-import side.onetime.domain.EventConfirmation;
-import side.onetime.domain.EventParticipation;
-import side.onetime.domain.Member;
-import side.onetime.domain.Schedule;
-import side.onetime.domain.Selection;
-import side.onetime.domain.User;
+import side.onetime.domain.*;
 import side.onetime.domain.enums.Category;
 import side.onetime.domain.enums.EventStatus;
 import side.onetime.domain.enums.ParticipationRole;
 import side.onetime.dto.event.request.ConfirmEventRequest;
 import side.onetime.dto.event.request.CreateEventRequest;
 import side.onetime.dto.event.request.ModifyEventRequest;
-import side.onetime.dto.event.response.ConfirmEventResponse;
-import side.onetime.dto.event.response.CreateEventResponse;
-import side.onetime.dto.event.response.GetEventQrCodeResponse;
-import side.onetime.dto.event.response.GetEventResponse;
-import side.onetime.dto.event.response.GetMostPossibleTime;
-import side.onetime.dto.event.response.GetParticipantsResponse;
-import side.onetime.dto.event.response.GetParticipatedEventResponse;
-import side.onetime.dto.event.response.GetParticipatedEventsResponse;
-import side.onetime.dto.event.response.PageCursorInfo;
+import side.onetime.dto.event.response.*;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.EventErrorStatus;
 import side.onetime.exception.status.EventParticipationErrorStatus;
 import side.onetime.exception.status.ScheduleErrorStatus;
 import side.onetime.exception.status.UserErrorStatus;
-import side.onetime.repository.EventConfirmationRepository;
-import side.onetime.repository.EventParticipationRepository;
-import side.onetime.repository.EventRepository;
-import side.onetime.repository.ScheduleBatchRepository;
-import side.onetime.repository.ScheduleRepository;
-import side.onetime.repository.SelectionRepository;
-import side.onetime.repository.UserRepository;
-import side.onetime.util.DateUtil;
-import side.onetime.util.JwtUtil;
-import side.onetime.util.QrUtil;
-import side.onetime.util.S3Util;
-import side.onetime.util.UserAuthorizationUtil;
+import side.onetime.repository.*;
+import side.onetime.util.*;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @Service
@@ -681,12 +647,14 @@ public class EventService {
 
                     GetParticipantsResponse participants = this.getParticipants(event, eventParticipations);
                     List<GetMostPossibleTime> mostPossibleTimes = this.getMostPossibleTimes(event, eventParticipations);
+                    EventConfirmation confirmation = eventConfirmationRepository.findByEventId(event.getId()).orElse(null);
 
                     return GetParticipatedEventResponse.of(
                             event,
                             ep,
                             participants.users().size() + participants.members().size(),
-                            mostPossibleTimes
+                            mostPossibleTimes,
+                            confirmation
                     );
                 })
                 .toList();
