@@ -20,8 +20,10 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import side.onetime.auth.annotation.IsUser;
 import side.onetime.auth.annotation.PublicApi;
+import side.onetime.dto.event.request.ConfirmEventRequest;
 import side.onetime.dto.event.request.CreateEventRequest;
 import side.onetime.dto.event.request.ModifyEventRequest;
+import side.onetime.dto.event.response.ConfirmEventResponse;
 import side.onetime.dto.event.response.CreateEventResponse;
 import side.onetime.dto.event.response.GetEventQrCodeResponse;
 import side.onetime.dto.event.response.GetEventResponse;
@@ -202,6 +204,28 @@ public class EventController {
 
         eventService.modifyEvent(eventId, modifyEventRequest);
         return ApiResponse.onSuccess(SuccessStatus._MODIFY_EVENT);
+    }
+
+    /**
+     * 이벤트 확정 API.
+     *
+     * 이벤트를 확정합니다. 확정 후에는 이벤트 수정/삭제, 스케줄 수정이 불가합니다.
+     * 인증된 유저와 비회원 모두 확정할 수 있습니다.
+     *
+     * @param eventId 확정할 이벤트의 ID
+     * @param confirmEventRequest 확정 요청 데이터 (날짜/요일, 시간, 선택 방식)
+     * @param authorizationHeader 인증된 유저의 토큰 (선택 사항)
+     * @return 확정된 이벤트 정보
+     */
+	@PublicApi
+    @PostMapping("/{event_id}/confirm")
+    public ResponseEntity<ApiResponse<ConfirmEventResponse>> confirmEvent(
+            @PathVariable("event_id") String eventId,
+            @Valid @RequestBody ConfirmEventRequest confirmEventRequest,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+
+        ConfirmEventResponse confirmEventResponse = eventService.confirmEvent(eventId, confirmEventRequest, authorizationHeader);
+        return ApiResponse.onSuccess(SuccessStatus._CONFIRM_EVENT, confirmEventResponse);
     }
 
     /**

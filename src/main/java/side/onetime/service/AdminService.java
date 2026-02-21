@@ -1,27 +1,45 @@
 package side.onetime.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import side.onetime.domain.*;
-import side.onetime.domain.enums.AdminStatus;
-import side.onetime.domain.enums.EventStatus;
-import side.onetime.dto.admin.request.LoginAdminUserRequest;
-import side.onetime.dto.admin.request.RegisterAdminUserRequest;
-import side.onetime.dto.admin.request.UpdateAdminUserStatusRequest;
-import side.onetime.dto.admin.response.*;
-import side.onetime.exception.CustomException;
-import side.onetime.exception.status.AdminErrorStatus;
-import side.onetime.repository.*;
-import side.onetime.util.AdminAuthorizationUtil;
-import side.onetime.util.JwtUtil;
-
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import side.onetime.domain.AdminUser;
+import side.onetime.domain.Event;
+import side.onetime.domain.EventParticipation;
+import side.onetime.domain.Member;
+import side.onetime.domain.Schedule;
+import side.onetime.domain.User;
+import side.onetime.domain.enums.AdminStatus;
+import side.onetime.domain.enums.ParticipationRole;
+import side.onetime.dto.admin.request.LoginAdminUserRequest;
+import side.onetime.dto.admin.request.RegisterAdminUserRequest;
+import side.onetime.dto.admin.request.UpdateAdminUserStatusRequest;
+import side.onetime.dto.admin.response.AdminUserDetailResponse;
+import side.onetime.dto.admin.response.DashboardEvent;
+import side.onetime.dto.admin.response.DashboardUser;
+import side.onetime.dto.admin.response.GetAdminUserProfileResponse;
+import side.onetime.dto.admin.response.GetAllDashboardEventsResponse;
+import side.onetime.dto.admin.response.GetAllDashboardUsersResponse;
+import side.onetime.dto.admin.response.LoginAdminUserResponse;
+import side.onetime.dto.admin.response.PageInfo;
+import side.onetime.exception.CustomException;
+import side.onetime.exception.status.AdminErrorStatus;
+import side.onetime.repository.AdminRepository;
+import side.onetime.repository.EventParticipationRepository;
+import side.onetime.repository.EventRepository;
+import side.onetime.repository.MemberRepository;
+import side.onetime.repository.ScheduleRepository;
+import side.onetime.repository.UserRepository;
+import side.onetime.util.AdminAuthorizationUtil;
+import side.onetime.util.JwtUtil;
 
 @Slf4j
 @Service
@@ -192,7 +210,7 @@ public class AdminService {
                 .sorted(Comparator.comparingInt(event -> {
                     Long eventId = event.getId();
                     int userCount = (int) eventParticipationRepository.findAllByEventIdIn(List.of(eventId)).stream()
-                            .filter(ep -> ep.getEventStatus() != EventStatus.CREATOR)
+                            .filter(ep -> ep.getParticipationRole() != ParticipationRole.CREATOR)
                             .count();
                     int memberCount = (int) memberRepository.findAllByEventIdIn(List.of(eventId)).stream().count();
                     return userCount + memberCount;
@@ -208,7 +226,7 @@ public class AdminService {
                 .collect(Collectors.groupingBy(s -> s.getEvent().getId()));
 
         Map<Long, List<EventParticipation>> epMap = eventParticipationRepository.findAllByEventIdIn(eventIds).stream()
-                .filter(ep -> ep.getEventStatus() != EventStatus.CREATOR)
+                .filter(ep -> ep.getParticipationRole() != ParticipationRole.CREATOR)
                 .collect(Collectors.groupingBy(ep -> ep.getEvent().getId()));
 
         Map<Long, List<Member>> memberMap = memberRepository.findAllByEventIdIn(eventIds).stream()

@@ -1,26 +1,37 @@
 package side.onetime.domain;
 
-import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
 import side.onetime.domain.enums.Category;
-import side.onetime.domain.enums.Status;
+import side.onetime.domain.enums.EventStatus;
 import side.onetime.global.common.dao.BaseEntity;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Table(name = "events")
 @SQLDelete(sql = "UPDATE events SET status = 'DELETED', deleted_at = CURRENT_TIMESTAMP WHERE events_id = ?")
-@SQLRestriction("status = 'ACTIVE'")
+@SQLRestriction("status != 'DELETED'")
 public class Event extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -57,7 +68,7 @@ public class Event extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private Status status;
+    private EventStatus status;
 
     @Column(name = "deleted_at", nullable = true)
     private LocalDateTime deletedAt;
@@ -69,7 +80,7 @@ public class Event extends BaseEntity {
         this.startTime = startTime;
         this.endTime = endTime;
         this.category = category;
-        this.status = Status.ACTIVE;
+        this.status = EventStatus.ACTIVE;
     }
 
     public void updateTitle(String title) {
@@ -88,5 +99,13 @@ public class Event extends BaseEntity {
 
     public void addQrFileName(String qrFileName) {
         this.qrFileName = qrFileName;
+    }
+
+    public void updateStatus(EventStatus status) {
+        this.status = status;
+    }
+
+    public boolean isConfirmed() {
+        return this.status == EventStatus.CONFIRMED;
     }
 }

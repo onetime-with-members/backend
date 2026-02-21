@@ -63,6 +63,7 @@ public class SecurityConfig {
 		"/api/v1/urls/action-original",
 		"/api/v1/events",                         // 익명 이벤트 생성
 		"/api/v1/events/*/most/filtering",        // 필터링 조회
+		"/api/v1/events/*/confirm",        		  // 이벤트 확정
 		"/api/v1/schedules/day",                  // 스케줄 등록
 		"/api/v1/schedules/date",                 // 스케줄 등록
 		"/api/v1/schedules/day/*/filtering",      // 스케줄 필터링

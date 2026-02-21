@@ -1,23 +1,53 @@
 package side.onetime.util;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-import side.onetime.domain.enums.Category;
-import side.onetime.dto.event.response.GetMostPossibleTime;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.springframework.stereotype.Component;
+
+import lombok.RequiredArgsConstructor;
+import side.onetime.domain.enums.Category;
+import side.onetime.dto.event.response.GetMostPossibleTime;
+
 @Component
 @RequiredArgsConstructor
-public class  DateUtil {
+public class DateUtil {
+
+    public static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+
+    /**
+     * yyyy.MM.dd 형식의 날짜 문자열을 파싱합니다.
+     *
+     * @param dateStr 날짜 문자열 (yyyy.MM.dd 형식)
+     * @return 파싱된 LocalDate
+     */
+    public static LocalDate parseDate(String dateStr) {
+        return LocalDate.parse(dateStr, DATE_FORMATTER);
+    }
+
+    /**
+     * HH:mm 형식의 시간 문자열을 파싱합니다.
+     *
+     * @param timeStr 시간 문자열 (HH:mm 형식)
+     * @return 파싱된 LocalTime
+     */
+    public static LocalTime parseTime(String timeStr) {
+        return LocalTime.parse(timeStr, TIME_FORMATTER);
+    }
 
     /**
      * 30분 단위 타임 셋 생성 메서드.
@@ -64,7 +94,7 @@ public class  DateUtil {
      * @return 정렬된 날짜 문자열 리스트
      */
     public static List<String> getSortedDateRanges(List<String> dateStrings, String pattern) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+        DateTimeFormatter formatter = pattern.equals("yyyy.MM.dd") ? DATE_FORMATTER : DateTimeFormatter.ofPattern(pattern);
 
         return dateStrings.stream()
                 .filter(dateStr -> dateStr != null && !dateStr.isEmpty())
@@ -115,7 +145,6 @@ public class  DateUtil {
      * @return 정렬된 최적 시간대 리스트
      */
     public static List<GetMostPossibleTime> sortMostPossibleTimes(List<GetMostPossibleTime> mostPossibleTimes, Category category) {
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
         Map<String, Integer> timePointOrder;
 
         if (category.equals(Category.DAY)) {
@@ -132,13 +161,13 @@ public class  DateUtil {
                     .distinct()
                     .filter(tp -> {
                         try {
-                            LocalDate.parse(tp, dateFormatter);
+                            LocalDate.parse(tp, DATE_FORMATTER);
                             return true;
                         } catch (DateTimeParseException e) {
                             return false;
                         }
                     })
-                    .sorted(Comparator.comparing((String tp) -> LocalDate.parse(tp, dateFormatter)))
+                    .sorted(Comparator.comparing((String tp) -> LocalDate.parse(tp, DATE_FORMATTER)))
                     .collect(Collectors.toMap(tp -> tp, tp -> order.getAndIncrement(), (a, b) -> a, LinkedHashMap::new));
         }
 
@@ -161,11 +190,10 @@ public class  DateUtil {
     public static String formatDateToYearMonthDay(LocalDateTime dateTime) {
         String dateTimeString = String.valueOf(dateTime);
         DateTimeFormatter originalFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
-        DateTimeFormatter targetFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
 
         try {
             LocalDate parsedDate = LocalDate.parse(dateTimeString, originalFormatter);
-            return parsedDate.format(targetFormatter);
+            return parsedDate.format(DATE_FORMATTER);
         } catch (DateTimeParseException e) {
             return dateTimeString;
         }

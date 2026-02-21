@@ -1,19 +1,18 @@
 package side.onetime.dto.member.request;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
+import java.util.UUID;
+
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import side.onetime.domain.Event;
 import side.onetime.domain.Member;
 import side.onetime.dto.member.response.ScheduleResponse;
 
-import java.util.List;
-import java.util.UUID;
-
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public record RegisterMemberRequest(
         @NotBlank(message = "Event ID는 필수 값입니다.") String eventId,
         @NotBlank(message = "이름은 필수 값입니다.") String name,
