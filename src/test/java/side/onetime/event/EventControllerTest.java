@@ -183,13 +183,13 @@ public class EventControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("payload.event_status").type(JsonFieldType.STRING).description("이벤트 상태 (ACTIVE, CONFIRMED)"),
                                                 fieldWithPath("payload.participation_role").type(JsonFieldType.STRING).description("유저 역할 (CREATOR, PARTICIPANT, CREATOR_AND_PARTICIPANT)"),
                                                 fieldWithPath("payload.confirmation").type(JsonFieldType.OBJECT).description("이벤트 확정 정보").optional(),
-                                                fieldWithPath("payload.confirmation.start_date").type(JsonFieldType.STRING).description("확정 시작 날짜"),
-                                                fieldWithPath("payload.confirmation.end_date").type(JsonFieldType.STRING).description("확정 종료 날짜"),
-                                                fieldWithPath("payload.confirmation.start_day").type(JsonFieldType.STRING).description("확정 시작 요일"),
-                                                fieldWithPath("payload.confirmation.end_day").type(JsonFieldType.STRING).description("확정 종료 요일"),
-                                                fieldWithPath("payload.confirmation.start_time").type(JsonFieldType.STRING).description("확정 시작 시간"),
-                                                fieldWithPath("payload.confirmation.end_time").type(JsonFieldType.STRING).description("확정 종료 시간"),
-                                                fieldWithPath("payload.confirmation.created_date").type(JsonFieldType.STRING).description("확정 생성일")
+                                                fieldWithPath("payload.confirmation.start_date").type(JsonFieldType.STRING).description("확정 시작 날짜").optional(),
+                                                fieldWithPath("payload.confirmation.end_date").type(JsonFieldType.STRING).description("확정 종료 날짜").optional(),
+                                                fieldWithPath("payload.confirmation.start_day").type(JsonFieldType.STRING).description("확정 시작 요일").optional(),
+                                                fieldWithPath("payload.confirmation.end_day").type(JsonFieldType.STRING).description("확정 종료 요일").optional(),
+                                                fieldWithPath("payload.confirmation.start_time").type(JsonFieldType.STRING).description("확정 시작 시간").optional(),
+                                                fieldWithPath("payload.confirmation.end_time").type(JsonFieldType.STRING).description("확정 종료 시간").optional(),
+                                                fieldWithPath("payload.confirmation.created_date").type(JsonFieldType.STRING).description("확정 생성일").optional()
                                         )
                                         .responseSchema(Schema.schema("GetEventResponseSchema"))
                                         .build()
@@ -483,13 +483,13 @@ public class EventControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("payload.events[].most_possible_times[].possible_names").type(JsonFieldType.ARRAY).description("참여 가능한 유저 이름 목록"),
                                                 fieldWithPath("payload.events[].most_possible_times[].impossible_names").type(JsonFieldType.ARRAY).description("참여 불가능한 유저 이름 목록"),
                                                 fieldWithPath("payload.events[].confirmation").type(JsonFieldType.OBJECT).description("이벤트 확정 정보").optional(),
-                                                fieldWithPath("payload.events[].confirmation.start_date").type(JsonFieldType.STRING).description("확정 시작 날짜"),
-                                                fieldWithPath("payload.events[].confirmation.end_date").type(JsonFieldType.STRING).description("확정 종료 날짜"),
-                                                fieldWithPath("payload.events[].confirmation.start_day").type(JsonFieldType.STRING).description("확정 시작 요일"),
-                                                fieldWithPath("payload.events[].confirmation.end_day").type(JsonFieldType.STRING).description("확정 종료 요일"),
-                                                fieldWithPath("payload.events[].confirmation.start_time").type(JsonFieldType.STRING).description("확정 시작 시간"),
-                                                fieldWithPath("payload.events[].confirmation.end_time").type(JsonFieldType.STRING).description("확정 종료 시간"),
-                                                fieldWithPath("payload.events[].confirmation.created_date").type(JsonFieldType.STRING).description("확정 생성일"),
+                                                fieldWithPath("payload.events[].confirmation.start_date").type(JsonFieldType.STRING).description("확정 시작 날짜").optional(),
+                                                fieldWithPath("payload.events[].confirmation.end_date").type(JsonFieldType.STRING).description("확정 종료 날짜").optional(),
+                                                fieldWithPath("payload.events[].confirmation.start_day").type(JsonFieldType.STRING).description("확정 시작 요일").optional(),
+                                                fieldWithPath("payload.events[].confirmation.end_day").type(JsonFieldType.STRING).description("확정 종료 요일").optional(),
+                                                fieldWithPath("payload.events[].confirmation.start_time").type(JsonFieldType.STRING).description("확정 시작 시간").optional(),
+                                                fieldWithPath("payload.events[].confirmation.end_time").type(JsonFieldType.STRING).description("확정 종료 시간").optional(),
+                                                fieldWithPath("payload.events[].confirmation.created_date").type(JsonFieldType.STRING).description("확정 생성일").optional(),
                                                 fieldWithPath("payload.page_cursor_info").type(JsonFieldType.OBJECT).description("페이지 커서 정보"),
                                                 fieldWithPath("payload.page_cursor_info.next_cursor").type(JsonFieldType.STRING).description("다음 페이지 조회용 커서"),
                                                 fieldWithPath("payload.page_cursor_info.has_next").type(JsonFieldType.BOOLEAN).description("다음 페이지 존재 여부")
