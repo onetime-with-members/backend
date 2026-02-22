@@ -63,7 +63,6 @@ public class SecurityConfig {
 		"/api/v1/urls/action-original",
 		"/api/v1/events",                         // 익명 이벤트 생성
 		"/api/v1/events/*/most/filtering",        // 필터링 조회
-		"/api/v1/events/*/confirm",        		  // 이벤트 확정
 		"/api/v1/schedules/day",                  // 스케줄 등록
 		"/api/v1/schedules/date",                 // 스케줄 등록
 		"/api/v1/schedules/day/*/filtering",      // 스케줄 필터링
@@ -78,6 +77,13 @@ public class SecurityConfig {
 	private static final String[] PUBLIC_PATCH_URLS = {
 		"/api/v1/banners/*/clicks",
 		"/api/v1/events/*"
+	};
+	
+	/**
+	 * [PUT 요청]에 한해서만 Public인 URL
+	 */
+	private static final String[] PUBLIC_PUT_URLS = {
+		"/api/v1/events/*/confirm",        		  // 이벤트 확정
 	};
 	
 	private static final String[] ALLOWED_ORIGINS = {
@@ -123,9 +129,11 @@ public class SecurityConfig {
 				.requestMatchers(HttpMethod.POST, PUBLIC_POST_URLS).permitAll()
 				// 4. PATCH Public
 				.requestMatchers(HttpMethod.PATCH, PUBLIC_PATCH_URLS).permitAll()
-				// 5. Safety-Net: 위에서 허용되지 않은 /api/** 요청은 인증 필요
+				// 5. PUT Public
+				.requestMatchers(HttpMethod.PUT, PUBLIC_PUT_URLS).permitAll()
+				// 6. Safety-Net: 위에서 허용되지 않은 /api/** 요청은 인증 필요
 				.requestMatchers("/api/**").authenticated()
-				// 6. 그 외 (정적 리소스 등)
+				// 7. 그 외 (정적 리소스 등)
 				.anyRequest().permitAll()
 			)
 			.oauth2Login(oauth -> oauth

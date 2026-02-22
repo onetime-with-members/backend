@@ -26,7 +26,7 @@ public class EventConfirmation extends BaseEntity {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "events_id", nullable = false)
+    @Column(name = "events_id", nullable = false, unique = true)
     private Long eventId;
 
     @Column(name = "users_id")
@@ -63,6 +63,20 @@ public class EventConfirmation extends BaseEntity {
                              String startDay, String endDay, String startTime, String endTime,
                              ParticipationRole confirmerRole, SelectionSource selectionSource) {
         this.eventId = eventId;
+        this.userId = userId;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.startDay = startDay;
+        this.endDay = endDay;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.confirmerRole = confirmerRole;
+        this.selectionSource = selectionSource;
+    }
+
+    public void update(Long userId, String startDate, String endDate, String startDay, String endDay,
+                       String startTime, String endTime, ParticipationRole confirmerRole,
+                       SelectionSource selectionSource) {
         this.userId = userId;
         this.startDate = startDate;
         this.endDate = endDate;
