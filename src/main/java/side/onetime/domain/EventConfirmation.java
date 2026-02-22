@@ -26,7 +26,7 @@ public class EventConfirmation extends BaseEntity {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "events_id", nullable = false)
+    @Column(name = "events_id", nullable = false, unique = true)
     private Long eventId;
 
     @Column(name = "users_id")
