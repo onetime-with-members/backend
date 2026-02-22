@@ -1,9 +1,17 @@
 package side.onetime.event;
 
-import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
-import com.epages.restdocs.apispec.ResourceSnippetParameters;
-import com.epages.restdocs.apispec.Schema;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static com.epages.restdocs.apispec.ResourceDocumentation.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -14,6 +22,12 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.ResultActions;
+
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
+import com.epages.restdocs.apispec.ResourceSnippetParameters;
+import com.epages.restdocs.apispec.Schema;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import side.onetime.configuration.ControllerTestConfig;
 import side.onetime.controller.EventController;
 import side.onetime.domain.enums.Category;
@@ -23,24 +37,20 @@ import side.onetime.domain.enums.SelectionSource;
 import side.onetime.dto.event.request.ConfirmEventRequest;
 import side.onetime.dto.event.request.CreateEventRequest;
 import side.onetime.dto.event.request.ModifyEventRequest;
-import side.onetime.dto.event.response.*;
+import side.onetime.dto.event.response.ConfirmEventResponse;
+import side.onetime.dto.event.response.ConfirmationDto;
+import side.onetime.dto.event.response.CreateEventResponse;
+import side.onetime.dto.event.response.GetEventQrCodeResponse;
+import side.onetime.dto.event.response.GetEventResponse;
+import side.onetime.dto.event.response.GetMostPossibleTime;
+import side.onetime.dto.event.response.GetParticipantsResponse;
+import side.onetime.dto.event.response.GetParticipatedEventResponse;
+import side.onetime.dto.event.response.GetParticipatedEventsResponse;
+import side.onetime.dto.event.response.PageCursorInfo;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.EventErrorStatus;
 import side.onetime.service.EventService;
-
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
-import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
-import static org.mockito.ArgumentMatchers.*;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
-import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(EventController.class)
 public class EventControllerTest extends ControllerTestConfig {
@@ -625,7 +635,7 @@ public class EventControllerTest extends ControllerTestConfig {
         String requestContent = new ObjectMapper().writeValueAsString(request);
 
         // when
-        ResultActions resultActions = this.mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/events/{event_id}/confirm", eventId)
+        ResultActions resultActions = this.mockMvc.perform(RestDocumentationRequestBuilders.put("/api/v1/events/{event_id}/confirm", eventId)
                 .content(requestContent)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON));
@@ -677,46 +687,6 @@ public class EventControllerTest extends ControllerTestConfig {
     }
 
     @Test
-    @DisplayName("[FAILED] 이미 확정된 이벤트를 다시 확정하려고 한다.")
-    public void confirmEvent_Fail_AlreadyConfirmed() throws Exception {
-        // given
-        UUID eventId = UUID.randomUUID();
-
-        Mockito.when(eventService.confirmEvent(anyString(), any(ConfirmEventRequest.class), any()))
-                .thenThrow(new CustomException(EventErrorStatus._ALREADY_CONFIRMED_EVENT));
-
-        ConfirmEventRequest request = new ConfirmEventRequest(
-                "2026.02.05", "2026.02.07", null, null, "18:00", "20:00", SelectionSource.RECOMMENDED
-        );
-        String requestContent = new ObjectMapper().writeValueAsString(request);
-
-        // when & then
-        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/events/{event_id}/confirm", eventId)
-                        .content(requestContent)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.is_success").value(false))
-                .andExpect(jsonPath("$.code").value("EVENT-006"))
-                .andExpect(jsonPath("$.message").value("이미 확정된 이벤트입니다."))
-                .andDo(MockMvcRestDocumentationWrapper.document("event/confirm-fail-already-confirmed",
-                        preprocessRequest(prettyPrint()),
-                        preprocessResponse(prettyPrint()),
-                        resource(
-                                ResourceSnippetParameters.builder()
-                                        .tag("Event API")
-                                        .responseFields(
-                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
-                                                fieldWithPath("code").type(JsonFieldType.STRING).description("에러 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지"),
-                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
-                                        )
-                                        .build()
-                        )
-                ));
-    }
-
-    @Test
     @DisplayName("[FAILED] 유효하지 않은 확정 요청을 보낸다.")
     public void confirmEvent_Fail_InvalidRequest() throws Exception {
         // given
@@ -731,13 +701,13 @@ public class EventControllerTest extends ControllerTestConfig {
         String requestContent = new ObjectMapper().writeValueAsString(request);
 
         // when & then
-        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/events/{event_id}/confirm", eventId)
+        mockMvc.perform(RestDocumentationRequestBuilders.put("/api/v1/events/{event_id}/confirm", eventId)
                         .content(requestContent)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.is_success").value(false))
-                .andExpect(jsonPath("$.code").value("EVENT-007"))
+                .andExpect(jsonPath("$.code").value("EVENT-006"))
                 .andExpect(jsonPath("$.message").value("유효하지 않은 확정 요청입니다."))
                 .andDo(MockMvcRestDocumentationWrapper.document("event/confirm-fail-invalid-request",
                         preprocessRequest(prettyPrint()),
@@ -776,7 +746,7 @@ public class EventControllerTest extends ControllerTestConfig {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.is_success").value(false))
-                .andExpect(jsonPath("$.code").value("EVENT-008"))
+                .andExpect(jsonPath("$.code").value("EVENT-007"))
                 .andExpect(jsonPath("$.message").value("확정된 이벤트는 수정할 수 없습니다."))
                 .andDo(MockMvcRestDocumentationWrapper.document("event/modify-fail-confirmed-event",
                         preprocessRequest(prettyPrint()),

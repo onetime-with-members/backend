@@ -73,4 +73,18 @@ public class EventConfirmation extends BaseEntity {
         this.confirmerRole = confirmerRole;
         this.selectionSource = selectionSource;
     }
+
+    public void update(Long userId, String startDate, String endDate, String startDay, String endDay,
+                       String startTime, String endTime, ParticipationRole confirmerRole,
+                       SelectionSource selectionSource) {
+        this.userId = userId;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.startDay = startDay;
+        this.endDay = endDay;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.confirmerRole = confirmerRole;
+        this.selectionSource = selectionSource;
+    }
 }

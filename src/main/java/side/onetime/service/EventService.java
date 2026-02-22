@@ -1,34 +1,67 @@
 package side.onetime.service;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import side.onetime.domain.*;
+
+import lombok.RequiredArgsConstructor;
+import side.onetime.domain.Event;
+import side.onetime.domain.EventConfirmation;
+import side.onetime.domain.EventParticipation;
+import side.onetime.domain.Member;
+import side.onetime.domain.Schedule;
+import side.onetime.domain.Selection;
+import side.onetime.domain.User;
 import side.onetime.domain.enums.Category;
 import side.onetime.domain.enums.EventStatus;
 import side.onetime.domain.enums.ParticipationRole;
 import side.onetime.dto.event.request.ConfirmEventRequest;
 import side.onetime.dto.event.request.CreateEventRequest;
 import side.onetime.dto.event.request.ModifyEventRequest;
-import side.onetime.dto.event.response.*;
+import side.onetime.dto.event.response.ConfirmEventResponse;
+import side.onetime.dto.event.response.CreateEventResponse;
+import side.onetime.dto.event.response.GetEventQrCodeResponse;
+import side.onetime.dto.event.response.GetEventResponse;
+import side.onetime.dto.event.response.GetMostPossibleTime;
+import side.onetime.dto.event.response.GetParticipantsResponse;
+import side.onetime.dto.event.response.GetParticipatedEventResponse;
+import side.onetime.dto.event.response.GetParticipatedEventsResponse;
+import side.onetime.dto.event.response.PageCursorInfo;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.EventErrorStatus;
 import side.onetime.exception.status.EventParticipationErrorStatus;
 import side.onetime.exception.status.ScheduleErrorStatus;
 import side.onetime.exception.status.UserErrorStatus;
-import side.onetime.repository.*;
-import side.onetime.util.*;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import side.onetime.repository.EventConfirmationRepository;
+import side.onetime.repository.EventParticipationRepository;
+import side.onetime.repository.EventRepository;
+import side.onetime.repository.ScheduleBatchRepository;
+import side.onetime.repository.ScheduleRepository;
+import side.onetime.repository.SelectionRepository;
+import side.onetime.repository.UserRepository;
+import side.onetime.util.DateUtil;
+import side.onetime.util.JwtUtil;
+import side.onetime.util.QrUtil;
+import side.onetime.util.S3Util;
+import side.onetime.util.UserAuthorizationUtil;
 
 
 @Service
@@ -93,8 +126,7 @@ public class EventService {
     /**
      * 이벤트 확정 메서드.
      *
-     * 이벤트를 확정하고 확정 정보를 저장합니다.
-     * 확정 후에는 이벤트 수정/삭제, 스케줄 수정이 불가합니다.
+     * 이벤트를 확정하거나 기존 확정 정보를 수정합니다.
      *
      * @param eventId 확정할 이벤트의 ID
      * @param confirmEventRequest 확정 요청 데이터
@@ -105,11 +137,6 @@ public class EventService {
     public ConfirmEventResponse confirmEvent(String eventId, ConfirmEventRequest confirmEventRequest, String authorizationHeader) {
         Event event = eventRepository.findByEventId(UUID.fromString(eventId))
                 .orElseThrow(() -> new CustomException(EventErrorStatus._NOT_FOUND_EVENT));
-
-        // 이미 확정된 이벤트인지 검증
-        if (event.isConfirmed()) {
-            throw new CustomException(EventErrorStatus._ALREADY_CONFIRMED_EVENT);
-        }
 
         // 요청 데이터 검증
         validateConfirmationRequest(event.getCategory(), confirmEventRequest);
@@ -128,23 +155,30 @@ public class EventService {
             }
         }
 
-        // EventConfirmation 저장
-        EventConfirmation confirmation = EventConfirmation.builder()
-                .eventId(event.getId())
-                .userId(userId)
-                .startDate(confirmEventRequest.startDate())
-                .endDate(confirmEventRequest.endDate())
-                .startDay(confirmEventRequest.startDay())
-                .endDay(confirmEventRequest.endDay())
-                .startTime(confirmEventRequest.startTime())
-                .endTime(confirmEventRequest.endTime())
-                .confirmerRole(confirmerRole)
-                .selectionSource(confirmEventRequest.selectionSource())
-                .build();
-        try {
-            eventConfirmationRepository.saveAndFlush(confirmation);
-        } catch (DataIntegrityViolationException e) {
-            throw new CustomException(EventErrorStatus._ALREADY_CONFIRMED_EVENT);
+        // EventConfirmation upsert
+        EventConfirmation confirmation = eventConfirmationRepository.findByEventId(event.getId())
+                .orElse(null);
+
+        if (confirmation != null) {
+            confirmation.update(userId,
+                    confirmEventRequest.startDate(), confirmEventRequest.endDate(),
+                    confirmEventRequest.startDay(), confirmEventRequest.endDay(),
+                    confirmEventRequest.startTime(), confirmEventRequest.endTime(),
+                    confirmerRole, confirmEventRequest.selectionSource());
+        } else {
+            confirmation = EventConfirmation.builder()
+                    .eventId(event.getId())
+                    .userId(userId)
+                    .startDate(confirmEventRequest.startDate())
+                    .endDate(confirmEventRequest.endDate())
+                    .startDay(confirmEventRequest.startDay())
+                    .endDay(confirmEventRequest.endDay())
+                    .startTime(confirmEventRequest.startTime())
+                    .endTime(confirmEventRequest.endTime())
+                    .confirmerRole(confirmerRole)
+                    .selectionSource(confirmEventRequest.selectionSource())
+                    .build();
+            eventConfirmationRepository.save(confirmation);
         }
 
         // Event 상태 변경
