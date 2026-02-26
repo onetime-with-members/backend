@@ -13,7 +13,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import side.onetime.domain.enums.ParticipationRole;
-import side.onetime.domain.enums.SelectionSource;
 import side.onetime.global.common.dao.BaseEntity;
 
 @Entity
@@ -54,14 +53,10 @@ public class EventConfirmation extends BaseEntity {
     @Column(name = "confirmer_role", nullable = false, length = 30)
     private ParticipationRole confirmerRole;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "selection_source", nullable = false, length = 20)
-    private SelectionSource selectionSource;
-
     @Builder
     public EventConfirmation(Long eventId, Long userId, String startDate, String endDate,
                              String startDay, String endDay, String startTime, String endTime,
-                             ParticipationRole confirmerRole, SelectionSource selectionSource) {
+                             ParticipationRole confirmerRole) {
         this.eventId = eventId;
         this.userId = userId;
         this.startDate = startDate;
@@ -71,12 +66,10 @@ public class EventConfirmation extends BaseEntity {
         this.startTime = startTime;
         this.endTime = endTime;
         this.confirmerRole = confirmerRole;
-        this.selectionSource = selectionSource;
     }
 
     public void update(Long userId, String startDate, String endDate, String startDay, String endDay,
-                       String startTime, String endTime, ParticipationRole confirmerRole,
-                       SelectionSource selectionSource) {
+                       String startTime, String endTime, ParticipationRole confirmerRole) {
         this.userId = userId;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -85,6 +78,5 @@ public class EventConfirmation extends BaseEntity {
         this.startTime = startTime;
         this.endTime = endTime;
         this.confirmerRole = confirmerRole;
-        this.selectionSource = selectionSource;
     }
 }

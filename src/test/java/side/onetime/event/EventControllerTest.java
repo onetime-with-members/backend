@@ -33,7 +33,6 @@ import side.onetime.controller.EventController;
 import side.onetime.domain.enums.Category;
 import side.onetime.domain.enums.EventStatus;
 import side.onetime.domain.enums.ParticipationRole;
-import side.onetime.domain.enums.SelectionSource;
 import side.onetime.dto.event.request.ConfirmEventRequest;
 import side.onetime.dto.event.request.CreateEventRequest;
 import side.onetime.dto.event.request.ModifyEventRequest;
@@ -628,8 +627,7 @@ public class EventControllerTest extends ControllerTestConfig {
                 null,
                 null,
                 "18:00",
-                "20:00",
-                SelectionSource.RECOMMENDED
+                "20:00"
         );
 
         String requestContent = new ObjectMapper().writeValueAsString(request);
@@ -667,8 +665,7 @@ public class EventControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("start_day").type(JsonFieldType.STRING).description("시작 요일 (DAY 이벤트, 예: 월)").optional(),
                                                 fieldWithPath("end_day").type(JsonFieldType.STRING).description("종료 요일 (DAY 이벤트, 예: 수)").optional(),
                                                 fieldWithPath("start_time").type(JsonFieldType.STRING).description("시작 시간 (예: 18:00)"),
-                                                fieldWithPath("end_time").type(JsonFieldType.STRING).description("종료 시간 (예: 20:00)"),
-                                                fieldWithPath("selection_source").type(JsonFieldType.STRING).description("선택 방식 (RECOMMENDED, MANUAL)")
+                                                fieldWithPath("end_time").type(JsonFieldType.STRING).description("종료 시간 (예: 20:00)")
                                         )
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
@@ -696,8 +693,8 @@ public class EventControllerTest extends ControllerTestConfig {
                 .thenThrow(new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST));
 
         ConfirmEventRequest request = new ConfirmEventRequest(
-                null, null, null, null, "20:00", "18:00", SelectionSource.MANUAL
-        );
+                null, null, null, null, "20:00", "18:00"
+		);
         String requestContent = new ObjectMapper().writeValueAsString(request);
 
         // when & then

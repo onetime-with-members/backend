@@ -164,7 +164,7 @@ public class EventService {
                     confirmEventRequest.startDate(), confirmEventRequest.endDate(),
                     confirmEventRequest.startDay(), confirmEventRequest.endDay(),
                     confirmEventRequest.startTime(), confirmEventRequest.endTime(),
-                    confirmerRole, confirmEventRequest.selectionSource());
+                    confirmerRole);
         } else {
             confirmation = EventConfirmation.builder()
                     .eventId(event.getId())
@@ -176,7 +176,6 @@ public class EventService {
                     .startTime(confirmEventRequest.startTime())
                     .endTime(confirmEventRequest.endTime())
                     .confirmerRole(confirmerRole)
-                    .selectionSource(confirmEventRequest.selectionSource())
                     .build();
             eventConfirmationRepository.save(confirmation);
         }
