@@ -1,28 +1,14 @@
 package side.onetime.service;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.UUID;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import lombok.RequiredArgsConstructor;
 import side.onetime.domain.GuideViewLog;
 import side.onetime.domain.RefreshToken;
 import side.onetime.domain.User;
 import side.onetime.domain.enums.GuideType;
-import side.onetime.dto.user.request.CreateGuideViewLogRequest;
-import side.onetime.dto.user.request.LogoutUserRequest;
-import side.onetime.dto.user.request.OnboardUserRequest;
-import side.onetime.dto.user.request.UpdateUserPolicyAgreementRequest;
-import side.onetime.dto.user.request.UpdateUserProfileRequest;
-import side.onetime.dto.user.request.UpdateUserSleepTimeRequest;
-import side.onetime.dto.user.response.GetGuideViewLogResponse;
-import side.onetime.dto.user.response.GetUserPolicyAgreementResponse;
-import side.onetime.dto.user.response.GetUserProfileResponse;
-import side.onetime.dto.user.response.GetUserSleepTimeResponse;
-import side.onetime.dto.user.response.OnboardUserResponse;
+import side.onetime.dto.user.request.*;
+import side.onetime.dto.user.response.*;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.UserErrorStatus;
 import side.onetime.repository.GuideViewLogRepository;
@@ -30,6 +16,10 @@ import side.onetime.repository.RefreshTokenRepository;
 import side.onetime.repository.UserRepository;
 import side.onetime.util.JwtUtil;
 import side.onetime.util.UserAuthorizationUtil;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -104,8 +94,6 @@ public class UserService {
                 .servicePolicyAgreement(request.servicePolicyAgreement())
                 .privacyPolicyAgreement(request.privacyPolicyAgreement())
                 .marketingPolicyAgreement(request.marketingPolicyAgreement())
-                .sleepStartTime(request.sleepStartTime())
-                .sleepEndTime(request.sleepEndTime())
                 .language(request.language())
                 .build();
     }
