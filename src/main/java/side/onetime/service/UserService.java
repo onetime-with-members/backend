@@ -1,28 +1,14 @@
 package side.onetime.service;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.UUID;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import lombok.RequiredArgsConstructor;
 import side.onetime.domain.GuideViewLog;
 import side.onetime.domain.RefreshToken;
 import side.onetime.domain.User;
 import side.onetime.domain.enums.GuideType;
-import side.onetime.dto.user.request.CreateGuideViewLogRequest;
-import side.onetime.dto.user.request.LogoutUserRequest;
-import side.onetime.dto.user.request.OnboardUserRequest;
-import side.onetime.dto.user.request.UpdateUserPolicyAgreementRequest;
-import side.onetime.dto.user.request.UpdateUserProfileRequest;
-import side.onetime.dto.user.request.UpdateUserSleepTimeRequest;
-import side.onetime.dto.user.response.GetGuideViewLogResponse;
-import side.onetime.dto.user.response.GetUserPolicyAgreementResponse;
-import side.onetime.dto.user.response.GetUserProfileResponse;
-import side.onetime.dto.user.response.GetUserSleepTimeResponse;
-import side.onetime.dto.user.response.OnboardUserResponse;
+import side.onetime.dto.user.request.*;
+import side.onetime.dto.user.response.*;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.UserErrorStatus;
 import side.onetime.repository.GuideViewLogRepository;
@@ -30,6 +16,10 @@ import side.onetime.repository.RefreshTokenRepository;
 import side.onetime.repository.UserRepository;
 import side.onetime.util.JwtUtil;
 import side.onetime.util.UserAuthorizationUtil;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -46,7 +36,7 @@ public class UserService {
      * 회원가입 이후 필수 정보를 설정하고 유저를 저장한 뒤, 액세스 토큰과 리프레쉬 토큰을 발급합니다.
      * 리프레쉬 토큰은 브라우저 식별자(browserId)와 함께 MySQL에 저장됩니다.
      *
-     * @param request 유저의 레지스터 토큰, 닉네임, 약관 동의, 수면 시간 등 온보딩 정보가 포함된 요청 객체
+     * @param request 유저의 레지스터 토큰, 닉네임, 약관 동의 등 온보딩 정보가 포함된 요청 객체
      * @param userIp 클라이언트 IP 주소
      * @param userAgent 클라이언트 User-Agent
      * @return 발급된 액세스 토큰과 리프레쉬 토큰을 포함한 응답 객체
@@ -88,7 +78,7 @@ public class UserService {
      * 레지스터 토큰을 기반으로 User 엔티티를 생성하는 메서드.
      *
      * JWT 레지스터 토큰의 유효성을 검증하고, 토큰에서 제공자 정보 및 유저 정보를 추출하여
-     * 닉네임, 약관 동의, 수면 정보 등을 포함한 새로운 User 객체를 빌드합니다.
+     * 닉네임, 약관 동의 등을 포함한 새로운 User 객체를 빌드합니다.
      *
      * @param request 레지스터 토큰 및 기타 온보딩 정보를 포함한 요청 객체
      * @return 생성된 User 엔티티 객체
@@ -104,8 +94,6 @@ public class UserService {
                 .servicePolicyAgreement(request.servicePolicyAgreement())
                 .privacyPolicyAgreement(request.privacyPolicyAgreement())
                 .marketingPolicyAgreement(request.marketingPolicyAgreement())
-                .sleepStartTime(request.sleepStartTime())
-                .sleepEndTime(request.sleepEndTime())
                 .language(request.language())
                 .build();
     }
