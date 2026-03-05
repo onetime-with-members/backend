@@ -1,9 +1,17 @@
 package side.onetime.event;
 
-import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
-import com.epages.restdocs.apispec.ResourceSnippetParameters;
-import com.epages.restdocs.apispec.Schema;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static com.epages.restdocs.apispec.ResourceDocumentation.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -14,28 +22,34 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.ResultActions;
+
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
+import com.epages.restdocs.apispec.ResourceSnippetParameters;
+import com.epages.restdocs.apispec.Schema;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import side.onetime.configuration.ControllerTestConfig;
 import side.onetime.controller.EventController;
 import side.onetime.domain.enums.Category;
 import side.onetime.domain.enums.EventStatus;
+import side.onetime.domain.enums.ParticipationRole;
+import side.onetime.dto.event.request.ConfirmEventRequest;
 import side.onetime.dto.event.request.CreateEventRequest;
 import side.onetime.dto.event.request.ModifyEventRequest;
-import side.onetime.dto.event.response.*;
+import side.onetime.dto.event.response.ConfirmEventResponse;
+import side.onetime.dto.event.response.ConfirmationDto;
+import side.onetime.dto.event.response.CreateEventResponse;
+import side.onetime.dto.event.response.GetEventQrCodeResponse;
+import side.onetime.dto.event.response.GetEventResponse;
+import side.onetime.dto.event.response.GetMostPossibleTime;
+import side.onetime.dto.event.response.GetParticipantsResponse;
+import side.onetime.dto.event.response.GetParticipatedEventResponse;
+import side.onetime.dto.event.response.GetParticipatedEventsResponse;
+import side.onetime.dto.event.response.PageCursorInfo;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
+import side.onetime.exception.CustomException;
+import side.onetime.exception.status.EventErrorStatus;
 import side.onetime.service.EventService;
-
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
-import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
-import static org.mockito.ArgumentMatchers.*;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
-import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(EventController.class)
 public class EventControllerTest extends ControllerTestConfig {
@@ -117,7 +131,17 @@ public class EventControllerTest extends ControllerTestConfig {
                 "12:00",
                 Category.DATE,
                 List.of("2024.11.13"),
-                EventStatus.CREATOR
+                EventStatus.ACTIVE,
+                ParticipationRole.CREATOR,
+                new ConfirmationDto(
+                        "2026.02.01",
+                        "2026.02.22",
+                        "일",
+                        "수",
+                        "10:00",
+                        "18:00",
+                        LocalDateTime.parse("2026-02-22T02:00:00.000000")
+                )
         );
 
         Mockito.when(eventService.getEvent(eventId.toString(), null))
@@ -140,7 +164,8 @@ public class EventControllerTest extends ControllerTestConfig {
                 .andExpect(jsonPath("$.payload.end_time").value("12:00"))
                 .andExpect(jsonPath("$.payload.category").value("DATE"))
                 .andExpect(jsonPath("$.payload.ranges[0]").value("2024.11.13"))
-                .andExpect(jsonPath("$.payload.event_status").value("CREATOR"))
+                .andExpect(jsonPath("$.payload.event_status").value("ACTIVE"))
+                .andExpect(jsonPath("$.payload.participation_role").value("CREATOR"))
 
                 // docs
                 .andDo(MockMvcRestDocumentationWrapper.document("event/get",
@@ -164,7 +189,16 @@ public class EventControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("payload.end_time").type(JsonFieldType.STRING).description("이벤트 종료 시간"),
                                                 fieldWithPath("payload.category").type(JsonFieldType.STRING).description("이벤트 카테고리"),
                                                 fieldWithPath("payload.ranges").type(JsonFieldType.ARRAY).description("이벤트 날짜 또는 요일 범위"),
-                                                fieldWithPath("payload.event_status").type(JsonFieldType.STRING).description("이벤트 상태 (로그인 유저만 반환)")
+                                                fieldWithPath("payload.event_status").type(JsonFieldType.STRING).description("이벤트 상태 (ACTIVE, CONFIRMED)"),
+                                                fieldWithPath("payload.participation_role").type(JsonFieldType.STRING).description("유저 역할 (CREATOR, PARTICIPANT, CREATOR_AND_PARTICIPANT)"),
+                                                fieldWithPath("payload.confirmation").type(JsonFieldType.OBJECT).description("이벤트 확정 정보").optional(),
+                                                fieldWithPath("payload.confirmation.start_date").type(JsonFieldType.STRING).description("확정 시작 날짜").optional(),
+                                                fieldWithPath("payload.confirmation.end_date").type(JsonFieldType.STRING).description("확정 종료 날짜").optional(),
+                                                fieldWithPath("payload.confirmation.start_day").type(JsonFieldType.STRING).description("확정 시작 요일").optional(),
+                                                fieldWithPath("payload.confirmation.end_day").type(JsonFieldType.STRING).description("확정 종료 요일").optional(),
+                                                fieldWithPath("payload.confirmation.start_time").type(JsonFieldType.STRING).description("확정 시작 시간").optional(),
+                                                fieldWithPath("payload.confirmation.end_time").type(JsonFieldType.STRING).description("확정 종료 시간").optional(),
+                                                fieldWithPath("payload.confirmation.created_date").type(JsonFieldType.STRING).description("확정 생성일").optional()
                                         )
                                         .responseSchema(Schema.schema("GetEventResponseSchema"))
                                         .build()
@@ -387,9 +421,19 @@ public class EventControllerTest extends ControllerTestConfig {
                         "Sample Event",
                         createdDate,
                         10,
-                        EventStatus.CREATOR,
+                        EventStatus.ACTIVE,
+                        ParticipationRole.CREATOR,
                         List.of(
                                 new GetMostPossibleTime("2024.11.13", "10:00", "10:30", 5, List.of("User1", "User2"), List.of("User3"))
+                        ),
+                        new ConfirmationDto(
+                                "2026.02.01",
+                                "2026.02.22",
+                                "일",
+                                "수",
+                                "10:00",
+                                "18:00",
+                                LocalDateTime.parse("2026-02-22T02:00:00.000000")
                         )
                 )
         );
@@ -438,7 +482,8 @@ public class EventControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("payload.events[].title").type(JsonFieldType.STRING).description("이벤트 제목"),
                                                 fieldWithPath("payload.events[].created_date").type(JsonFieldType.STRING).description("이벤트 생성일"),
                                                 fieldWithPath("payload.events[].participant_count").type(JsonFieldType.NUMBER).description("참여자 수"),
-                                                fieldWithPath("payload.events[].event_status").type(JsonFieldType.STRING).description("이벤트 참여 상태"),
+                                                fieldWithPath("payload.events[].event_status").type(JsonFieldType.STRING).description("이벤트 상태 (ACTIVE, CONFIRMED)"),
+                                                fieldWithPath("payload.events[].participation_role").type(JsonFieldType.STRING).description("유저 역할 (CREATOR, PARTICIPANT, CREATOR_AND_PARTICIPANT)"),
                                                 fieldWithPath("payload.events[].most_possible_times").type(JsonFieldType.ARRAY).description("가장 많이 가능한 시간대"),
                                                 fieldWithPath("payload.events[].most_possible_times[].time_point").type(JsonFieldType.STRING).description("날짜 또는 요일"),
                                                 fieldWithPath("payload.events[].most_possible_times[].start_time").type(JsonFieldType.STRING).description("시작 시간"),
@@ -446,6 +491,14 @@ public class EventControllerTest extends ControllerTestConfig {
                                                 fieldWithPath("payload.events[].most_possible_times[].possible_count").type(JsonFieldType.NUMBER).description("가능한 참여자 수"),
                                                 fieldWithPath("payload.events[].most_possible_times[].possible_names").type(JsonFieldType.ARRAY).description("참여 가능한 유저 이름 목록"),
                                                 fieldWithPath("payload.events[].most_possible_times[].impossible_names").type(JsonFieldType.ARRAY).description("참여 불가능한 유저 이름 목록"),
+                                                fieldWithPath("payload.events[].confirmation").type(JsonFieldType.OBJECT).description("이벤트 확정 정보").optional(),
+                                                fieldWithPath("payload.events[].confirmation.start_date").type(JsonFieldType.STRING).description("확정 시작 날짜").optional(),
+                                                fieldWithPath("payload.events[].confirmation.end_date").type(JsonFieldType.STRING).description("확정 종료 날짜").optional(),
+                                                fieldWithPath("payload.events[].confirmation.start_day").type(JsonFieldType.STRING).description("확정 시작 요일").optional(),
+                                                fieldWithPath("payload.events[].confirmation.end_day").type(JsonFieldType.STRING).description("확정 종료 요일").optional(),
+                                                fieldWithPath("payload.events[].confirmation.start_time").type(JsonFieldType.STRING).description("확정 시작 시간").optional(),
+                                                fieldWithPath("payload.events[].confirmation.end_time").type(JsonFieldType.STRING).description("확정 종료 시간").optional(),
+                                                fieldWithPath("payload.events[].confirmation.created_date").type(JsonFieldType.STRING).description("확정 생성일").optional(),
                                                 fieldWithPath("payload.page_cursor_info").type(JsonFieldType.OBJECT).description("페이지 커서 정보"),
                                                 fieldWithPath("payload.page_cursor_info.next_cursor").type(JsonFieldType.STRING).description("다음 페이지 조회용 커서"),
                                                 fieldWithPath("payload.page_cursor_info.has_next").type(JsonFieldType.BOOLEAN).description("다음 페이지 존재 여부")
@@ -489,7 +542,8 @@ public class EventControllerTest extends ControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .responseSchema(Schema.schema("RemoveUserCreatedEventResponseSchema"))
                                         .build()
@@ -547,9 +601,162 @@ public class EventControllerTest extends ControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .responseSchema(Schema.schema("ModifyEventResponseSchema"))
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("이벤트를 확정한다.")
+    public void confirmEvent() throws Exception {
+        // given
+        UUID eventId = UUID.randomUUID();
+        LocalDateTime createdDate = LocalDateTime.of(2026, 2, 5, 14, 0, 0);
+        ConfirmEventResponse response = ConfirmEventResponse.of(eventId, EventStatus.CONFIRMED, createdDate);
+
+        Mockito.when(eventService.confirmEvent(anyString(), any(ConfirmEventRequest.class), any()))
+                .thenReturn(response);
+
+        ConfirmEventRequest request = new ConfirmEventRequest(
+                "2026.02.05",
+                "2026.02.07",
+                null,
+                null,
+                "18:00",
+                "20:00"
+        );
+
+        String requestContent = new ObjectMapper().writeValueAsString(request);
+
+        // when
+        ResultActions resultActions = this.mockMvc.perform(RestDocumentationRequestBuilders.put("/api/v1/events/{event_id}/confirm", eventId)
+                .content(requestContent)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON));
+
+        // then
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.is_success").value(true))
+                .andExpect(jsonPath("$.code").value("200"))
+                .andExpect(jsonPath("$.message").value("이벤트 확정에 성공했습니다."))
+                .andExpect(jsonPath("$.payload.event_id").value(eventId.toString()))
+                .andExpect(jsonPath("$.payload.event_status").value("CONFIRMED"))
+                .andExpect(jsonPath("$.payload.created_date").exists())
+
+                // docs
+                .andDo(MockMvcRestDocumentationWrapper.document("event/confirm",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Event API")
+                                        .description("이벤트를 확정한다.")
+                                        .pathParameters(
+                                                parameterWithName("event_id").description("확정할 이벤트의 ID [예시 : dd099816-2b09-4625-bf95-319672c25659]")
+                                        )
+                                        .requestFields(
+                                                fieldWithPath("start_date").type(JsonFieldType.STRING).description("시작 날짜 (DATE 이벤트, 예: 2026.02.05)").optional(),
+                                                fieldWithPath("end_date").type(JsonFieldType.STRING).description("종료 날짜 (DATE 이벤트, 예: 2026.02.07)").optional(),
+                                                fieldWithPath("start_day").type(JsonFieldType.STRING).description("시작 요일 (DAY 이벤트, 예: 월)").optional(),
+                                                fieldWithPath("end_day").type(JsonFieldType.STRING).description("종료 요일 (DAY 이벤트, 예: 수)").optional(),
+                                                fieldWithPath("start_time").type(JsonFieldType.STRING).description("시작 시간 (예: 18:00)"),
+                                                fieldWithPath("end_time").type(JsonFieldType.STRING).description("종료 시간 (예: 20:00)")
+                                        )
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.OBJECT).description("응답 데이터"),
+                                                fieldWithPath("payload.event_id").type(JsonFieldType.STRING).description("확정된 이벤트 ID"),
+                                                fieldWithPath("payload.event_status").type(JsonFieldType.STRING).description("이벤트 상태 (CONFIRMED)"),
+                                                fieldWithPath("payload.created_date").type(JsonFieldType.STRING).description("확정 시각")
+                                        )
+                                        .requestSchema(Schema.schema("ConfirmEventRequestSchema"))
+                                        .responseSchema(Schema.schema("ConfirmEventResponseSchema"))
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("[FAILED] 유효하지 않은 확정 요청을 보낸다.")
+    public void confirmEvent_Fail_InvalidRequest() throws Exception {
+        // given
+        UUID eventId = UUID.randomUUID();
+
+        Mockito.when(eventService.confirmEvent(anyString(), any(ConfirmEventRequest.class), any()))
+                .thenThrow(new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST));
+
+        ConfirmEventRequest request = new ConfirmEventRequest(
+                null, null, null, null, "20:00", "18:00"
+		);
+        String requestContent = new ObjectMapper().writeValueAsString(request);
+
+        // when & then
+        mockMvc.perform(RestDocumentationRequestBuilders.put("/api/v1/events/{event_id}/confirm", eventId)
+                        .content(requestContent)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.is_success").value(false))
+                .andExpect(jsonPath("$.code").value("EVENT-006"))
+                .andExpect(jsonPath("$.message").value("유효하지 않은 확정 요청입니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("event/confirm-fail-invalid-request",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Event API")
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("에러 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
+                                        )
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("[FAILED] 확정된 이벤트를 수정하려고 한다.")
+    public void modifyEvent_Fail_ConfirmedEvent() throws Exception {
+        // given
+        String eventId = UUID.randomUUID().toString();
+        ModifyEventRequest request = new ModifyEventRequest(
+                "수정된 이벤트 제목", "09:00", "18:00", List.of("2024.12.10")
+        );
+        String requestContent = new ObjectMapper().writeValueAsString(request);
+
+        Mockito.doThrow(new CustomException(EventErrorStatus._CANNOT_MODIFY_CONFIRMED_EVENT))
+                .when(eventService).modifyEvent(anyString(), any(ModifyEventRequest.class));
+
+        // when & then
+        mockMvc.perform(RestDocumentationRequestBuilders.patch("/api/v1/events/{event_id}", eventId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestContent)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.is_success").value(false))
+                .andExpect(jsonPath("$.code").value("EVENT-007"))
+                .andExpect(jsonPath("$.message").value("확정된 이벤트는 수정할 수 없습니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("event/modify-fail-confirmed-event",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Event API")
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("에러 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
+                                        )
                                         .build()
                         )
                 ));

@@ -1,12 +1,14 @@
 package side.onetime.controller;
 
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import side.onetime.auth.annotation.PublicApi;
 import side.onetime.dto.member.request.IsDuplicateRequest;
 import side.onetime.dto.member.request.LoginMemberRequest;
 import side.onetime.dto.member.request.RegisterMemberRequest;
@@ -32,6 +34,7 @@ public class MemberController {
      * @param registerMemberRequest 등록할 멤버 정보 (이벤트 ID, 이름, PIN, 스케줄 목록)
      * @return 성공 여부와 등록된 멤버 정보 (멤버 ID, 이벤트 카테고리)
      */
+    @PublicApi
     @PostMapping("/action-register")
     public ResponseEntity<ApiResponse<RegisterMemberResponse>> registerMember(
             @Valid @RequestBody RegisterMemberRequest registerMemberRequest) {
@@ -48,6 +51,7 @@ public class MemberController {
      * @param loginMemberRequest 로그인할 멤버 정보 (이벤트 ID, 이름, PIN)
      * @return 성공 여부와 로그인된 멤버 정보 (멤버 ID, 이벤트 카테고리)
      */
+    @PublicApi
     @PostMapping("/action-login")
     public ResponseEntity<ApiResponse<LoginMemberResponse>> loginMember(
             @Valid @RequestBody LoginMemberRequest loginMemberRequest) {
@@ -64,6 +68,7 @@ public class MemberController {
      * @param isDuplicateRequest 중복 확인할 정보 (이벤트 ID, 확인할 이름)
      * @return 성공 여부와 이름 사용 가능 여부 (isPossible 필드)
      */
+    @PublicApi
     @PostMapping("/name/action-check")
     public ResponseEntity<ApiResponse<IsDuplicateResponse>> isDuplicate(
             @Valid @RequestBody IsDuplicateRequest isDuplicateRequest) {

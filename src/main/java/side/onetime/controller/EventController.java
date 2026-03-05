@@ -1,20 +1,40 @@
 package side.onetime.controller;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import side.onetime.auth.annotation.IsUser;
+import side.onetime.auth.annotation.PublicApi;
+import side.onetime.dto.event.request.ConfirmEventRequest;
 import side.onetime.dto.event.request.CreateEventRequest;
 import side.onetime.dto.event.request.ModifyEventRequest;
-import side.onetime.dto.event.response.*;
+import side.onetime.dto.event.response.ConfirmEventResponse;
+import side.onetime.dto.event.response.CreateEventResponse;
+import side.onetime.dto.event.response.GetEventQrCodeResponse;
+import side.onetime.dto.event.response.GetEventResponse;
+import side.onetime.dto.event.response.GetMostPossibleTime;
+import side.onetime.dto.event.response.GetParticipantsResponse;
+import side.onetime.dto.event.response.GetParticipatedEventsResponse;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.EventService;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/events")
@@ -33,6 +53,7 @@ public class EventController {
      * @param authorizationHeader 인증된 유저의 토큰 (선택 사항)
      * @return 생성된 이벤트의 ID
      */
+    @PublicApi
     @PostMapping
     public ResponseEntity<ApiResponse<CreateEventResponse>> createEvent(
             @Valid @RequestBody CreateEventRequest createEventRequest,
@@ -58,6 +79,7 @@ public class EventController {
      * @param eventId 조회할 이벤트의 ID
      * @return 조회한 이벤트의 세부 정보
      */
+    @PublicApi
     @GetMapping("/{event_id}")
     public ResponseEntity<ApiResponse<GetEventResponse>> getEvent(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
@@ -76,6 +98,7 @@ public class EventController {
      * @param eventId 참여자 목록을 조회할 이벤트의 ID
      * @return 해당 이벤트에 참여한 멤버, 유저의 이름 및 ID 목록
      */
+    @PublicApi
     @GetMapping("/{event_id}/participants")
     public ResponseEntity<ApiResponse<GetParticipantsResponse>> getParticipants(
             @PathVariable("event_id") String eventId) {
@@ -92,6 +115,7 @@ public class EventController {
      * @param eventId 조회할 이벤트의 ID
      * @return 가능 인원이 많은 시간대와 관련 세부 정보
      */
+    @PublicApi
     @GetMapping("/{event_id}/most")
     public ResponseEntity<ApiResponse<List<GetMostPossibleTime>>> getMostPossibleTime(
             @PathVariable("event_id") String eventId) {
@@ -109,6 +133,7 @@ public class EventController {
      * @param getFilteredSchedulesRequest 필터링할 스케줄 요청 객체 (유저 ID 목록, 멤버 ID 목록)
      * @return 필터링한 참여자의 시간대와 관련 세부 정보
      */
+    @PublicApi
     @PostMapping("/{event_id}/most/filtering")
     public ResponseEntity<ApiResponse<List<GetMostPossibleTime>>> getFilteredMostPossibleTimes(
             @PathVariable("event_id") String eventId,
@@ -130,6 +155,7 @@ public class EventController {
      * @param createdDate 마지막으로 조회한 이벤트 생성일
      * @return 유저가 참여한 이벤트 목록 및 페이지(커서) 정보가 포함된 응답 DTO
      */
+    @IsUser
     @GetMapping("/user/all")
     public ResponseEntity<ApiResponse<GetParticipatedEventsResponse>> getParticipatedEventsByCursor(
             @RequestParam(value = "size", defaultValue = "2") @Min(1) int size,
@@ -147,6 +173,7 @@ public class EventController {
      * @param eventId 삭제할 이벤트의 ID
      * @return 삭제 성공 여부
      */
+    @IsUser
     @DeleteMapping("/{event_id}")
     public ResponseEntity<ApiResponse<SuccessStatus>> removeUserCreatedEvent(
             @PathVariable("event_id") String eventId) {
@@ -170,6 +197,7 @@ public class EventController {
      * @param modifyEventRequest 새로운 이벤트 정보가 담긴 요청 데이터 (제목, 시간, 범위 등)
      * @return 수정 성공 여부
      */
+    @PublicApi
     @PatchMapping("/{event_id}")
     public ResponseEntity<ApiResponse<SuccessStatus>> modifyEvent(
             @PathVariable("event_id") String eventId,
@@ -180,6 +208,28 @@ public class EventController {
     }
 
     /**
+     * 이벤트 확정 API.
+     *
+     * 이벤트를 확정하거나 기존 확정 정보를 수정합니다.
+     * 인증된 유저와 비회원 모두 확정할 수 있습니다.
+     *
+     * @param eventId 확정할 이벤트의 ID
+     * @param confirmEventRequest 확정 요청 데이터 (날짜/요일, 시간, 선택 방식)
+     * @param authorizationHeader 인증된 유저의 토큰 (선택 사항)
+     * @return 확정된 이벤트 정보
+     */
+	@PublicApi
+    @PutMapping("/{event_id}/confirm")
+    public ResponseEntity<ApiResponse<ConfirmEventResponse>> confirmEvent(
+            @PathVariable("event_id") String eventId,
+            @Valid @RequestBody ConfirmEventRequest confirmEventRequest,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+
+        ConfirmEventResponse confirmEventResponse = eventService.confirmEvent(eventId, confirmEventRequest, authorizationHeader);
+        return ApiResponse.onSuccess(SuccessStatus._CONFIRM_EVENT, confirmEventResponse);
+    }
+
+    /**
      * 이벤트 QR Code 조회 API.
      *
      * 이 API는 이벤트로 이동할 수 있는 QR Code 이미지를 반환합니다.
@@ -187,6 +237,7 @@ public class EventController {
      * @param eventId QR Code를 조회할 이벤트의 ID
      * @return QR Code 이미지 URL
      */
+    @PublicApi
     @GetMapping("/qr/{event_id}")
     public ResponseEntity<ApiResponse<GetEventQrCodeResponse>> getEventQrCode(
             @PathVariable("event_id") String eventId) {

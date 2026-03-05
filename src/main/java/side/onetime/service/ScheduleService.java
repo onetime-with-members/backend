@@ -1,10 +1,24 @@
 package side.onetime.service;
 
-import lombok.RequiredArgsConstructor;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import side.onetime.domain.*;
-import side.onetime.domain.enums.EventStatus;
+
+import lombok.RequiredArgsConstructor;
+import side.onetime.domain.Event;
+import side.onetime.domain.EventParticipation;
+import side.onetime.domain.Member;
+import side.onetime.domain.Schedule;
+import side.onetime.domain.Selection;
+import side.onetime.domain.User;
+import side.onetime.domain.enums.ParticipationRole;
 import side.onetime.dto.schedule.request.CreateDateScheduleRequest;
 import side.onetime.dto.schedule.request.CreateDayScheduleRequest;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
@@ -17,13 +31,15 @@ import side.onetime.exception.status.EventErrorStatus;
 import side.onetime.exception.status.MemberErrorStatus;
 import side.onetime.exception.status.ScheduleErrorStatus;
 import side.onetime.exception.status.UserErrorStatus;
-import side.onetime.repository.*;
+import side.onetime.repository.EventParticipationRepository;
+import side.onetime.repository.EventRepository;
+import side.onetime.repository.MemberRepository;
+import side.onetime.repository.ScheduleRepository;
+import side.onetime.repository.SelectionBatchRepository;
+import side.onetime.repository.SelectionRepository;
+import side.onetime.repository.UserRepository;
 import side.onetime.util.JwtUtil;
 import side.onetime.util.UserAuthorizationUtil;
-
-import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -49,6 +65,9 @@ public class ScheduleService {
     public void createDaySchedulesForAnonymousUser(CreateDayScheduleRequest createDayScheduleRequest) {
         Event event = eventRepository.findByEventId(UUID.fromString(createDayScheduleRequest.eventId()))
                 .orElseThrow(() -> new CustomException(EventErrorStatus._NOT_FOUND_EVENT));
+        if (event.isConfirmed()) {
+            throw new CustomException(EventErrorStatus._CANNOT_MODIFY_CONFIRMED_EVENT);
+        }
         Member member = memberRepository.findByMemberId(UUID.fromString(createDayScheduleRequest.memberId()))
                 .orElseThrow(() -> new CustomException(MemberErrorStatus._NOT_FOUND_MEMBER));
 
@@ -86,6 +105,9 @@ public class ScheduleService {
     public void createDaySchedulesForAuthenticatedUser(CreateDayScheduleRequest createDayScheduleRequest, String authorizationHeader) {
         Event event = eventRepository.findByEventId(UUID.fromString(createDayScheduleRequest.eventId()))
                 .orElseThrow(() -> new CustomException(EventErrorStatus._NOT_FOUND_EVENT));
+        if (event.isConfirmed()) {
+            throw new CustomException(EventErrorStatus._CANNOT_MODIFY_CONFIRMED_EVENT);
+        }
         User user = jwtUtil.getUserFromHeader(authorizationHeader);
         EventParticipation eventParticipation = eventParticipationRepository.findByUserAndEvent(user, event);
         if (eventParticipation == null) {
@@ -94,12 +116,12 @@ public class ScheduleService {
                     EventParticipation.builder()
                             .user(user)
                             .event(event)
-                            .eventStatus(EventStatus.PARTICIPANT)
+                            .participationRole(ParticipationRole.PARTICIPANT)
                             .build()
             );
-        } else if (EventStatus.CREATOR == eventParticipation.getEventStatus()) {
+        } else if (ParticipationRole.CREATOR == eventParticipation.getParticipationRole()) {
             // 생성자인 경우 생성자 & 참여자로 변경
-            eventParticipation.updateEventStatus(EventStatus.CREATOR_AND_PARTICIPANT);
+            eventParticipation.updateParticipationRole(ParticipationRole.CREATOR_AND_PARTICIPANT);
         }
 
         List<DaySchedule> daySchedules = createDayScheduleRequest.daySchedules();
@@ -135,6 +157,9 @@ public class ScheduleService {
     public void createDateSchedulesForAnonymousUser(CreateDateScheduleRequest createDateScheduleRequest) {
         Event event = eventRepository.findByEventId(UUID.fromString(createDateScheduleRequest.eventId()))
                 .orElseThrow(() -> new CustomException(EventErrorStatus._NOT_FOUND_EVENT));
+        if (event.isConfirmed()) {
+            throw new CustomException(EventErrorStatus._CANNOT_MODIFY_CONFIRMED_EVENT);
+        }
         Member member = memberRepository.findByMemberId(UUID.fromString(createDateScheduleRequest.memberId()))
                 .orElseThrow(() -> new CustomException(MemberErrorStatus._NOT_FOUND_MEMBER));
 
@@ -172,6 +197,9 @@ public class ScheduleService {
     public void createDateSchedulesForAuthenticatedUser(CreateDateScheduleRequest createDateScheduleRequest, String authorizationHeader) {
         Event event = eventRepository.findByEventId(UUID.fromString(createDateScheduleRequest.eventId()))
                 .orElseThrow(() -> new CustomException(EventErrorStatus._NOT_FOUND_EVENT));
+        if (event.isConfirmed()) {
+            throw new CustomException(EventErrorStatus._CANNOT_MODIFY_CONFIRMED_EVENT);
+        }
         User user = jwtUtil.getUserFromHeader(authorizationHeader);
         EventParticipation eventParticipation = eventParticipationRepository.findByUserAndEvent(user, event);
         if (eventParticipation == null) {
@@ -180,12 +208,12 @@ public class ScheduleService {
                     EventParticipation.builder()
                             .user(user)
                             .event(event)
-                            .eventStatus(EventStatus.PARTICIPANT)
+                            .participationRole(ParticipationRole.PARTICIPANT)
                             .build()
             );
-        } else if (EventStatus.CREATOR == eventParticipation.getEventStatus()) {
+        } else if (ParticipationRole.CREATOR == eventParticipation.getParticipationRole()) {
             // 생성자인 경우 생성자 & 참여자로 변경
-            eventParticipation.updateEventStatus(EventStatus.CREATOR_AND_PARTICIPANT);
+            eventParticipation.updateParticipationRole(ParticipationRole.CREATOR_AND_PARTICIPANT);
         }
 
         List<DateSchedule> dateSchedules = createDateScheduleRequest.dateSchedules();
@@ -226,7 +254,7 @@ public class ScheduleService {
         List<Member> members = memberRepository.findAllByEvent(event);
 
         List<User> users = eventParticipationRepository.findAllByEvent(event).stream()
-                .filter(p -> p.getEventStatus() != EventStatus.CREATOR)
+                .filter(p -> p.getParticipationRole() != ParticipationRole.CREATOR)
                 .map(EventParticipation::getUser)
                 .toList();
 
@@ -327,7 +355,7 @@ public class ScheduleService {
         List<Member> members = memberRepository.findAllByEvent(event);
 
         List<User> users = eventParticipationRepository.findAllByEvent(event).stream()
-                .filter(p -> p.getEventStatus() != EventStatus.CREATOR)
+                .filter(p -> p.getParticipationRole() != ParticipationRole.CREATOR)
                 .map(EventParticipation::getUser)
                 .toList();
 

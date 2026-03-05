@@ -1,43 +1,87 @@
 package side.onetime.service;
 
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import side.onetime.domain.*;
+
+import lombok.RequiredArgsConstructor;
+import side.onetime.domain.Event;
+import side.onetime.domain.EventConfirmation;
+import side.onetime.domain.EventParticipation;
+import side.onetime.domain.Member;
+import side.onetime.domain.Schedule;
+import side.onetime.domain.Selection;
+import side.onetime.domain.User;
 import side.onetime.domain.enums.Category;
 import side.onetime.domain.enums.EventStatus;
+import side.onetime.domain.enums.ParticipationRole;
+import side.onetime.dto.event.request.ConfirmEventRequest;
 import side.onetime.dto.event.request.CreateEventRequest;
 import side.onetime.dto.event.request.ModifyEventRequest;
-import side.onetime.dto.event.response.*;
+import side.onetime.dto.event.response.ConfirmEventResponse;
+import side.onetime.dto.event.response.CreateEventResponse;
+import side.onetime.dto.event.response.GetEventQrCodeResponse;
+import side.onetime.dto.event.response.GetEventResponse;
+import side.onetime.dto.event.response.GetMostPossibleTime;
+import side.onetime.dto.event.response.GetParticipantsResponse;
+import side.onetime.dto.event.response.GetParticipatedEventResponse;
+import side.onetime.dto.event.response.GetParticipatedEventsResponse;
+import side.onetime.dto.event.response.PageCursorInfo;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.EventErrorStatus;
 import side.onetime.exception.status.EventParticipationErrorStatus;
 import side.onetime.exception.status.ScheduleErrorStatus;
 import side.onetime.exception.status.UserErrorStatus;
-import side.onetime.repository.*;
-import side.onetime.util.*;
-
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import side.onetime.repository.EventConfirmationRepository;
+import side.onetime.repository.EventParticipationRepository;
+import side.onetime.repository.EventRepository;
+import side.onetime.repository.ScheduleBatchRepository;
+import side.onetime.repository.ScheduleRepository;
+import side.onetime.repository.SelectionRepository;
+import side.onetime.repository.UserRepository;
+import side.onetime.util.DateUtil;
+import side.onetime.util.JwtUtil;
+import side.onetime.util.QrUtil;
+import side.onetime.util.S3Util;
+import side.onetime.util.UserAuthorizationUtil;
 
 
 @Service
 @RequiredArgsConstructor
 public class EventService {
+
     private static final int MAX_MOST_POSSIBLE_TIMES_SIZE = 10;
+    private static final Map<String, Integer> DAY_ORDER = Map.of(
+            "일", 0, "월", 1, "화", 2, "수", 3, "목", 4, "금", 5, "토", 6
+    );
+    
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
     private final EventParticipationRepository eventParticipationRepository;
     private final ScheduleRepository scheduleRepository;
     private final SelectionRepository selectionRepository;
-    private final ScheduleBatchRepository scheduleBatchRepository;
-    private final JwtUtil jwtUtil;
-    private final S3Util s3Util;
+	private final EventConfirmationRepository eventConfirmationRepository;
+	private final ScheduleBatchRepository scheduleBatchRepository;
+	private final JwtUtil jwtUtil;
+	private final S3Util s3Util;
     private final QrUtil qrUtil;
 
     /**
@@ -71,12 +115,109 @@ public class EventService {
         EventParticipation eventParticipation = EventParticipation.builder()
                 .user(user)
                 .event(savedEvent)
-                .eventStatus(EventStatus.CREATOR)
+                .participationRole(ParticipationRole.CREATOR)
                 .build();
         eventParticipationRepository.save(eventParticipation);
 
         validateAndSaveSchedules(savedEvent, createEventRequest);
         return CreateEventResponse.of(savedEvent);
+    }
+
+    /**
+     * 이벤트 확정 메서드.
+     *
+     * 이벤트를 확정하거나 기존 확정 정보를 수정합니다.
+     *
+     * @param eventId 확정할 이벤트의 ID
+     * @param confirmEventRequest 확정 요청 데이터
+     * @param authorizationHeader 인증된 유저의 토큰 (선택 사항)
+     * @return 확정 응답
+     */
+    @Transactional
+    public ConfirmEventResponse confirmEvent(String eventId, ConfirmEventRequest confirmEventRequest, String authorizationHeader) {
+        Event event = eventRepository.findByEventId(UUID.fromString(eventId))
+                .orElseThrow(() -> new CustomException(EventErrorStatus._NOT_FOUND_EVENT));
+
+        // 요청 데이터 검증
+        validateConfirmationRequest(event.getCategory(), confirmEventRequest);
+
+        // 확정자 정보 결정
+        Long userId = null;
+        ParticipationRole confirmerRole = ParticipationRole.GUEST;
+        if (authorizationHeader != null) {
+            User user = jwtUtil.getUserFromHeader(authorizationHeader);
+            userId = user.getId();
+            EventParticipation eventParticipation = eventParticipationRepository.findByUserAndEvent(user, event);
+            if (eventParticipation != null) {
+                ParticipationRole role = eventParticipation.getParticipationRole();
+                confirmerRole = (role == ParticipationRole.CREATOR || role == ParticipationRole.CREATOR_AND_PARTICIPANT)
+                        ? ParticipationRole.CREATOR : ParticipationRole.PARTICIPANT;
+            }
+        }
+
+        // EventConfirmation upsert
+        EventConfirmation confirmation = eventConfirmationRepository.findByEventId(event.getId())
+                .orElse(null);
+
+        if (confirmation != null) {
+            confirmation.update(userId,
+                    confirmEventRequest.startDate(), confirmEventRequest.endDate(),
+                    confirmEventRequest.startDay(), confirmEventRequest.endDay(),
+                    confirmEventRequest.startTime(), confirmEventRequest.endTime(),
+                    confirmerRole);
+        } else {
+            confirmation = EventConfirmation.builder()
+                    .eventId(event.getId())
+                    .userId(userId)
+                    .startDate(confirmEventRequest.startDate())
+                    .endDate(confirmEventRequest.endDate())
+                    .startDay(confirmEventRequest.startDay())
+                    .endDay(confirmEventRequest.endDay())
+                    .startTime(confirmEventRequest.startTime())
+                    .endTime(confirmEventRequest.endTime())
+                    .confirmerRole(confirmerRole)
+                    .build();
+            eventConfirmationRepository.save(confirmation);
+        }
+
+        // Event 상태 변경
+        event.updateStatus(EventStatus.CONFIRMED);
+
+        return ConfirmEventResponse.of(event.getEventId(), EventStatus.CONFIRMED, confirmation.getCreatedDate());
+    }
+
+    /**
+     * 확정 요청 데이터 검증 메서드.
+     *
+     * @param category 이벤트 카테고리
+     * @param request 확정 요청 데이터
+     */
+    private void validateConfirmationRequest(Category category, ConfirmEventRequest request) {
+        if (category == Category.DATE) {
+            if (request.startDate() == null || request.endDate() == null) {
+                throw new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST);
+            }
+            LocalDate startDate = DateUtil.parseDate(request.startDate());
+            LocalDate endDate = DateUtil.parseDate(request.endDate());
+            if (startDate.isAfter(endDate)) {
+                throw new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST);
+            }
+        } else {
+            if (request.startDay() == null || request.endDay() == null) {
+                throw new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST);
+            }
+            Integer startOrder = DAY_ORDER.get(request.startDay());
+            Integer endOrder = DAY_ORDER.get(request.endDay());
+            if (startOrder == null || endOrder == null || startOrder > endOrder) {
+                throw new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST);
+            }
+        }
+
+        LocalTime startTime = DateUtil.parseTime(request.startTime());
+        LocalTime endTime = DateUtil.parseTime(request.endTime());
+        if (!startTime.isBefore(endTime)) {
+            throw new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST);
+        }
     }
 
     /**
@@ -193,16 +334,17 @@ public class EventService {
                 ? DateUtil.getSortedDateRanges(schedules.stream().map(Schedule::getDate).toList(), "yyyy.MM.dd")
                 : DateUtil.getSortedDayRanges(schedules.stream().map(Schedule::getDay).toList());
 
-        EventStatus eventStatus = null;
+        ParticipationRole participationRole = null;
         if (authorizationHeader != null) {
             User user = jwtUtil.getUserFromHeader(authorizationHeader);
             EventParticipation eventParticipation = eventParticipationRepository.findByUserAndEvent(user, event);
             if (eventParticipation != null) {
-                eventStatus = eventParticipation.getEventStatus();
+                participationRole = eventParticipation.getParticipationRole();
             }
         }
 
-        return GetEventResponse.of(event, ranges, eventStatus);
+        EventConfirmation confirmation = eventConfirmationRepository.findByEventId(event.getId()).orElse(null);
+        return GetEventResponse.of(event, ranges, participationRole, confirmation);
     }
 
     /**
@@ -220,7 +362,7 @@ public class EventService {
 
         // 이벤트 참여 상태가 CREATOR가 아닌 유저만 필터링하여 가져오기
         List<User> users = eventParticipationRepository.findAllByEvent(event).stream()
-                .filter(eventParticipation -> eventParticipation.getEventStatus() != EventStatus.CREATOR)
+                .filter(eventParticipation -> eventParticipation.getParticipationRole() != ParticipationRole.CREATOR)
                 .map(EventParticipation::getUser)
                 .toList();
 
@@ -237,7 +379,7 @@ public class EventService {
      */
     private GetParticipantsResponse getParticipants(Event event, List<EventParticipation> eventParticipations) {
         List<User> users = eventParticipations.stream()
-                .filter(eventParticipation -> eventParticipation.getEventStatus() != EventStatus.CREATOR)
+                .filter(eventParticipation -> eventParticipation.getParticipationRole() != ParticipationRole.CREATOR)
                 .map(EventParticipation::getUser)
                 .toList();
 
@@ -265,7 +407,7 @@ public class EventService {
 
         // 3. 참여자(user) 조회 (CREATOR 제외)
         List<String> userNicknames = eventParticipationRepository.findAllByEvent(event).stream()
-                .filter(ep -> ep.getEventStatus() != EventStatus.CREATOR)
+                .filter(ep -> ep.getParticipationRole() != ParticipationRole.CREATOR)
                 .map(ep -> ep.getUser().getNickname())
                 .toList();
 
@@ -300,7 +442,7 @@ public class EventService {
                 .toList();
 
         List<String> userNicknames = eventParticipations.stream()
-                .filter(ep -> ep.getEventStatus() != EventStatus.CREATOR)
+                .filter(ep -> ep.getParticipationRole() != ParticipationRole.CREATOR)
                 .map(ep -> ep.getUser().getNickname())
                 .toList();
 
@@ -349,7 +491,7 @@ public class EventService {
         // 3. 참여자(user) 조회 (CREATOR 제외, 요청된 유저 ID에 해당하는 이름만 추출)
         List<String> userNicknames = eventParticipationRepository.findAllByEvent(event).stream()
                 .filter(ep -> userIds.contains(ep.getUser().getId()))
-                .filter(ep -> ep.getEventStatus() != EventStatus.CREATOR)
+                .filter(ep -> ep.getParticipationRole() != ParticipationRole.CREATOR)
                 .map(ep -> ep.getUser().getNickname())
                 .toList();
 
@@ -379,16 +521,12 @@ public class EventService {
      * @return 스케줄과 참여자 이름의 매핑 데이터
      */
     private Map<Schedule, List<String>> buildScheduleToNamesMap(List<Selection> selections, Category category) {
-        Map<String, Integer> dayOrderIndex = Map.of(
-                "일", 0, "월", 1, "화", 2, "수", 3, "목", 4, "금", 5, "토", 6
-        );
-
         // Comparator 정의
         Comparator<Schedule> scheduleComparator = (s1, s2) -> {
             if (category == Category.DAY) {
                 int cmp = Integer.compare(
-                        dayOrderIndex.getOrDefault(s1.getDay(), 7),
-                        dayOrderIndex.getOrDefault(s2.getDay(), 7)
+                        DAY_ORDER.getOrDefault(s1.getDay(), 7),
+                        DAY_ORDER.getOrDefault(s2.getDay(), 7)
                 );
                 if (cmp != 0) return cmp;
             } else {
@@ -542,12 +680,14 @@ public class EventService {
 
                     GetParticipantsResponse participants = this.getParticipants(event, eventParticipations);
                     List<GetMostPossibleTime> mostPossibleTimes = this.getMostPossibleTimes(event, eventParticipations);
+                    EventConfirmation confirmation = eventConfirmationRepository.findByEventId(event.getId()).orElse(null);
 
                     return GetParticipatedEventResponse.of(
                             event,
                             ep,
                             participants.users().size() + participants.members().size(),
-                            mostPossibleTimes
+                            mostPossibleTimes,
+                            confirmation
                     );
                 })
                 .toList();
@@ -570,6 +710,7 @@ public class EventService {
         User user = userRepository.findById(UserAuthorizationUtil.getLoginUserId())
                 .orElseThrow(() -> new CustomException(UserErrorStatus._NOT_FOUND_USER));
         EventParticipation eventParticipation = verifyUserHasEventAccess(user, eventId);
+
         eventRepository.deleteEvent(eventParticipation.getEvent());
         s3Util.deleteFile(eventParticipation.getEvent().getQrFileName()); // QR 이미지 삭제
     }
@@ -585,6 +726,10 @@ public class EventService {
     public void modifyEvent(String eventId, ModifyEventRequest modifyEventRequest) {
         Event event = eventRepository.findByEventId(UUID.fromString(eventId))
                 .orElseThrow(() -> new CustomException(EventErrorStatus._NOT_FOUND_EVENT));
+
+        if (event.isConfirmed()) {
+            throw new CustomException(EventErrorStatus._CANNOT_MODIFY_CONFIRMED_EVENT);
+        }
 
         event.updateTitle(modifyEventRequest.title());
         updateEventRanges(event, event.getSchedules(), modifyEventRequest.ranges(), modifyEventRequest.startTime(), modifyEventRequest.endTime());
@@ -726,7 +871,7 @@ public class EventService {
         if (eventParticipation == null) {
             throw new CustomException(EventParticipationErrorStatus._NOT_FOUND_EVENT_PARTICIPATION);
         }
-        if (EventStatus.PARTICIPANT.equals(eventParticipation.getEventStatus())) {
+        if (ParticipationRole.PARTICIPANT.equals(eventParticipation.getParticipationRole())) {
             throw new CustomException(EventParticipationErrorStatus._IS_NOT_AUTHORIZED_EVENT_PARTICIPATION);
         }
 

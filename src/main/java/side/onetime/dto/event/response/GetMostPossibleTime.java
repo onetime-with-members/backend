@@ -1,16 +1,15 @@
 package side.onetime.dto.event.response;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import side.onetime.domain.Schedule;
+import static side.onetime.util.DateUtil.*;
 
 import java.util.List;
 
-import static side.onetime.util.DateUtil.addThirtyMinutes;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+
+import side.onetime.domain.Schedule;
 
 @JsonNaming(value = PropertyNamingStrategies.SnakeCaseStrategy.class)
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public record GetMostPossibleTime(
         String timePoint,
         String startTime,

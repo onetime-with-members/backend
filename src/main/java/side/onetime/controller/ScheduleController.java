@@ -1,9 +1,20 @@
 package side.onetime.controller;
 
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import side.onetime.auth.annotation.IsUser;
+import side.onetime.auth.annotation.PublicApi;
 import side.onetime.dto.schedule.request.CreateDateScheduleRequest;
 import side.onetime.dto.schedule.request.CreateDayScheduleRequest;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
@@ -12,8 +23,6 @@ import side.onetime.dto.schedule.response.PerDaySchedulesResponse;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.status.SuccessStatus;
 import side.onetime.service.ScheduleService;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/schedules")
@@ -32,6 +41,7 @@ public class ScheduleController {
      * @param authorizationHeader 인증된 유저의 토큰 (선택사항)
      * @return 스케줄 등록 성공 상태
      */
+    @PublicApi
     @PostMapping("/day")
     public ResponseEntity<ApiResponse<SuccessStatus>> createDaySchedules(
             @Valid @RequestBody CreateDayScheduleRequest createDayScheduleRequest,
@@ -55,6 +65,7 @@ public class ScheduleController {
      * @param authorizationHeader 인증된 유저의 토큰 (선택사항)
      * @return 스케줄 등록 성공 상태
      */
+    @PublicApi
     @PostMapping("/date")
     public ResponseEntity<ApiResponse<SuccessStatus>> createDateSchedules(
             @Valid @RequestBody CreateDateScheduleRequest createDateScheduleRequest,
@@ -76,6 +87,7 @@ public class ScheduleController {
      * @param eventId 조회할 이벤트의 ID
      * @return 이벤트에 등록된 요일 스케줄 목록
      */
+    @PublicApi
     @GetMapping("/day/{event_id}")
     public ResponseEntity<ApiResponse<List<PerDaySchedulesResponse>>> getAllDaySchedules(
             @PathVariable("event_id") String eventId) {
@@ -93,6 +105,7 @@ public class ScheduleController {
      * @param memberId 조회할 멤버의 ID
      * @return 멤버의 요일 스케줄
      */
+    @PublicApi
     @GetMapping("/day/{event_id}/{member_id}")
     public ResponseEntity<ApiResponse<PerDaySchedulesResponse>> getMemberDaySchedules(
             @PathVariable("event_id") String eventId,
@@ -110,6 +123,7 @@ public class ScheduleController {
      * @param eventId 조회할 이벤트의 ID
      * @return 사용자의 요일 스케줄
      */
+    @IsUser
     @GetMapping("/day/{event_id}/user")
     public ResponseEntity<ApiResponse<PerDaySchedulesResponse>> getUserDaySchedules(
             @PathVariable("event_id") String eventId) {
@@ -127,6 +141,7 @@ public class ScheduleController {
      * @param getFilteredSchedulesRequest 필터링할 스케줄 요청 객체 (유저 ID 목록, 멤버 ID 목록)
      * @return 필터링된 요일 스케줄 목록
      */
+    @PublicApi
     @PostMapping("/day/{event_id}/filtering")
     public ResponseEntity<ApiResponse<List<PerDaySchedulesResponse>>> getFilteredDaySchedules(
             @PathVariable("event_id") String eventId,
@@ -144,6 +159,7 @@ public class ScheduleController {
      * @param eventId 조회할 이벤트의 ID
      * @return 이벤트에 등록된 날짜 스케줄 목록
      */
+    @PublicApi
     @GetMapping("/date/{event_id}")
     public ResponseEntity<ApiResponse<List<PerDateSchedulesResponse>>> getAllDateSchedules(
             @PathVariable("event_id") String eventId) {
@@ -161,6 +177,7 @@ public class ScheduleController {
      * @param memberId 조회할 멤버의 ID
      * @return 멤버의 날짜 스케줄
      */
+    @PublicApi
     @GetMapping("/date/{event_id}/{member_id}")
     public ResponseEntity<ApiResponse<PerDateSchedulesResponse>> getMemberDateSchedules(
             @PathVariable("event_id") String eventId,
@@ -178,6 +195,7 @@ public class ScheduleController {
      * @param eventId 조회할 이벤트의 ID
      * @return 사용자의 날짜 스케줄
      */
+    @IsUser
     @GetMapping("/date/{event_id}/user")
     public ResponseEntity<ApiResponse<PerDateSchedulesResponse>> getUserDateSchedules(
             @PathVariable("event_id") String eventId) {
@@ -195,6 +213,7 @@ public class ScheduleController {
      * @param getFilteredSchedulesRequest 필터링할 스케줄 요청 객체 (유저 ID 목록, 멤버 ID 목록)
      * @return 필터링된 날짜 스케줄 목록
      */
+    @PublicApi
     @PostMapping("/date/{event_id}/filtering")
     public ResponseEntity<ApiResponse<List<PerDateSchedulesResponse>>> getFilteredDateSchedules(
             @PathVariable("event_id") String eventId,
