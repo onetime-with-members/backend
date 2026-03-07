@@ -193,6 +193,9 @@ public class EventService {
      * @param request 확정 요청 데이터
      */
     private void validateConfirmationRequest(Category category, ConfirmEventRequest request) {
+        boolean isSamePeriod;
+
+        // 1. 날짜/요일 유효성 검증
         if (category == Category.DATE) {
             if (request.startDate() == null || request.endDate() == null) {
                 throw new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST);
@@ -202,6 +205,7 @@ public class EventService {
             if (startDate.isAfter(endDate)) {
                 throw new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST);
             }
+            isSamePeriod = startDate.isEqual(endDate);
         } else {
             if (request.startDay() == null || request.endDay() == null) {
                 throw new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST);
@@ -211,13 +215,23 @@ public class EventService {
             if (startOrder == null || endOrder == null || startOrder > endOrder) {
                 throw new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST);
             }
+            isSamePeriod = startOrder.equals(endOrder);
         }
 
-        LocalTime startTime = DateUtil.parseTime(request.startTime());
-        LocalTime endTime = DateUtil.parseTime(request.endTime());
-        if (!startTime.isBefore(endTime)) {
+        // 2. 시간 유효성 검증: 같은 날짜/요일인 경우에만 startTime < endTime을 검증한다.
+        //    날짜/요일이 다르면 시간이 역전되어도 유효하다. (예: 03.03 01:30 ~ 03.04 00:30)
+        if (isSamePeriod && parseTimeSafe(request.startTime()) >= parseTimeSafe(request.endTime())) {
             throw new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST);
         }
+    }
+
+    /**
+     * 시간 문자열을 분 단위 정수로 변환한다. "24:00"은 LocalTime으로 파싱할 수 없으므로 1440으로 처리한다.
+     */
+    private int parseTimeSafe(String time) {
+        if ("24:00".equals(time)) return 1440;
+        LocalTime parsed = DateUtil.parseTime(time);
+        return parsed.getHour() * 60 + parsed.getMinute();
     }
 
     /**
