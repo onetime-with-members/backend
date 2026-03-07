@@ -724,6 +724,97 @@ public class EventControllerTest extends ControllerTestConfig {
     }
 
     @Test
+    @DisplayName("날짜가 다르고 시작 시간이 종료 시간보다 늦은 경우에도 이벤트를 확정한다.")
+    public void confirmEvent_DifferentDate_StartTimeAfterEndTime() throws Exception {
+        // given
+        UUID eventId = UUID.randomUUID();
+        LocalDateTime createdDate = LocalDateTime.of(2026, 3, 3, 14, 0, 0);
+        ConfirmEventResponse response = ConfirmEventResponse.of(eventId, EventStatus.CONFIRMED, createdDate);
+
+        Mockito.when(eventService.confirmEvent(anyString(), any(ConfirmEventRequest.class), any()))
+                .thenReturn(response);
+
+        ConfirmEventRequest request = new ConfirmEventRequest(
+                "2026.03.03",
+                "2026.03.04",
+                null,
+                null,
+                "01:30",
+                "00:30"
+        );
+        String requestContent = new ObjectMapper().writeValueAsString(request);
+
+        // when & then
+        mockMvc.perform(RestDocumentationRequestBuilders.put("/api/v1/events/{event_id}/confirm", eventId)
+                        .content(requestContent)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.is_success").value(true))
+                .andExpect(jsonPath("$.payload.event_status").value("CONFIRMED"));
+    }
+
+    @Test
+    @DisplayName("종료 시간이 24:00인 경우에도 이벤트를 확정한다.")
+    public void confirmEvent_EndTime2400() throws Exception {
+        // given
+        UUID eventId = UUID.randomUUID();
+        LocalDateTime createdDate = LocalDateTime.of(2026, 3, 3, 14, 0, 0);
+        ConfirmEventResponse response = ConfirmEventResponse.of(eventId, EventStatus.CONFIRMED, createdDate);
+
+        Mockito.when(eventService.confirmEvent(anyString(), any(ConfirmEventRequest.class), any()))
+                .thenReturn(response);
+
+        ConfirmEventRequest request = new ConfirmEventRequest(
+                "2026.03.03",
+                "2026.03.03",
+                null,
+                null,
+                "23:00",
+                "24:00"
+        );
+        String requestContent = new ObjectMapper().writeValueAsString(request);
+
+        // when & then
+        mockMvc.perform(RestDocumentationRequestBuilders.put("/api/v1/events/{event_id}/confirm", eventId)
+                        .content(requestContent)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.is_success").value(true))
+                .andExpect(jsonPath("$.payload.event_status").value("CONFIRMED"));
+    }
+
+    @Test
+    @DisplayName("[FAILED] 같은 날짜에서 시작 시간이 종료 시간보다 늦으면 확정에 실패한다.")
+    public void confirmEvent_Fail_SameDateStartTimeAfterEndTime() throws Exception {
+        // given
+        UUID eventId = UUID.randomUUID();
+
+        Mockito.when(eventService.confirmEvent(anyString(), any(ConfirmEventRequest.class), any()))
+                .thenThrow(new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST));
+
+        ConfirmEventRequest request = new ConfirmEventRequest(
+                "2026.03.03",
+                "2026.03.03",
+                null,
+                null,
+                "20:00",
+                "18:00"
+        );
+        String requestContent = new ObjectMapper().writeValueAsString(request);
+
+        // when & then
+        mockMvc.perform(RestDocumentationRequestBuilders.put("/api/v1/events/{event_id}/confirm", eventId)
+                        .content(requestContent)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.is_success").value(false))
+                .andExpect(jsonPath("$.code").value("EVENT-006"));
+    }
+
+    @Test
     @DisplayName("[FAILED] 확정된 이벤트를 수정하려고 한다.")
     public void modifyEvent_Fail_ConfirmedEvent() throws Exception {
         // given
