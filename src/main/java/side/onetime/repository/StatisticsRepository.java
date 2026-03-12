@@ -207,7 +207,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         SELECT COUNT(DISTINCT u.users_id)
         FROM users u
         LEFT JOIN event_participations ep ON u.users_id = ep.users_id
-            AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+            AND ep.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
         WHERE u.status = 'ACTIVE'
           AND ep.users_id IS NULL
           AND u.created_date >= :startDate
@@ -228,7 +228,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             SELECT u.users_id
             FROM users u
             JOIN event_participations ep ON u.users_id = ep.users_id
-                AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+                AND ep.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
             WHERE u.status = 'ACTIVE'
               AND u.created_date >= :startDate
               AND u.created_date < :endDate
@@ -249,7 +249,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             SELECT u.users_id
             FROM users u
             JOIN event_participations ep ON u.users_id = ep.users_id
-                AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+                AND ep.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
             WHERE u.status = 'ACTIVE'
               AND u.created_date >= :startDate
               AND u.created_date < :endDate
@@ -271,7 +271,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             FROM events e
             JOIN event_participations ep ON e.events_id = ep.events_id
             LEFT JOIN members m ON e.events_id = m.events_id
-            WHERE ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+            WHERE ep.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
               AND e.status = 'ACTIVE'
               AND e.created_date >= :startDate
               AND e.created_date < :endDate
@@ -377,7 +377,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             SELECT DATEDIFF(MIN(e.created_date), u.created_date) AS days_to_first_event
             FROM users u
             JOIN event_participations ep ON u.users_id = ep.users_id
-                AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+                AND ep.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
             JOIN events e ON ep.events_id = e.events_id
             WHERE u.status = 'ACTIVE'
               AND u.created_date >= :startDate AND u.created_date < :endDate
@@ -516,7 +516,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         LEFT JOIN (
             SELECT events_id, COUNT(*) AS ep_count
             FROM event_participations
-            WHERE event_status NOT IN ('CREATOR')
+            WHERE participation_role NOT IN ('CREATOR')
             GROUP BY events_id
         ) ep_sub ON e.events_id = ep_sub.events_id
         LEFT JOIN (
@@ -583,7 +583,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             COUNT(DISTINCT m.members_id) AS member_count
         FROM events e
         LEFT JOIN event_participations ep ON e.events_id = ep.events_id
-            AND ep.event_status NOT IN ('CREATOR')
+            AND ep.participation_role NOT IN ('CREATOR')
         LEFT JOIN members m ON e.events_id = m.events_id
         WHERE e.status = 'ACTIVE'
           AND e.created_date >= :startDate AND e.created_date < :endDate
@@ -653,7 +653,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         SELECT u.email, u.users_id, u.name, u.nickname
         FROM users u
         LEFT JOIN event_participations ep ON u.users_id = ep.users_id
-            AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+            AND ep.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
         WHERE u.status = 'ACTIVE'
           AND u.marketing_policy_agreement = 1
           AND u.email IS NOT NULL
@@ -674,7 +674,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         SELECT u.email, u.users_id, u.name, u.nickname
         FROM users u
         JOIN event_participations ep ON u.users_id = ep.users_id
-            AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+            AND ep.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
         WHERE u.status = 'ACTIVE'
           AND u.marketing_policy_agreement = 1
           AND u.email IS NOT NULL
@@ -692,7 +692,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         SELECT u.email, u.users_id, u.name, u.nickname
         FROM users u
         JOIN event_participations ep ON u.users_id = ep.users_id
-            AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+            AND ep.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
         WHERE u.status = 'ACTIVE'
           AND u.email IS NOT NULL
         GROUP BY u.users_id, u.email, u.name, u.nickname
@@ -745,7 +745,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         JOIN event_participations ep ON u.users_id = ep.users_id
         WHERE u.status = 'ACTIVE'
           AND u.created_date >= :startDate AND u.created_date < :endDate
-          AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+          AND ep.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
         """, nativeQuery = true)
     Long countUsersWithFirstEvent(
             @Param("startDate") LocalDateTime startDate,
@@ -763,11 +763,11 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             JOIN event_participations ep_creator ON u.users_id = ep_creator.users_id
             JOIN events e ON ep_creator.events_id = e.events_id
             LEFT JOIN event_participations ep_participant ON e.events_id = ep_participant.events_id
-                AND ep_participant.event_status = 'PARTICIPANT'
+                AND ep_participant.participation_role = 'PARTICIPANT'
             LEFT JOIN members m ON e.events_id = m.events_id
             WHERE u.status = 'ACTIVE'
               AND u.created_date >= :startDate AND u.created_date < :endDate
-              AND ep_creator.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+              AND ep_creator.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
               AND e.status = 'ACTIVE'
             GROUP BY ep_creator.users_id, e.events_id
             HAVING COUNT(ep_participant.event_participations_id) > 0
@@ -790,7 +790,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             JOIN event_participations ep ON u.users_id = ep.users_id
             WHERE u.status = 'ACTIVE'
               AND u.created_date >= :startDate AND u.created_date < :endDate
-              AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+              AND ep.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
             GROUP BY u.users_id
             HAVING COUNT(DISTINCT ep.events_id) >= 2
         ) AS users_with_two_events
@@ -853,7 +853,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         JOIN event_participations ep ON u.users_id = ep.users_id
         JOIN events e ON ep.events_id = e.events_id
         WHERE u.status = 'ACTIVE'
-          AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+          AND ep.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
           AND u.created_date >= :startDate AND u.created_date < :endDate
         GROUP BY u.users_id
         HAVING days_to_first_event IS NOT NULL
@@ -872,7 +872,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         FROM users u
         JOIN event_participations ep ON u.users_id = ep.users_id
         WHERE u.status = 'ACTIVE'
-          AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+          AND ep.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
           AND u.created_date >= :startDate AND u.created_date < :endDate
         """, nativeQuery = true)
     Long countUsersWithAnyEvent(
@@ -1002,7 +1002,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         SELECT COUNT(*)
         FROM event_participations ep
         WHERE ep.users_id = :userId
-          AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
+          AND ep.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
         """, nativeQuery = true)
     Long countUserCreatedEvents(@Param("userId") Long userId);
 
@@ -1013,7 +1013,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         SELECT COUNT(*)
         FROM event_participations ep
         WHERE ep.users_id = :userId
-          AND ep.event_status = 'PARTICIPANT'
+          AND ep.participation_role = 'PARTICIPANT'
         """, nativeQuery = true)
     Long countUserParticipatedEvents(@Param("userId") Long userId);
 
@@ -1038,7 +1038,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         LEFT JOIN (
             SELECT ep.users_id, COUNT(*) AS participation_count
             FROM event_participations ep
-            WHERE ep.event_status NOT IN ('CREATOR')
+            WHERE ep.participation_role NOT IN ('CREATOR')
             GROUP BY ep.users_id
         ) p ON u.users_id = p.users_id
         WHERE u.status = 'ACTIVE'
@@ -1071,7 +1071,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         LEFT JOIN (
             SELECT events_id, COUNT(*) AS ep_count
             FROM event_participations
-            WHERE event_status NOT IN ('CREATOR')
+            WHERE participation_role NOT IN ('CREATOR')
             GROUP BY events_id
         ) ep_sub ON e.events_id = ep_sub.events_id
         LEFT JOIN (

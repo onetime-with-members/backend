@@ -94,7 +94,7 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
         sql.append(", DATEDIFF(NOW(), u.created_date) AS days_since_signup");
         sql.append(" FROM users u");
         sql.append(" LEFT JOIN event_participations ep ON u.users_id = ep.users_id");
-        sql.append("   AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')");
+        sql.append("   AND ep.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')");
         sql.append(" WHERE u.status = 'ACTIVE'");
         sql.append("   AND ep.users_id IS NULL");
         sql.append("   AND u.created_date < DATE_SUB(NOW(), INTERVAL :daysAfterSignup DAY)");
@@ -126,7 +126,7 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
         sql.append(", COUNT(ep.events_id) AS event_count");
         sql.append(" FROM users u");
         sql.append(" JOIN event_participations ep ON u.users_id = ep.users_id");
-        sql.append("   AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')");
+        sql.append("   AND ep.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')");
         sql.append(" WHERE u.status = 'ACTIVE'");
         sql.append("   AND u.created_date >= :startDate AND u.created_date < :endDate");
 
@@ -159,7 +159,7 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
         sql.append(", COUNT(ep.events_id) AS event_count");
         sql.append(" FROM users u");
         sql.append(" JOIN event_participations ep ON u.users_id = ep.users_id");
-        sql.append("   AND ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')");
+        sql.append("   AND ep.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')");
         sql.append(" WHERE u.status = 'ACTIVE'");
         sql.append("   AND u.created_date >= :startDate AND u.created_date < :endDate");
 
@@ -195,7 +195,7 @@ public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
         sql.append(" JOIN event_participations ep ON u.users_id = ep.users_id");
         sql.append(" JOIN events e ON ep.events_id = e.events_id");
         sql.append(" LEFT JOIN members m ON e.events_id = m.events_id");
-        sql.append(" WHERE ep.event_status IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')");
+        sql.append(" WHERE ep.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')");
         sql.append("   AND e.status = 'ACTIVE'");
         sql.append("   AND e.created_date < DATE_SUB(NOW(), INTERVAL 3 DAY)");
         sql.append("   AND e.created_date >= :startDate AND e.created_date < :endDate");
