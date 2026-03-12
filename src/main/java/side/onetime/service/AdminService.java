@@ -15,9 +15,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import side.onetime.domain.AdminUser;
 import side.onetime.domain.Event;
+import side.onetime.domain.RefreshToken;
 import side.onetime.domain.Schedule;
 import side.onetime.domain.User;
 import side.onetime.domain.enums.AdminStatus;
+import side.onetime.domain.enums.ParticipationRole;
 import side.onetime.dto.admin.request.LoginAdminUserRequest;
 import side.onetime.dto.admin.request.RegisterAdminUserRequest;
 import side.onetime.dto.admin.request.UpdateAdminUserStatusRequest;
@@ -35,7 +37,9 @@ import side.onetime.repository.AdminRepository;
 import side.onetime.repository.EventParticipationRepository;
 import side.onetime.repository.EventRepository;
 import side.onetime.repository.MemberRepository;
+import side.onetime.repository.RefreshTokenRepository;
 import side.onetime.repository.ScheduleRepository;
+import side.onetime.repository.StatisticsRepository;
 import side.onetime.repository.UserRepository;
 import side.onetime.util.AdminAuthorizationUtil;
 import side.onetime.util.JwtUtil;
@@ -255,7 +259,7 @@ public class AdminService {
 
         // 생성자 정보 조회 (CREATOR 또는 CREATOR_AND_PARTICIPANT)
         Map<Long, String> creatorNicknameMap = eventParticipationRepository.findAllByEventIdIn(eventIds).stream()
-                .filter(ep -> ep.getEventStatus() == EventStatus.CREATOR || ep.getEventStatus() == EventStatus.CREATOR_AND_PARTICIPANT)
+                .filter(ep -> ep.getParticipationRole() == ParticipationRole.CREATOR || ep.getParticipationRole() == ParticipationRole.CREATOR_AND_PARTICIPANT)
                 .filter(ep -> ep.getUser() != null)
                 .collect(Collectors.toMap(
                         ep -> ep.getEvent().getId(),

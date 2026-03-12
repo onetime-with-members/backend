@@ -197,7 +197,7 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
         QEvent event = QEvent.event;
 
         JPAQuery<Event> query = queryFactory.selectFrom(event)
-                .where(event.status.eq(Status.ACTIVE));
+                .where(event.status.eq(EventStatus.ACTIVE));
 
         // 검색 조건
         if (search != null && !search.trim().isEmpty()) {
@@ -259,7 +259,7 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
 
         JPAQuery<Long> query = queryFactory.select(event.count())
                 .from(event)
-                .where(event.status.eq(Status.ACTIVE));
+                .where(event.status.eq(EventStatus.ACTIVE));
 
         if (search != null && !search.trim().isEmpty()) {
             query.where(event.title.containsIgnoreCase(search.trim()));
