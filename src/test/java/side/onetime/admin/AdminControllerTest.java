@@ -1,8 +1,14 @@
 package side.onetime.admin;
 
-import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
-import com.epages.restdocs.apispec.ResourceSnippetParameters;
-import com.epages.restdocs.apispec.Schema;
+import static com.epages.restdocs.apispec.ResourceDocumentation.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -12,6 +18,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.restdocs.payload.JsonFieldType;
+
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
+import com.epages.restdocs.apispec.ResourceSnippetParameters;
+import com.epages.restdocs.apispec.Schema;
+
 import side.onetime.configuration.AdminControllerTestConfig;
 import side.onetime.controller.AdminController;
 import side.onetime.domain.enums.AdminStatus;
@@ -20,18 +31,15 @@ import side.onetime.domain.enums.Language;
 import side.onetime.dto.admin.request.LoginAdminUserRequest;
 import side.onetime.dto.admin.request.RegisterAdminUserRequest;
 import side.onetime.dto.admin.request.UpdateAdminUserStatusRequest;
-import side.onetime.dto.admin.response.*;
+import side.onetime.dto.admin.response.AdminUserDetailResponse;
+import side.onetime.dto.admin.response.DashboardEvent;
+import side.onetime.dto.admin.response.DashboardUser;
+import side.onetime.dto.admin.response.GetAdminUserProfileResponse;
+import side.onetime.dto.admin.response.GetAllDashboardEventsResponse;
+import side.onetime.dto.admin.response.GetAllDashboardUsersResponse;
+import side.onetime.dto.admin.response.LoginAdminUserResponse;
+import side.onetime.dto.admin.response.PageInfo;
 import side.onetime.service.AdminService;
-
-import java.util.List;
-
-import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
-import static org.mockito.ArgumentMatchers.any;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
-import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AdminController.class)
 public class AdminControllerTest extends AdminControllerTestConfig {
@@ -76,7 +84,8 @@ public class AdminControllerTest extends AdminControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .requestSchema(Schema.schema("RegisterAdminUserRequest"))
                                         .responseSchema(Schema.schema("CommonSuccessResponse"))
@@ -258,7 +267,8 @@ public class AdminControllerTest extends AdminControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .requestSchema(Schema.schema("UpdateAdminUserStatusRequest"))
                                         .responseSchema(Schema.schema("CommonSuccessResponse"))
@@ -289,7 +299,8 @@ public class AdminControllerTest extends AdminControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .responseSchema(Schema.schema("CommonSuccessResponse"))
                                         .build()

@@ -21,6 +21,7 @@ public enum SuccessStatus implements BaseCode {
     _GET_PARTICIPATED_EVENTS(HttpStatus.OK, "200", "유저 참여 이벤트 목록 조회에 성공했습니다."),
     _REMOVE_USER_CREATED_EVENT(HttpStatus.OK, "200", "유저가 생성한 이벤트 삭제에 성공했습니다."),
     _MODIFY_EVENT(HttpStatus.OK, "200", "이벤트 수정에 성공했습니다."),
+    _CONFIRM_EVENT(HttpStatus.OK, "200", "이벤트 확정에 성공했습니다."),
     _GET_EVENT_QR_CODE(HttpStatus.OK, "200", "이벤트 QR 코드 조회에 성공했습니다."),
     // Member
     _REGISTER_MEMBER(HttpStatus.CREATED, "201", "멤버 등록에 성공했습니다."),

@@ -1,29 +1,44 @@
 package side.onetime.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import side.onetime.domain.*;
-import side.onetime.domain.enums.AdminStatus;
-import side.onetime.domain.enums.EventStatus;
-import side.onetime.dto.admin.request.LoginAdminUserRequest;
-import side.onetime.dto.admin.request.RegisterAdminUserRequest;
-import side.onetime.dto.admin.request.UpdateAdminUserStatusRequest;
-import side.onetime.dto.admin.response.*;
-import side.onetime.exception.CustomException;
-import side.onetime.exception.status.AdminErrorStatus;
-import side.onetime.repository.*;
-import side.onetime.util.AdminAuthorizationUtil;
-import side.onetime.util.JwtUtil;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import side.onetime.domain.AdminUser;
+import side.onetime.domain.Event;
+import side.onetime.domain.Schedule;
+import side.onetime.domain.User;
+import side.onetime.domain.enums.AdminStatus;
+import side.onetime.dto.admin.request.LoginAdminUserRequest;
+import side.onetime.dto.admin.request.RegisterAdminUserRequest;
+import side.onetime.dto.admin.request.UpdateAdminUserStatusRequest;
+import side.onetime.dto.admin.response.AdminUserDetailResponse;
+import side.onetime.dto.admin.response.DashboardEvent;
+import side.onetime.dto.admin.response.DashboardUser;
+import side.onetime.dto.admin.response.GetAdminUserProfileResponse;
+import side.onetime.dto.admin.response.GetAllDashboardEventsResponse;
+import side.onetime.dto.admin.response.GetAllDashboardUsersResponse;
+import side.onetime.dto.admin.response.LoginAdminUserResponse;
+import side.onetime.dto.admin.response.PageInfo;
+import side.onetime.exception.CustomException;
+import side.onetime.exception.status.AdminErrorStatus;
+import side.onetime.repository.AdminRepository;
+import side.onetime.repository.EventParticipationRepository;
+import side.onetime.repository.EventRepository;
+import side.onetime.repository.MemberRepository;
+import side.onetime.repository.ScheduleRepository;
+import side.onetime.repository.UserRepository;
+import side.onetime.util.AdminAuthorizationUtil;
+import side.onetime.util.JwtUtil;
 
 @Slf4j
 @Service
@@ -192,8 +207,8 @@ public class AdminService {
      * 어드민 권한 사용자가 전체 이벤트 목록을 페이지 단위로 조회할 수 있습니다.
      * 각 이벤트에 대해 스케줄 및 참여자 수를 일괄 조회한 뒤 DashboardEvent로 변환합니다.
      *
-     * 정렬 기준이 participant_count인 경우 Native Query로 DB에서 정렬 및 페이징 처리됩니다.
-     * 그 외 기준은 QueryDSL로 정렬 및 페이징 후 결과가 반환됩니다.
+     * 정렬 기준이 participant_count인 경우 메모리 내 정렬 후 페이징 처리됩니다.
+     * 그 외 기준은 DB 정렬 및 페이징 후 결과가 반환됩니다.
      *
      * @param pageable 페이지 정보 (페이지 번호, 크기 등 - 정렬은 직접 처리)
      * @param keyword 정렬 기준 필드명 (snake_case)

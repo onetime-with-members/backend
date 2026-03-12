@@ -1,7 +1,13 @@
 package side.onetime.fixed;
 
-import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
-import com.epages.restdocs.apispec.ResourceSnippetParameters;
+import static com.epages.restdocs.apispec.ResourceDocumentation.*;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -11,6 +17,10 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.ResultActions;
+
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
+import com.epages.restdocs.apispec.ResourceSnippetParameters;
+
 import side.onetime.configuration.UserControllerTestConfig;
 import side.onetime.controller.FixedController;
 import side.onetime.dto.fixed.request.UpdateFixedScheduleRequest;
@@ -19,15 +29,6 @@ import side.onetime.dto.fixed.response.GetFixedScheduleResponse;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.FixedErrorStatus;
 import side.onetime.service.FixedScheduleService;
-
-import java.util.List;
-
-import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
-import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(FixedController.class)
 public class FixedControllerTest extends UserControllerTestConfig {
@@ -126,7 +127,8 @@ public class FixedControllerTest extends UserControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("HTTP 상태 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .build()
                         )

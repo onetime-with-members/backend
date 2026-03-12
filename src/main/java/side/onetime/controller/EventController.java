@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,8 +21,10 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import side.onetime.auth.annotation.IsUser;
 import side.onetime.auth.annotation.PublicApi;
+import side.onetime.dto.event.request.ConfirmEventRequest;
 import side.onetime.dto.event.request.CreateEventRequest;
 import side.onetime.dto.event.request.ModifyEventRequest;
+import side.onetime.dto.event.response.ConfirmEventResponse;
 import side.onetime.dto.event.response.CreateEventResponse;
 import side.onetime.dto.event.response.GetEventQrCodeResponse;
 import side.onetime.dto.event.response.GetEventResponse;
@@ -202,6 +205,28 @@ public class EventController {
 
         eventService.modifyEvent(eventId, modifyEventRequest);
         return ApiResponse.onSuccess(SuccessStatus._MODIFY_EVENT);
+    }
+
+    /**
+     * 이벤트 확정 API.
+     *
+     * 이벤트를 확정하거나 기존 확정 정보를 수정합니다.
+     * 인증된 유저와 비회원 모두 확정할 수 있습니다.
+     *
+     * @param eventId 확정할 이벤트의 ID
+     * @param confirmEventRequest 확정 요청 데이터 (날짜/요일, 시간, 선택 방식)
+     * @param authorizationHeader 인증된 유저의 토큰 (선택 사항)
+     * @return 확정된 이벤트 정보
+     */
+	@PublicApi
+    @PutMapping("/{event_id}/confirm")
+    public ResponseEntity<ApiResponse<ConfirmEventResponse>> confirmEvent(
+            @PathVariable("event_id") String eventId,
+            @Valid @RequestBody ConfirmEventRequest confirmEventRequest,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+
+        ConfirmEventResponse confirmEventResponse = eventService.confirmEvent(eventId, confirmEventRequest, authorizationHeader);
+        return ApiResponse.onSuccess(SuccessStatus._CONFIRM_EVENT, confirmEventResponse);
     }
 
     /**

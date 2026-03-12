@@ -1,11 +1,8 @@
 package side.onetime.user;
 
-import static com.epages.restdocs.apispec.ResourceDocumentation.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
-import static org.springframework.restdocs.payload.PayloadDocumentation.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
+import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
+import com.epages.restdocs.apispec.ResourceSnippetParameters;
+import com.epages.restdocs.apispec.Schema;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -15,28 +12,24 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.ResultActions;
-
-import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper;
-import com.epages.restdocs.apispec.ResourceSnippetParameters;
-import com.epages.restdocs.apispec.Schema;
-
 import side.onetime.configuration.UserControllerTestConfig;
 import side.onetime.controller.UserController;
 import side.onetime.domain.enums.GuideType;
 import side.onetime.domain.enums.Language;
-import side.onetime.dto.user.request.CreateGuideViewLogRequest;
-import side.onetime.dto.user.request.OnboardUserRequest;
-import side.onetime.dto.user.request.UpdateUserPolicyAgreementRequest;
-import side.onetime.dto.user.request.UpdateUserProfileRequest;
-import side.onetime.dto.user.request.UpdateUserSleepTimeRequest;
-import side.onetime.dto.user.response.GetGuideViewLogResponse;
-import side.onetime.dto.user.response.GetUserPolicyAgreementResponse;
-import side.onetime.dto.user.response.GetUserProfileResponse;
-import side.onetime.dto.user.response.GetUserSleepTimeResponse;
-import side.onetime.dto.user.response.OnboardUserResponse;
+import side.onetime.dto.user.request.*;
+import side.onetime.dto.user.response.*;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.UserErrorStatus;
 import side.onetime.service.UserService;
+
+import static com.epages.restdocs.apispec.ResourceDocumentation.parameterWithName;
+import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserController.class)
 public class UserControllerTest extends UserControllerTestConfig {
@@ -57,8 +50,6 @@ public class UserControllerTest extends UserControllerTestConfig {
                 true,
                 true,
                 false,
-                "23:30",
-                "07:00",
                 Language.KOR
         );
         String requestContent = objectMapper.writeValueAsString(request);
@@ -90,8 +81,6 @@ public class UserControllerTest extends UserControllerTestConfig {
                                                 fieldWithPath("service_policy_agreement").type(JsonFieldType.BOOLEAN).description("서비스 이용약관 동의 여부"),
                                                 fieldWithPath("privacy_policy_agreement").type(JsonFieldType.BOOLEAN).description("개인정보 수집 및 이용 동의 여부"),
                                                 fieldWithPath("marketing_policy_agreement").type(JsonFieldType.BOOLEAN).description("마케팅 정보 수신 동의 여부"),
-                                                fieldWithPath("sleep_start_time").type(JsonFieldType.STRING).description("수면 시작 시간 (예: 23:30)"),
-                                                fieldWithPath("sleep_end_time").type(JsonFieldType.STRING).description("수면 종료 시간 (예: 07:00)"),
                                                 fieldWithPath("language").type(JsonFieldType.STRING).description("언어 (예: KOR, ENG)")
                                         )
                                         .responseFields(
@@ -195,7 +184,8 @@ public class UserControllerTest extends UserControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .build()
                         )
@@ -228,7 +218,8 @@ public class UserControllerTest extends UserControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .build()
                         )
@@ -317,7 +308,8 @@ public class UserControllerTest extends UserControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .requestSchema(Schema.schema("UpdateUserPolicyAgreementRequestSchema"))
                                         .build()
@@ -404,7 +396,8 @@ public class UserControllerTest extends UserControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .requestSchema(Schema.schema("UpdateUserSleepTimeRequestSchema"))
                                         .build()
@@ -422,7 +415,7 @@ public class UserControllerTest extends UserControllerTestConfig {
         {
             "refresh_token": "sampleRefreshToken"
         }
-    """;
+        """;
 
         // when
         ResultActions resultActions = this.mockMvc.perform(
@@ -451,7 +444,8 @@ public class UserControllerTest extends UserControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .requestSchema(Schema.schema("LogoutUserRequestSchema"))
                                         .build()
@@ -491,7 +485,8 @@ public class UserControllerTest extends UserControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .requestSchema(Schema.schema("CreateGuideViewLogRequestSchema"))
                                         .build()
@@ -623,7 +618,8 @@ public class UserControllerTest extends UserControllerTestConfig {
                                         .responseFields(
                                                 fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
                                                 fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
-                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지")
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("페이로드")
                                         )
                                         .responseSchema(Schema.schema("CommonSuccessResponse"))
                                         .build()
