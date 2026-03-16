@@ -52,6 +52,7 @@ public class EmailLog {
     @Column(name = "target_group", length = 50)
     private String targetGroup;
 
+    /** 이메일 로그 생성(큐잉) 시각. 실제 발송 시각이 아님. */
     @Column(name = "sent_at", nullable = false)
     private LocalDateTime sentAt;
 

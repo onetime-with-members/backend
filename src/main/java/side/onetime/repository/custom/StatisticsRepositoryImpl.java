@@ -6,18 +6,18 @@ import java.util.List;
 import org.springframework.stereotype.Repository;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 통계 Repository 커스텀 구현체
  * Native Query로 정렬, 검색, 기간 필터 기능 지원
  */
 @Repository
+@RequiredArgsConstructor
 public class StatisticsRepositoryImpl implements StatisticsRepositoryCustom {
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
 
     private static final String USER_SELECT_COLUMNS = """
         u.users_id, u.email, u.name, u.nickname, u.provider, u.provider_id,

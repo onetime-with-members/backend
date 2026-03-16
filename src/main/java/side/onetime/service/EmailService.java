@@ -15,7 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 import side.onetime.domain.AdminUser;
 import side.onetime.domain.EmailLog;
 import side.onetime.domain.EmailTemplate;
+import side.onetime.domain.User;
 import side.onetime.domain.enums.EmailLogStatus;
+import side.onetime.domain.enums.EmailTemplateCode;
 import side.onetime.dto.admin.email.request.CreateEmailTemplateRequest;
 import side.onetime.dto.admin.email.request.EmailEventMessage;
 import side.onetime.dto.admin.email.request.SendEmailRequest;
@@ -171,7 +173,32 @@ public class EmailService {
         return rows.stream().map(UserEmailDto::from).toList();
     }
 
-    // ==================== 로그 조회 ====================
+    /**
+     * 신규 가입 웰컴 이메일 SQS 발행
+     * DB에서 WELCOME 템플릿 조회 → SQS 발행
+     */
+    @Transactional
+    public void publishWelcomeEmail(User user) {
+        String templateCode = EmailTemplateCode.WELCOME.getCode();
+        EmailTemplate template = emailTemplateRepository.findByCode(templateCode)
+                .orElseThrow(() -> new CustomException(EmailErrorStatus._EMAIL_TEMPLATE_NOT_FOUND));
+
+        EmailLog emailLog = saveQueuedEmailLog(
+                user.getId(), user.getEmail(), template.getSubject(),
+                template.getContent(), template.getContentType(), templateCode);
+
+        List<EmailEventMessage.Recipient> recipients = List.of(
+                new EmailEventMessage.Recipient(
+                        emailLog.getId(), user.getEmail(), user.getId(),
+                        user.getName(), user.getNickname()));
+
+        EmailEventMessage message = EmailEventMessage.of(
+                template.getSubject(), template.getContent(), template.getContentType(),
+                templateCode, recipients);
+        emailEventPublisher.publish(message);
+
+        log.info("[Email] 웰컴 이메일 SQS 발행 - userId: {}", user.getId());
+    }
 
     /**
      * 이메일 로그 목록 조회 (페이징 + 복합 필터)
@@ -217,8 +244,6 @@ public class EmailService {
 
         return EmailLogStatsResponse.of(totalSent, sentTodayCount, failedTodayCount);
     }
-
-    // ==================== 템플릿 CRUD ====================
 
     /**
      * 템플릿 목록 조회
