@@ -38,8 +38,8 @@ out/
 
 ### Claude Code ###
 .claude
-/docs
-*.md
+docs/sql/
+docs/security/
 .serena
 
 ### Auto-generated files ###
