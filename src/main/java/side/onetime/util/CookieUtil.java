@@ -1,11 +1,11 @@
 package side.onetime.util;
 
+import java.util.Arrays;
+import java.util.Optional;
+
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import java.util.Arrays;
-import java.util.Optional;
 
 /**
  * 쿠키 관리 유틸리티
@@ -51,10 +51,7 @@ public class CookieUtil {
         cookie.append("; Path=/");
         cookie.append("; Max-Age=").append(maxAge);
         cookie.append("; HttpOnly");
-
-        if (request.isSecure()) {
-            cookie.append("; Secure");
-        }
+        cookie.append("; Secure");
         cookie.append("; SameSite=Lax");
 
         response.addHeader("Set-Cookie", cookie.toString());
@@ -63,7 +60,7 @@ public class CookieUtil {
     /**
      * 쿠키 삭제 (Secure, SameSite 지원)
      *
-     * @param request  요청 객체 (HTTPS 여부 감지용)
+     * @param request  요청 객체
      * @param response 응답 객체
      * @param name     쿠키 이름
      */
@@ -73,10 +70,7 @@ public class CookieUtil {
         cookie.append("; Path=/");
         cookie.append("; Max-Age=0");
         cookie.append("; HttpOnly");
-
-        if (request.isSecure()) {
-            cookie.append("; Secure");
-        }
+        cookie.append("; Secure");
         cookie.append("; SameSite=Lax");
 
         response.addHeader("Set-Cookie", cookie.toString());

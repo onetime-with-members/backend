@@ -1,6 +1,7 @@
 package side.onetime.global.config;
 
-import lombok.RequiredArgsConstructor;
+import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -9,18 +10,20 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HttpBasicConfigurer;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import lombok.RequiredArgsConstructor;
 import side.onetime.auth.exception.CustomAccessDeniedHandler;
 import side.onetime.auth.exception.CustomAuthenticationEntryPoint;
 import side.onetime.auth.handler.OAuthLoginFailureHandler;
 import side.onetime.auth.handler.OAuthLoginSuccessHandler;
 import side.onetime.global.filter.JwtFilter;
-
-import java.util.Arrays;
 
 @RequiredArgsConstructor
 @Configuration
@@ -34,6 +37,11 @@ public class SecurityConfig {
 	private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 	private final CustomAccessDeniedHandler customAccessDeniedHandler;
 	
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
+
 	private static final String[] SWAGGER_URLS = {
 		"/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html"
 	};
@@ -53,8 +61,8 @@ public class SecurityConfig {
 	 */
 	private static final String[] PUBLIC_POST_URLS = {
 		"/api/v1/users/onboarding",
-		"/api/v1/admin/register",
 		"/api/v1/admin/login",
+		"/api/v1/admin/register",
 		"/api/v1/members/action-register",
 		"/api/v1/members/action-login",
 		"/api/v1/members/name/action-check",

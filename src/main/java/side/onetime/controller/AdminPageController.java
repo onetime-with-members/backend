@@ -44,8 +44,6 @@ public class AdminPageController {
     private final JwtUtil jwtUtil;
     private final ClientInfoExtractor clientInfoExtractor;
 
-    // ==================== Model Attributes ====================
-
     /**
      * 현재 로그인된 어드민의 이름(이메일 첫 글자) 반환
      * 모든 페이지에서 공통으로 사용
@@ -66,11 +64,10 @@ public class AdminPageController {
         return "A";
     }
 
-    // ==================== Authentication ====================
-
     /**
      * 로그인 페이지 렌더링
      */
+
     @GetMapping("/login")
     public String loginPage() {
         return "admin/login";
@@ -80,6 +77,7 @@ public class AdminPageController {
      * 로그인 처리
      * 성공 시 JWT 토큰을 쿠키에 저장하고 대시보드로 리다이렉트
      */
+
     @PostMapping("/login")
     public String login(@RequestParam String email,
                         @RequestParam String password,
@@ -109,13 +107,12 @@ public class AdminPageController {
      * 로그아웃 처리
      * 쿠키에서 토큰 삭제 후 로그인 페이지로 리다이렉트
      */
-    @GetMapping("/logout")
+
+    @PostMapping("/logout")
     public String logout(HttpServletRequest request, HttpServletResponse response) {
         CookieUtil.clearAdminTokenCookies(request, response);
         return "redirect:/admin/login";
     }
-
-    // ==================== Dashboard ====================
 
     /**
      * 대시보드 페이지 렌더링
@@ -138,8 +135,6 @@ public class AdminPageController {
         model.addAttribute("charts", statisticsService.getDashboardCharts(dates[0], dates[1]));
         return "admin/dashboard";
     }
-
-    // ==================== Statistics Pages ====================
 
     /**
      * 유저 통계 페이지 렌더링
@@ -221,8 +216,6 @@ public class AdminPageController {
         return "admin/marketing";
     }
 
-    // ==================== Email Page ====================
-
     /**
      * 이메일 발송 페이지 렌더링
      */
@@ -233,8 +226,6 @@ public class AdminPageController {
         model.addAttribute("pageTitle", "Send Email");
         return "admin/email";
     }
-
-    // ==================== Banner Page ====================
 
     /**
      * 배너 관리 페이지 렌더링

@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import side.onetime.dto.admin.statistics.response.MarketingTargetDetailResponse;
+import side.onetime.exception.CustomException;
+import side.onetime.global.common.status.ErrorStatus;
 import side.onetime.repository.StatisticsRepository;
 
 @Service
@@ -34,7 +36,7 @@ public class ExportService {
             case "oneTime" -> statisticsService.getOneTimeUsers("created_date_desc", null, defaultStart, defaultEnd);
             case "vip" -> statisticsService.getVipUsers("created_date_desc", null, defaultStart, defaultEnd);
             case "zeroParticipant" -> statisticsService.getZeroParticipantEvents("created_date_desc", null, defaultStart, defaultEnd);
-            default -> throw new IllegalArgumentException("Invalid type: " + type);
+            default -> throw new CustomException(ErrorStatus._BAD_REQUEST);
         };
     }
 
@@ -127,7 +129,9 @@ public class ExportService {
             String nickname = row[3] != null ? row[3].toString() : "";
             String provider = row[4] != null ? row[4].toString() : "";
             String language = row[5] != null ? row[5].toString() : "";
-            Boolean marketingAgreement = row[6] != null && (Boolean) row[6];
+            Boolean marketingAgreement = row[6] != null
+                    ? (row[6] instanceof Number ? ((Number) row[6]).intValue() == 1 : (Boolean) row[6])
+                    : false;
             Object createdDate = row[7];
             Long participationCount = row[8] != null ? ((Number) row[8]).longValue() : 0L;
 
@@ -182,6 +186,9 @@ public class ExportService {
     private String escapeCsv(Object value) {
         if (value == null) return "";
         String str = value.toString();
+        if (!str.isEmpty() && "=+-@\t\r".indexOf(str.charAt(0)) >= 0) {
+            str = "'" + str;
+        }
         if (str.contains(",") || str.contains("\"") || str.contains("\n")) {
             return "\"" + str.replace("\"", "\"\"") + "\"";
         }

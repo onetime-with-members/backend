@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +37,6 @@ import side.onetime.exception.status.AdminErrorStatus;
 import side.onetime.repository.AdminRepository;
 import side.onetime.repository.EventParticipationRepository;
 import side.onetime.repository.EventRepository;
-import side.onetime.repository.MemberRepository;
 import side.onetime.repository.RefreshTokenRepository;
 import side.onetime.repository.ScheduleRepository;
 import side.onetime.repository.StatisticsRepository;
@@ -53,10 +53,10 @@ public class AdminService {
     private final EventRepository eventRepository;
     private final EventParticipationRepository eventParticipationRepository;
     private final ScheduleRepository scheduleRepository;
-    private final MemberRepository memberRepository;
     private final UserRepository userRepository;
     private final StatisticsRepository statisticsRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     /**
@@ -73,7 +73,7 @@ public class AdminService {
         if (adminRepository.existsAdminUsersByEmail(request.email())) {
             throw new CustomException(AdminErrorStatus._IS_DUPLICATED_EMAIL);
         }
-        AdminUser newAdminUser = request.toEntity();
+        AdminUser newAdminUser = request.toEntity(passwordEncoder.encode(request.password()));
         adminRepository.save(newAdminUser);
     }
 
@@ -98,7 +98,7 @@ public class AdminService {
         if (AdminStatus.PENDING_APPROVAL == adminUser.getAdminStatus()) {
             throw new CustomException(AdminErrorStatus._IS_NOT_APPROVED_ADMIN_USER);
         }
-        if (!request.password().equals(adminUser.getPassword())) {
+        if (!passwordEncoder.matches(request.password(), adminUser.getPassword())) {
             throw new CustomException(AdminErrorStatus._IS_NOT_EQUAL_PASSWORD);
         }
 
@@ -285,8 +285,6 @@ public class AdminService {
      * 어드민 권한 사용자가 전체 사용자 정보를 페이지 단위로 조회할 수 있습니다.
      * 사용자 목록은 정렬 기준(keyword)과 정렬 방향(sorting)에 따라 정렬되며,
      * 각 사용자 데이터는 참여 이벤트 수를 포함한 DashboardUser DTO로 변환됩니다.
-     *
-     * 배치 쿼리를 사용하여 N+1 문제를 해결했습니다.
      *
      * @param pageable 페이지 정보 (페이지 번호, 크기 등)
      * @param keyword 정렬 기준 필드 (예: name, email, created_date 등)
