@@ -4,10 +4,10 @@
 <!-- Alert/Confirm 모달 -->
 <div th:fragment="modal">
     <!-- Alert Modal -->
-    <div id="alertModal" class="fixed inset-0 z-50 hidden items-center justify-center">
+    <div id="alertModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 sm:p-0" role="dialog" aria-modal="true" aria-labelledby="alertTitle">
         <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="closeAlert()"></div>
-        <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 transform transition-all">
-            <div class="p-6">
+        <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md mx-0 sm:mx-4 transform transition-all">
+            <div class="p-5 sm:p-6">
                 <div class="flex items-center gap-3 mb-4">
                     <div id="alertIcon" class="w-10 h-10 rounded-full flex items-center justify-center">
                         <!-- Icon will be set dynamically -->
@@ -26,10 +26,10 @@
     </div>
 
     <!-- Confirm Modal -->
-    <div id="confirmModal" class="fixed inset-0 z-50 hidden items-center justify-center">
+    <div id="confirmModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 sm:p-0" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
         <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="closeConfirm(false)"></div>
-        <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 transform transition-all">
-            <div class="p-6">
+        <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md mx-0 sm:mx-4 transform transition-all">
+            <div class="p-5 sm:p-6">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
                         <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

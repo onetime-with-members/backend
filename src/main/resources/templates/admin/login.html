@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -40,7 +40,7 @@
     </style>
 </head>
 <body class="bg-white dark:bg-gray-900 min-h-screen flex items-center justify-center transition-colors duration-200">
-    <div class="w-full max-w-sm px-6">
+    <div class="w-full max-w-sm px-4 sm:px-6 py-8">
         <!-- Logo -->
         <div class="text-center mb-8">
             <div class="inline-flex items-center justify-center w-12 h-12 bg-accent-500 rounded-lg mb-4">
@@ -79,7 +79,7 @@
         <div class="flex justify-center mt-6">
             <button id="themeToggle" type="button"
                     class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-                    title="테마 변경">
+                    title="테마 변경" aria-label="테마 변경">
                 <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
                 <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
             </button>

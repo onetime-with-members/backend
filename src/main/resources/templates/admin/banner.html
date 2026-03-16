@@ -8,21 +8,21 @@
 <body>
 <div layout:fragment="content">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">배너 관리</h1>
+            <h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">배너 관리</h1>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">배너와 띠배너를 관리합니다</p>
         </div>
     </div>
 
     <!-- Tabs -->
     <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
-        <nav class="flex gap-6">
-            <button type="button" class="tab-btn pb-3 text-sm font-medium border-b-2 border-accent-500 text-gray-900 dark:text-white" data-tab="carouselBanners">
+        <nav class="flex gap-6 overflow-x-auto scrollbar-hide -mb-px" role="tablist">
+            <button type="button" id="tab-carouselBanners" role="tab" aria-selected="true" aria-controls="carouselBanners" class="tab-btn pb-3 text-sm font-medium border-b-2 border-accent-500 text-gray-900 dark:text-white whitespace-nowrap" data-tab="carouselBanners">
                 <i data-lucide="image" class="w-4 h-4 inline mr-1"></i>
                 배너
             </button>
-            <button type="button" class="tab-btn pb-3 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" data-tab="barBanners">
+            <button type="button" id="tab-barBanners" role="tab" aria-selected="false" aria-controls="barBanners" class="tab-btn pb-3 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 whitespace-nowrap" data-tab="barBanners">
                 <i data-lucide="bar-chart-horizontal" class="w-4 h-4 inline mr-1"></i>
                 띠배너
             </button>
@@ -32,9 +32,9 @@
     <!-- Tab Contents -->
     <div id="tabContents">
         <!-- Tab 1: Carousel Banners -->
-        <div id="carouselBanners" class="tab-content">
+        <div id="carouselBanners" class="tab-content" role="tabpanel" aria-labelledby="tab-carouselBanners">
             <!-- Staging Alert -->
-            <div id="bannerStagingAlert" class="hidden mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg flex items-center justify-between">
+            <div id="bannerStagingAlert" class="hidden mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg flex flex-wrap items-center justify-between gap-2">
                 <div class="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
                     <i data-lucide="alert-circle" class="w-4 h-4"></i>
                     <span>동기화 대기 중인 배너 데이터가 <strong id="bannerStagingCount">0</strong>건 있습니다.</span>
@@ -44,7 +44,7 @@
                 </button>
             </div>
             <!-- Stats Cards -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                 <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
                     <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">전체</p>
                     <p class="text-xl font-semibold text-gray-900 dark:text-white" id="statsTotal">-</p>
@@ -65,19 +65,19 @@
 
             <!-- Banners Table -->
             <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors">
-                <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex flex-wrap items-center justify-between gap-2 p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 class="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
                         <i data-lucide="image" class="w-4 h-4"></i>
                         배너
                     </h3>
-                    <div class="flex items-center gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
                         <button type="button" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2" onclick="exportBanners()">
                             <i data-lucide="upload" class="w-4 h-4"></i>
-                            내보내기
+                            <span class="hidden sm:inline">내보내기</span>
                         </button>
                         <button type="button" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2" onclick="importBanners()">
                             <i data-lucide="download" class="w-4 h-4"></i>
-                            불러오기
+                            <span class="hidden sm:inline">불러오기</span>
                         </button>
                         <button type="button" class="px-3 py-1.5 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2" onclick="showBannerModal()">
                             <i data-lucide="plus" class="w-4 h-4"></i>
@@ -113,9 +113,9 @@
         </div>
 
         <!-- Tab 2: Bar Banners -->
-        <div id="barBanners" class="tab-content hidden">
+        <div id="barBanners" class="tab-content hidden" role="tabpanel" aria-labelledby="tab-barBanners">
             <!-- Staging Alert -->
-            <div id="barBannerStagingAlert" class="hidden mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg flex items-center justify-between">
+            <div id="barBannerStagingAlert" class="hidden mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg flex flex-wrap items-center justify-between gap-2">
                 <div class="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
                     <i data-lucide="alert-circle" class="w-4 h-4"></i>
                     <span>동기화 대기 중인 띠배너 데이터가 <strong id="barBannerStagingCount">0</strong>건 있습니다.</span>
@@ -125,7 +125,7 @@
                 </button>
             </div>
             <!-- Stats Cards -->
-            <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
                     <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">전체</p>
                     <p class="text-xl font-semibold text-gray-900 dark:text-white" id="barStatsTotal">-</p>
@@ -142,19 +142,19 @@
 
             <!-- Bar Banners Table -->
             <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors">
-                <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex flex-wrap items-center justify-between gap-2 p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 class="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
                         <i data-lucide="bar-chart-horizontal" class="w-4 h-4"></i>
                         띠배너
                     </h3>
-                    <div class="flex items-center gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
                         <button type="button" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2" onclick="exportBarBanners()">
                             <i data-lucide="upload" class="w-4 h-4"></i>
-                            내보내기
+                            <span class="hidden sm:inline">내보내기</span>
                         </button>
                         <button type="button" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2" onclick="importBarBanners()">
                             <i data-lucide="download" class="w-4 h-4"></i>
-                            불러오기
+                            <span class="hidden sm:inline">불러오기</span>
                         </button>
                         <button type="button" class="px-3 py-1.5 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2" onclick="showBarBannerModal()">
                             <i data-lucide="plus" class="w-4 h-4"></i>
@@ -190,8 +190,8 @@
     </div>
 
     <!-- Banner Modal (Create/Edit) -->
-    <div id="bannerModal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div id="bannerModal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg w-full max-w-[95vw] sm:max-w-lg lg:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
             <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="bannerModalTitle">배너 등록</h3>
                 <button onclick="closeBannerModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" aria-label="닫기">
@@ -215,7 +215,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">조직명 <span class="text-red-500">*</span></label>
                         <input type="text" id="bannerOrganization" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="예: 원타임" onkeyup="updateBannerPreview()">
@@ -229,7 +229,7 @@
                     <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">부제목 <span class="text-red-500">*</span></label>
                     <input type="text" id="bannerSubTitle" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="예: 지금 바로 참여해보세요" onkeyup="updateBannerPreview()">
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">버튼 텍스트 <span class="text-red-500">*</span></label>
                         <input type="text" id="bannerButtonText" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="예: 자세히 보기" onkeyup="updateBannerPreview()">
@@ -269,8 +269,8 @@
     </div>
 
     <!-- Bar Banner Modal (Create/Edit) -->
-    <div id="barBannerModal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div id="barBannerModal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg w-full max-w-[95vw] sm:max-w-lg lg:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
             <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="barBannerModalTitle">띠배너 등록</h3>
                 <button onclick="closeBarBannerModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" aria-label="닫기">
@@ -297,7 +297,7 @@
                     <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">내용(영) <span class="text-red-500">*</span></label>
                     <input type="text" id="barBannerContentEng" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="예: Check out new features" onkeyup="updateBarBannerPreview()">
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">배경색 <span class="text-red-500">*</span></label>
                         <div class="flex gap-2">
@@ -362,9 +362,11 @@
             tabBtns.forEach(b => {
                 b.classList.remove('border-accent-500', 'text-gray-900', 'dark:text-white');
                 b.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+                b.setAttribute('aria-selected', 'false');
             });
             btn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
             btn.classList.add('border-accent-500', 'text-gray-900', 'dark:text-white');
+            btn.setAttribute('aria-selected', 'true');
 
             tabContents.forEach(content => {
                 content.classList.add('hidden');

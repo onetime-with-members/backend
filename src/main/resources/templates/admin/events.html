@@ -9,7 +9,7 @@
 <div layout:fragment="content">
     <!-- Header -->
     <div class="mb-6">
-        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">이벤트 통계</h1>
+        <h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">이벤트 통계</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">서비스 이벤트 현황을 확인하세요</p>
     </div>
 
@@ -17,32 +17,45 @@
     <div th:replace="~{admin/fragments/date-filter :: dateFilter}"></div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover">
             <p class="text-sm text-gray-500 dark:text-gray-400">총 생성 이벤트</p>
             <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                th:text="${#numbers.formatInteger(data.totalEvents, 0, 'COMMA')}">0</p>
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">선택 기간 내 생성된 이벤트</p>
         </div>
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover">
             <p class="text-sm text-gray-500 dark:text-gray-400">활성 이벤트</p>
             <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                th:text="${#numbers.formatInteger(data.activeEvents, 0, 'COMMA')}">0</p>
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">삭제되지 않은 활성 상태 이벤트</p>
         </div>
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover">
-            <p class="text-sm text-gray-500 dark:text-gray-400">평균 참여자</p>
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover">
+            <p class="text-sm text-gray-500 dark:text-gray-400">확정 이벤트</p>
+            <p class="text-2xl font-semibold text-green-600 dark:text-green-400 mt-1 tabular-nums"
+               th:text="${#numbers.formatInteger(data.confirmedEvents, 0, 'COMMA')}">0</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">확정 완료된 이벤트</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover">
+            <p class="text-sm text-gray-500 dark:text-gray-400">확정률</p>
             <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
-               th:text="${#numbers.formatDecimal(data.avgParticipants, 1, 2)}">0</p>
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">이벤트당 평균 참여 인원</p>
+               th:text="${#numbers.formatDecimal(data.confirmationRate, 1, 1) + '%'}">0%</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">전체 이벤트 대비 확정 비율</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover">
+            <p class="text-sm text-gray-500 dark:text-gray-400">평균 확정 소요</p>
+            <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
+               th:text="${data.avgConfirmationHours < 24 ? #numbers.formatDecimal(data.avgConfirmationHours, 1, 1) + '시간' : #numbers.formatDecimal(data.avgConfirmationHours / 24, 1, 1) + '일'}">0</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">생성→확정 평균 소요시간</p>
         </div>
     </div>
 
     <!-- Distribution Tables -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
             <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">카테고리 분포</h3>
             <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">날짜 기반 vs 요일 기반 이벤트</p>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-gray-700">
@@ -57,11 +70,13 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
             <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">요일별 분포</h3>
             <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">이벤트 생성이 많은 요일 분석</p>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-gray-700">
@@ -76,11 +91,58 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Analysis -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
+        <!-- Confirmer Role Distribution -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">확정자 유형 분포</h3>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">이벤트를 확정한 사용자의 역할</p>
+            <div id="confirmerChartLoading" class="text-center py-8">
+                <div class="inline-block w-6 h-6 border-2 border-gray-200 dark:border-gray-600 border-t-accent-500 rounded-full animate-spin"></div>
+            </div>
+            <div id="confirmerChartContent" class="hidden">
+                <div class="h-48">
+                    <canvas id="confirmerRoleChart"></canvas>
+                </div>
+                <div class="mt-4 flex flex-wrap justify-center gap-3 text-xs text-gray-600 dark:text-gray-400" id="confirmerLegend"></div>
+            </div>
+        </div>
+
+        <!-- Category Confirmation Rate -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">카테고리별 확정률</h3>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">DATE vs DAY 이벤트의 확정 비율 비교</p>
+            <div id="categoryConfirmLoading" class="text-center py-8">
+                <div class="inline-block w-6 h-6 border-2 border-gray-200 dark:border-gray-600 border-t-accent-500 rounded-full animate-spin"></div>
+            </div>
+            <div id="categoryConfirmContent" class="hidden">
+                <div class="h-48">
+                    <canvas id="categoryConfirmChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Trend -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 mb-6 transition-colors">
+        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">확정 추이</h3>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">일별 이벤트 생성 vs 확정 추이</p>
+        <div id="confirmTrendLoading" class="text-center py-8">
+            <div class="inline-block w-6 h-6 border-2 border-gray-200 dark:border-gray-600 border-t-accent-500 rounded-full animate-spin"></div>
+        </div>
+        <div id="confirmTrendContent" class="hidden">
+            <div class="h-64">
+                <canvas id="confirmTrendChart"></canvas>
+            </div>
         </div>
     </div>
 
     <!-- Heatmap -->
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 mb-6 transition-colors">
         <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">이벤트 생성 시점 히트맵</h3>
         <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">시간대별, 요일별 이벤트 생성 분포</p>
         <div id="heatmapLoading" class="text-center py-8">
@@ -104,9 +166,10 @@
     </div>
 
     <!-- Top Keywords -->
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 mb-6 transition-colors">
         <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">제목 키워드 TOP</h3>
         <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">이벤트 제목에 자주 등장하는 키워드 (회의, 스터디, 밥 등)</p>
+        <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead>
                 <tr class="border-b border-gray-200 dark:border-gray-700">
@@ -127,6 +190,7 @@
                 </tr>
             </tbody>
         </table>
+        </div>
         <button th:if="${#lists.size(data.topKeywords) > 10}"
                 id="keywordToggleBtn"
                 onclick="toggleKeywords()"
@@ -137,13 +201,13 @@
     </div>
 
     <!-- Event List -->
-    <div id="eventListSection" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
-        <div class="flex items-center justify-between mb-4">
+    <div id="eventListSection" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
+        <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
             <div>
                 <h3 class="text-sm font-medium text-gray-900 dark:text-white">이벤트 목록</h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">선택한 기간 내 생성된 이벤트</p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
                 <button onclick="exportEventsCsv()"
                         class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 btn-hover flex items-center gap-1">
                     <i data-lucide="download" class="w-4 h-4"></i>
@@ -236,17 +300,18 @@
                         <tr class="border-b border-gray-200 dark:border-gray-700">
                             <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[7%]">카테고리</th>
                             <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">제목</th>
-                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[13%]">날짜 범위</th>
-                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[10%]">시간 범위</th>
-                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[10%]">생성자</th>
-                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[8%]">참여자</th>
-                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[15%]">생성일</th>
+                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[7%]">상태</th>
+                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[12%]">날짜 범위</th>
+                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[9%]">시간 범위</th>
+                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[9%]">생성자</th>
+                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[7%]">참여자</th>
+                            <th class="text-center py-2 px-3 text-gray-500 dark:text-gray-400 font-medium w-[14%]">생성일</th>
                         </tr>
                     </thead>
                     <tbody id="eventListBody"></tbody>
                 </table>
             </div>
-            <div class="flex justify-center mt-4" id="eventPagination"></div>
+            <div class="flex flex-wrap justify-center mt-4 gap-1" id="eventPagination"></div>
         </div>
     </div>
 </div>
@@ -286,11 +351,18 @@
         if (currentDayOfWeek !== null) url += `&dayOfWeek=${currentDayOfWeek}`;
 
         fetch(url)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
             .then(data => {
                 if (data.is_success && data.payload) {
                     renderEventList(data.payload);
                 }
+            })
+            .catch(err => {
+                console.error('이벤트 목록 로드 실패:', err);
+                showToast('이벤트 목록을 불러오는데 실패했습니다.', 'error');
             })
             .finally(() => {
                 document.getElementById('eventListLoading').classList.add('hidden');
@@ -342,7 +414,7 @@
 
         let tbody = '';
         if (events.length === 0) {
-            tbody = `<tr><td colspan="7" class="py-12">
+            tbody = `<tr><td colspan="8" class="py-12">
                 <div class="flex flex-col items-center justify-center text-center">
                     <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
                         <i data-lucide="calendar-x" class="w-6 h-6 text-gray-400 dark:text-gray-500"></i>
@@ -355,17 +427,21 @@
             events.forEach(event => {
                 const category = event.category || '-';
                 const categoryLabel = category === 'DATE' ? '날짜' : '요일';
-                const eventUrl = `https://www.onetime-with-members.com/ko/events/view/${event.event_id}`;
+                const eventId = encodeURIComponent(event.event_id || '');
+                const eventUrl = `https://www.onetime-with-members.com/ko/events/view/${eventId}`;
                 const badgeClass = isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700';
                 tbody += `
                     <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" onclick="window.open('${eventUrl}', '_blank')">
-                        <td class="py-2 px-3"><span class="text-xs px-2 py-0.5 ${badgeClass} rounded">${categoryLabel}</span></td>
-                        <td class="py-2 px-3 text-gray-900 dark:text-white">${event.title || '-'}</td>
-                        <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${event.date_range || '-'}</td>
-                        <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${event.time_range || '-'}</td>
-                        <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${event.creator_nickname || '-'}</td>
+                        <td class="py-2 px-3"><span class="text-xs px-2 py-0.5 ${badgeClass} rounded">${escapeHtml(categoryLabel)}</span></td>
+                        <td class="py-2 px-3 text-gray-900 dark:text-white">${escapeHtml(event.title)}</td>
+                        <td class="py-2 px-3 text-center">${event.event_status === 'CONFIRMED'
+                            ? '<span class="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">확정</span>'
+                            : '<span class="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">미확정</span>'}</td>
+                        <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${escapeHtml(event.date_range)}</td>
+                        <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${escapeHtml(event.time_range)}</td>
+                        <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${escapeHtml(event.creator_nickname)}</td>
                         <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${event.participant_count || 0}명</td>
-                        <td class="py-2 px-3 text-center text-gray-400 dark:text-gray-500">${event.created_date || '-'}</td>
+                        <td class="py-2 px-3 text-center text-gray-400 dark:text-gray-500">${escapeHtml(event.created_date)}</td>
                     </tr>
                 `;
             });
@@ -381,16 +457,18 @@
         const startPage = pageGroup * 10 + 1;
         const endPage = Math.min(startPage + 9, totalPages);
 
-        let html = '<div class="flex gap-1">';
-        html += `<button onclick="loadEventList(1)" class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${currentPage === 1 ? 'text-gray-300 dark:text-gray-600' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">«</button>`;
-        html += `<button onclick="loadEventList(${startPage - 1})" class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${startPage === 1 ? 'text-gray-300 dark:text-gray-600' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">‹</button>`;
+        let html = '<div class="flex flex-wrap gap-1">';
+        const atFirst = currentPage <= 1;
+        const atLast = currentPage >= totalPages;
+        html += `<button onclick="loadEventList(1)" ${atFirst ? 'disabled' : ''} class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${atFirst ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">«</button>`;
+        html += `<button onclick="loadEventList(${startPage - 1})" ${startPage <= 1 ? 'disabled' : ''} class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${startPage === 1 ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">‹</button>`;
 
         for (let i = startPage; i <= endPage; i++) {
             html += `<button onclick="loadEventList(${i})" class="px-3 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${i === currentPage ? 'bg-accent-500 text-white border-accent-500' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">${i}</button>`;
         }
 
-        html += `<button onclick="loadEventList(${endPage + 1})" class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${endPage >= totalPages ? 'text-gray-300 dark:text-gray-600' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">›</button>`;
-        html += `<button onclick="loadEventList(${totalPages})" class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${currentPage === totalPages ? 'text-gray-300 dark:text-gray-600' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">»</button>`;
+        html += `<button onclick="loadEventList(${endPage + 1})" ${endPage >= totalPages ? 'disabled' : ''} class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${endPage >= totalPages ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">›</button>`;
+        html += `<button onclick="loadEventList(${totalPages})" ${atLast ? 'disabled' : ''} class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${atLast ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">»</button>`;
         html += '</div>';
 
         document.getElementById('eventPagination').innerHTML = html;
@@ -425,11 +503,18 @@
         }
 
         fetch(url)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
             .then(data => {
                 if (data.is_success && data.payload) {
                     renderHeatmap(data.payload);
                 }
+            })
+            .catch(err => {
+                console.error('히트맵 로드 실패:', err);
+                showToast('히트맵 데이터를 불러오는데 실패했습니다.', 'error');
             })
             .finally(() => {
                 document.getElementById('heatmapLoading').classList.add('hidden');
@@ -552,9 +637,205 @@
         document.getElementById('eventListSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
+    // ==================== Confirmation Charts ====================
+
+    const roleLabels = { CREATOR: '생성자', PARTICIPANT: '참여자', GUEST: '비회원' };
+    const confirmColors = ['#677CEE', '#8198f3', '#a5b4fd'];
+
+    function loadConfirmationStats() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const startDate = urlParams.get('startDate') || '';
+        const endDate = urlParams.get('endDate') || '';
+
+        let url = '/api/v1/admin/statistics/events/confirmation';
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        if (params.toString()) url += '?' + params.toString();
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    renderConfirmerRoleChart(data.payload);
+                    renderCategoryConfirmChart(data.payload);
+                    renderConfirmTrendChart(data.payload);
+                }
+            })
+            .catch(error => {
+                console.error('Confirmation stats failed:', error);
+            });
+    }
+
+    function renderConfirmerRoleChart(data) {
+        const dist = data.confirmer_role_distribution || {};
+        const labels = Object.keys(dist).map(k => roleLabels[k] || k);
+        const values = Object.values(dist);
+
+        if (values.length === 0) {
+            document.getElementById('confirmerChartLoading').innerHTML =
+                '<p class="text-sm text-gray-400 dark:text-gray-500">확정 데이터가 없습니다</p>';
+            return;
+        }
+
+        document.getElementById('confirmerChartLoading').classList.add('hidden');
+        document.getElementById('confirmerChartContent').classList.remove('hidden');
+
+        const isDark = document.documentElement.classList.contains('dark');
+        new Chart(document.getElementById('confirmerRoleChart'), {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{ data: values, backgroundColor: confirmColors.slice(0, labels.length), borderWidth: 0 }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                const total = values.reduce((a, b) => a + b, 0);
+                                const pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : 0;
+                                return `${ctx.raw}건 (${pct}%)`;
+                            }
+                        }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+
+        const legend = document.getElementById('confirmerLegend');
+        labels.forEach((label, i) => {
+            const span = document.createElement('span');
+            span.className = 'flex items-center gap-1';
+            span.innerHTML = `<span class="w-2 h-2 rounded-full" style="background-color: ${confirmColors[i]}"></span>${label}`;
+            legend.appendChild(span);
+        });
+    }
+
+    function renderCategoryConfirmChart(data) {
+        const rates = data.category_confirmation_rates || [];
+        if (rates.length === 0) {
+            document.getElementById('categoryConfirmLoading').innerHTML =
+                '<p class="text-sm text-gray-400 dark:text-gray-500">카테고리 데이터가 없습니다</p>';
+            return;
+        }
+
+        document.getElementById('categoryConfirmLoading').classList.add('hidden');
+        document.getElementById('categoryConfirmContent').classList.remove('hidden');
+
+        const isDark = document.documentElement.classList.contains('dark');
+        const colors = { text: isDark ? '#9ca3af' : '#6b7280', grid: isDark ? '#374151' : '#f0f0f0' };
+
+        new Chart(document.getElementById('categoryConfirmChart'), {
+            type: 'bar',
+            data: {
+                labels: rates.map(r => r.category === 'DATE' ? '날짜' : '요일'),
+                datasets: [
+                    { label: '확정', data: rates.map(r => r.confirmed_count), backgroundColor: '#22c55e', borderRadius: 4 },
+                    { label: '미확정', data: rates.map(r => r.total_count - r.confirmed_count), backgroundColor: isDark ? '#374151' : '#e5e7eb', borderRadius: 4 }
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: colors.text, usePointStyle: true } },
+                    tooltip: {
+                        callbacks: {
+                            afterBody: function(ctx) {
+                                const idx = ctx[0].dataIndex;
+                                return `확정률: ${rates[idx].rate}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        grid: { color: colors.grid },
+                        ticks: { color: colors.text },
+                        title: { display: true, text: '이벤트 수', color: colors.text, font: { size: 11 } }
+                    },
+                    y: {
+                        stacked: true,
+                        grid: { display: false },
+                        ticks: { color: colors.text }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderConfirmTrendChart(data) {
+        const trend = data.daily_trend || [];
+        if (trend.length === 0) {
+            document.getElementById('confirmTrendLoading').innerHTML =
+                '<p class="text-sm text-gray-400 dark:text-gray-500">추이 데이터가 없습니다</p>';
+            return;
+        }
+
+        document.getElementById('confirmTrendLoading').classList.add('hidden');
+        document.getElementById('confirmTrendContent').classList.remove('hidden');
+
+        const isDark = document.documentElement.classList.contains('dark');
+        const colors = { text: isDark ? '#9ca3af' : '#6b7280', grid: isDark ? '#374151' : '#f0f0f0' };
+
+        new Chart(document.getElementById('confirmTrendChart'), {
+            type: 'line',
+            data: {
+                labels: trend.map(t => t.date),
+                datasets: [
+                    {
+                        label: '확정',
+                        data: trend.map(t => t.confirmed_count),
+                        borderColor: '#22c55e',
+                        backgroundColor: isDark ? 'rgba(34, 197, 94, 0.1)' : 'rgba(34, 197, 94, 0.05)',
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: '생성',
+                        data: trend.map(t => t.created_count),
+                        borderColor: '#677CEE',
+                        backgroundColor: 'transparent',
+                        borderDash: [5, 5],
+                        pointRadius: 2,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: colors.text, usePointStyle: true } }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: colors.grid },
+                        ticks: { color: colors.text },
+                        title: { display: true, text: '건수', color: colors.text, font: { size: 11 } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: colors.text, maxTicksLimit: 15 },
+                        title: { display: true, text: '날짜', color: colors.text, font: { size: 11 } }
+                    }
+                }
+            }
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         loadHeatmap();
         loadEventList(1);
+        loadConfirmationStats();
     });
 </script>
 </th:block>

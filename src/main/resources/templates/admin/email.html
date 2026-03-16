@@ -8,9 +8,9 @@
 <body>
 <div layout:fragment="content">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">이메일 발송</h1>
+            <h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">이메일 발송</h1>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">사용자에게 이메일을 발송합니다</p>
         </div>
         <button type="button" id="btnTestEmail" class="px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
@@ -21,20 +21,20 @@
 
     <!-- Tabs -->
     <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
-        <nav class="flex gap-6">
-            <button type="button" class="tab-btn pb-3 text-sm font-medium border-b-2 border-accent-500 text-gray-900 dark:text-white" data-tab="groupSend">
+        <nav class="flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide -mb-px" role="tablist">
+            <button type="button" id="tab-groupSend" role="tab" aria-selected="true" aria-controls="groupSend" class="tab-btn pb-3 text-sm font-medium border-b-2 border-accent-500 text-gray-900 dark:text-white whitespace-nowrap" data-tab="groupSend">
                 <i data-lucide="users" class="w-4 h-4 inline mr-1"></i>
                 그룹 발송
             </button>
-            <button type="button" class="tab-btn pb-3 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" data-tab="individualSend">
+            <button type="button" id="tab-individualSend" role="tab" aria-selected="false" aria-controls="individualSend" class="tab-btn pb-3 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 whitespace-nowrap" data-tab="individualSend">
                 <i data-lucide="user" class="w-4 h-4 inline mr-1"></i>
                 개별 발송
             </button>
-            <button type="button" class="tab-btn pb-3 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" data-tab="emailLogs">
+            <button type="button" id="tab-emailLogs" role="tab" aria-selected="false" aria-controls="emailLogs" class="tab-btn pb-3 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 whitespace-nowrap" data-tab="emailLogs">
                 <i data-lucide="history" class="w-4 h-4 inline mr-1"></i>
                 발송 로그
             </button>
-            <button type="button" class="tab-btn pb-3 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" data-tab="emailTemplates">
+            <button type="button" id="tab-emailTemplates" role="tab" aria-selected="false" aria-controls="emailTemplates" class="tab-btn pb-3 text-sm font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 whitespace-nowrap" data-tab="emailTemplates">
                 <i data-lucide="file-text" class="w-4 h-4 inline mr-1"></i>
                 템플릿
             </button>
@@ -44,13 +44,13 @@
     <!-- Tab Contents -->
     <div id="tabContents">
         <!-- Tab 1: Group Send -->
-        <div id="groupSend" class="tab-content">
-            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+        <div id="groupSend" class="tab-content" role="tabpanel" aria-labelledby="tab-groupSend">
+            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
                 <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                     <i data-lucide="users" class="w-4 h-4"></i>
                     그룹 발송
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">대상 그룹</label>
                         <select id="groupTargetGroup" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
@@ -91,8 +91,8 @@
                     </div>
                     <textarea id="groupContent" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" rows="6" placeholder="이메일 내용..."></textarea>
                 </div>
-                <div class="flex justify-end">
-                    <button type="button" class="px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2" id="btnGroupSend">
+                <div class="flex justify-end sm:justify-end">
+                    <button type="button" class="w-full sm:w-auto px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center justify-center gap-2" id="btnGroupSend">
                         <i data-lucide="send" class="w-4 h-4"></i>
                         발송
                     </button>
@@ -101,11 +101,11 @@
         </div>
 
         <!-- Tab 2: Individual Send -->
-        <div id="individualSend" class="tab-content hidden">
+        <div id="individualSend" class="tab-content hidden" role="tabpanel" aria-labelledby="tab-individualSend">
             <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 <!-- Left: User Search -->
                 <div class="lg:col-span-2">
-                    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+                    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
                         <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                             <i data-lucide="search" class="w-4 h-4"></i>
                             사용자 검색
@@ -140,7 +140,7 @@
 
                 <!-- Right: Email Compose -->
                 <div class="lg:col-span-3">
-                    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+                    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
                         <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                             <i data-lucide="mail" class="w-4 h-4"></i>
                             이메일 작성
@@ -178,7 +178,7 @@
                             <textarea id="indContent" class="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500" rows="6" placeholder="이메일 내용..."></textarea>
                         </div>
                         <div class="flex justify-end">
-                            <button type="button" class="px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2" id="btnIndividualSend">
+                            <button type="button" class="w-full sm:w-auto px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center justify-center gap-2" id="btnIndividualSend">
                                 <i data-lucide="send" class="w-4 h-4"></i>
                                 발송
                             </button>
@@ -189,9 +189,9 @@
         </div>
 
         <!-- Tab 3: Email Logs -->
-        <div id="emailLogs" class="tab-content hidden">
+        <div id="emailLogs" class="tab-content hidden" role="tabpanel" aria-labelledby="tab-emailLogs">
             <!-- Stats Cards -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                 <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 transition-colors">
                     <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">총 발송</p>
                     <p class="text-xl font-semibold text-gray-900 dark:text-white" id="statsTotalSent">-</p>
@@ -220,14 +220,14 @@
                         </h3>
                     </div>
                     <!-- Filters -->
-                    <div class="flex flex-wrap items-center gap-2">
-                        <select id="logStatusFilter" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap items-center gap-2">
+                        <select id="logStatusFilter" class="w-full lg:w-auto px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
                             <option value="">전체 상태</option>
                             <option value="QUEUED">대기중</option>
                             <option value="SENT">발송됨</option>
                             <option value="FAILED">실패</option>
                         </select>
-                        <select id="logTargetGroupFilter" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
+                        <select id="logTargetGroupFilter" class="w-full lg:w-auto px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
                             <option value="">전체 그룹</option>
                             <option value="agreed">마케팅 동의</option>
                             <option value="dormant">휴면 유저</option>
@@ -236,18 +236,20 @@
                             <option value="vip">VIP 유저</option>
                             <option value="test">테스트</option>
                         </select>
-                        <input type="date" id="logStartDate" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
-                        <span class="text-gray-400 text-sm">~</span>
-                        <input type="date" id="logEndDate" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
-                        <div class="flex">
-                            <input type="text" id="logSearchInput" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-l-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="수신자/제목 검색...">
+                        <div class="flex items-center gap-2 col-span-1 sm:col-span-2 lg:col-span-1">
+                            <input type="date" id="logStartDate" class="flex-1 lg:flex-none px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
+                            <span class="text-gray-400 text-sm flex-shrink-0">~</span>
+                            <input type="date" id="logEndDate" class="flex-1 lg:flex-none px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
+                        </div>
+                        <div class="flex col-span-1 sm:col-span-2 lg:col-span-1">
+                            <input type="text" id="logSearchInput" class="flex-1 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-l-md focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="수신자/제목 검색...">
                             <button type="button" id="btnSearchLogs" class="px-3 py-1.5 border border-l-0 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-r-md hover:bg-gray-50 dark:hover:bg-gray-800">
                                 <i data-lucide="search" class="w-4 h-4"></i>
                             </button>
+                            <button type="button" id="btnResetLogFilter" class="ml-2 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 flex-shrink-0">
+                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                            </button>
                         </div>
-                        <button type="button" id="btnResetLogFilter" class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800">
-                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
-                        </button>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -277,7 +279,7 @@
         </div>
 
         <!-- Tab 4: Templates -->
-        <div id="emailTemplates" class="tab-content hidden">
+        <div id="emailTemplates" class="tab-content hidden" role="tabpanel" aria-labelledby="tab-emailTemplates">
             <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors">
                 <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 class="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
@@ -313,8 +315,8 @@
     </div>
 
     <!-- Template Modal -->
-    <div id="templateModal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div id="templateModal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg w-full max-w-[95vw] sm:max-w-lg lg:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
             <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="templateModalTitle">새 템플릿</h3>
                 <button onclick="closeTemplateModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
@@ -359,8 +361,8 @@
     </div>
 
     <!-- Log Detail Modal -->
-    <div id="logDetailModal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div id="logDetailModal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg w-full max-w-[95vw] sm:max-w-lg lg:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
             <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">발송 상세</h3>
                 <button onclick="closeLogDetailModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
@@ -368,7 +370,7 @@
                 </button>
             </div>
             <div class="flex-1 overflow-auto p-4">
-                <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div>
                         <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">수신자</p>
                         <p class="text-sm text-gray-900 dark:text-white" id="logDetailRecipient">-</p>
@@ -421,9 +423,11 @@
             tabBtns.forEach(b => {
                 b.classList.remove('border-accent-500', 'text-gray-900', 'dark:text-white');
                 b.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+                b.setAttribute('aria-selected', 'false');
             });
             btn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
             btn.classList.add('border-accent-500', 'text-gray-900', 'dark:text-white');
+            btn.setAttribute('aria-selected', 'true');
 
             tabContents.forEach(content => {
                 content.classList.add('hidden');
@@ -493,13 +497,19 @@
         document.getElementById('searchLoading').classList.remove('hidden');
 
         fetch(`/api/v1/admin/statistics/users/search?query=${encodeURIComponent(query.trim())}&limit=20`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
             .then(data => {
                 if (data.is_success && data.payload) {
                     renderSearchResults(data.payload);
                 }
             })
-            .catch(error => console.error('Error:', error))
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('사용자 검색에 실패했습니다.', 'error');
+            })
             .finally(() => document.getElementById('searchLoading').classList.add('hidden'));
     }
 
@@ -571,7 +581,10 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ subject, content, contentType })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        })
         .then(data => {
             if (data.is_success && data.payload) {
                 showAlert('테스트 이메일이 발송 대기열에 등록되었습니다', 'success');
@@ -611,7 +624,10 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ targetGroup, subject, content, contentType, limit })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        })
         .then(data => {
             if (data.is_success && data.payload) {
                 const r = data.payload;
@@ -655,7 +671,10 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ to: emails, subject, content, contentType, userIds })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        })
         .then(data => {
             if (data.is_success && data.payload) {
                 const r = data.payload;
@@ -683,7 +702,10 @@
 
     function loadTemplates() {
         fetch('/api/v1/admin/email/templates')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
             .then(data => {
                 if (data.is_success && data.payload) {
                     templatesCache = data.payload;
@@ -691,7 +713,10 @@
                     updateTemplateDropdowns(data.payload);
                 }
             })
-            .catch(error => console.error('Error loading templates:', error));
+            .catch(error => {
+                console.error('Error loading templates:', error);
+                showToast('템플릿 로드에 실패했습니다.', 'error');
+            });
     }
 
     function renderTemplatesTable(templates) {
@@ -724,11 +749,14 @@
     }
 
     function updateTemplateDropdowns(templates) {
-        const options = templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+        const options = templates.map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('');
         const html = '<option value="">템플릿을 선택하세요</option>' + options;
-        document.getElementById('groupTemplateSelect').innerHTML = html;
-        document.getElementById('indTemplateSelect').innerHTML = html;
-        document.getElementById('scheduleTemplateId').innerHTML = html;
+        const groupEl = document.getElementById('groupTemplateSelect');
+        const indEl = document.getElementById('indTemplateSelect');
+        const scheduleEl = document.getElementById('scheduleTemplateId');
+        if (groupEl) groupEl.innerHTML = html;
+        if (indEl) indEl.innerHTML = html;
+        if (scheduleEl) scheduleEl.innerHTML = html;
     }
 
     // Template dropdown change handlers
@@ -806,7 +834,10 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        })
         .then(data => {
             if (data.is_success) {
                 closeTemplateModal();
@@ -824,7 +855,10 @@
         if (!confirmed) return;
 
         fetch(`/api/v1/admin/email/templates/${id}`, { method: 'DELETE' })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
             .then(data => {
                 if (data.is_success) {
                     loadTemplates();
@@ -861,13 +895,19 @@
         if (targetGroup) url += `&targetGroup=${targetGroup}`;
 
         fetch(url)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
             .then(data => {
                 if (data.is_success && data.payload) {
                     renderEmailLogs(data.payload);
                 }
             })
-            .catch(error => console.error('Error loading logs:', error));
+            .catch(error => {
+                console.error('Error loading logs:', error);
+                showToast('이메일 로그 로드에 실패했습니다.', 'error');
+            });
     }
 
     // Store logs for detail view
@@ -957,7 +997,10 @@
 
     function loadEmailStats() {
         fetch('/api/v1/admin/email/stats')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
             .then(data => {
                 if (data.is_success && data.payload) {
                     const stats = data.payload;

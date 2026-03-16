@@ -8,9 +8,9 @@
 <body>
 <div layout:fragment="content">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">마케팅 타겟</h1>
+            <h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">마케팅 타겟</h1>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">마케팅 대상 그룹을 관리합니다</p>
         </div>
     </div>
@@ -25,7 +25,7 @@
     </div>
 
     <!-- Summary Cards Row 1 -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
         <!-- Marketing Agreed -->
         <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
              onclick="showDetail('agreed')">
@@ -76,7 +76,7 @@
     </div>
 
     <!-- Summary Cards Row 2 -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <!-- One-time Users -->
         <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
              onclick="showDetail('oneTime')">
@@ -127,8 +127,8 @@
     </div>
 
     <!-- Detail Modal -->
-    <div id="detailModal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div id="detailModal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg w-full max-w-[95vw] sm:max-w-3xl lg:max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
             <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="detailModalLabel">Detail View</h3>
                 <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
@@ -152,7 +152,7 @@
                     </div>
                 </div>
             </div>
-            <div class="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex flex-wrap items-center justify-between gap-2 p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700">
                 <button type="button" onclick="sendEmailToSelected()" id="btnSendEmailToSelected"
                         class="px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled>
@@ -257,6 +257,23 @@
         selectedMarketingUsers.clear();
         updateSelectionUI();
     }
+
+    // Delegated event listener for marketing checkboxes (replaces inline onchange)
+    document.addEventListener('change', function(e) {
+        const cb = e.target.closest('.marketing-user-checkbox');
+        if (!cb) return;
+        const userId = cb.dataset.userId;
+        const email = cb.dataset.userEmail;
+        const name = cb.dataset.userName;
+        const nickname = cb.dataset.userNickname;
+        const key = String(userId);
+        if (cb.checked) {
+            selectedMarketingUsers.set(key, { userId, email, name, nickname });
+        } else {
+            selectedMarketingUsers.delete(key);
+        }
+        updateSelectionUI();
+    });
 
     function toggleUser(userId, email, name, nickname) {
         const key = `${userId}`;
@@ -405,14 +422,17 @@
                     <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 ${rowOpacity}">
                         <td class="py-2 px-3">
                             <input type="checkbox" class="marketing-user-checkbox w-4 h-4 text-accent-500 border-gray-300 dark:border-gray-600 rounded focus:ring-accent-500"
-                                   data-user-id="${user.userId}" ${checkboxDisabled}
-                                   onchange="toggleUser('${user.userId}', '${(user.email || '').replace(/'/g, "\\'")}', '${(user.name || '').replace(/'/g, "\\'")}', '${(user.nickname || '').replace(/'/g, "\\'")}')">
+                                   data-user-id="${escapeHtml(String(user.userId))}"
+                                   data-user-email="${escapeHtml(user.email || '')}"
+                                   data-user-name="${escapeHtml(user.name || '')}"
+                                   data-user-nickname="${escapeHtml(user.nickname || '')}"
+                                   ${checkboxDisabled}>
                         </td>
-                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.userId || '-'}</td>
-                        <td class="py-2 px-3 text-gray-900 dark:text-white" title="${user.email || ''}">${user.email || '-'}</td>
-                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.name || '-'}</td>
-                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.nickname || '-'}</td>
-                        <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs ${badgeClass} rounded">${user.provider || '-'}</span></td>
+                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${escapeHtml(String(user.userId || ''))}</td>
+                        <td class="py-2 px-3 text-gray-900 dark:text-white">${escapeHtml(user.email)}</td>
+                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${escapeHtml(user.name)}</td>
+                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${escapeHtml(user.nickname)}</td>
+                        <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs ${badgeClass} rounded">${escapeHtml(user.provider)}</span></td>
                         <td class="py-2 px-3">${user.marketingPolicyAgreement ? '<i data-lucide="check" class="w-4 h-4 text-green-600 dark:text-green-400"></i>' : '<i data-lucide="x" class="w-4 h-4 text-red-500 dark:text-red-400"></i>'}</td>
                         <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.createdDate ? new Date(user.createdDate).toLocaleDateString() : '-'}</td>
                         <td class="py-2 px-3">${extra}</td>
@@ -466,14 +486,17 @@
                     <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 ${rowOpacity}">
                         <td class="py-2 px-3">
                             <input type="checkbox" class="marketing-user-checkbox w-4 h-4 text-accent-500 border-gray-300 dark:border-gray-600 rounded focus:ring-accent-500"
-                                   data-user-id="${uniqueId}" ${checkboxDisabled}
-                                   onchange="toggleUser('${uniqueId}', '${(event.creatorEmail || '').replace(/'/g, "\\'")}', '${(event.creatorName || '').replace(/'/g, "\\'")}', '${(event.creatorNickname || '').replace(/'/g, "\\'")}')">
+                                   data-user-id="${escapeHtml(String(uniqueId))}"
+                                   data-user-email="${escapeHtml(event.creatorEmail || '')}"
+                                   data-user-name="${escapeHtml(event.creatorName || '')}"
+                                   data-user-nickname="${escapeHtml(event.creatorNickname || '')}"
+                                   ${checkboxDisabled}>
                         </td>
-                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${event.eventId || '-'}</td>
-                        <td class="py-2 px-3 text-gray-900 dark:text-white" title="${event.title || ''}">${event.title || '-'}</td>
-                        <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs ${badgeClass} rounded">${event.category || '-'}</span></td>
-                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${event.creatorNickname || event.creatorName || '-'}</td>
-                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400" title="${event.creatorEmail || ''}">${event.creatorEmail || '-'}</td>
+                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${escapeHtml(String(event.eventId || ''))}</td>
+                        <td class="py-2 px-3 text-gray-900 dark:text-white">${escapeHtml(event.title)}</td>
+                        <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs ${badgeClass} rounded">${escapeHtml(event.category)}</span></td>
+                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${escapeHtml(event.creatorNickname || event.creatorName)}</td>
+                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${escapeHtml(event.creatorEmail)}</td>
                         <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${event.createdDate ? new Date(event.createdDate).toLocaleDateString() : '-'}</td>
                         <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded">${event.daysSinceCreated || 0}d</span></td>
                     </tr>

@@ -8,9 +8,9 @@
 <body>
 <div layout:fragment="content">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">리텐션 분석</h1>
+            <h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">리텐션 분석</h1>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">사용자 유지율을 분석합니다</p>
         </div>
     </div>
@@ -25,7 +25,7 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <!-- Dormant 7d+ -->
         <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
              onclick="showRetentionDetail('dormant7')">
@@ -92,16 +92,16 @@
     </div>
 
     <!-- Monthly MAU Chart -->
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 mb-6 transition-colors">
         <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">월간 활성 사용자 (MAU)</h3>
         <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">매월 로그인한 고유 사용자 수 추이</p>
-        <div class="h-64">
+        <div class="h-56 sm:h-64 w-full">
             <canvas id="mauChart"></canvas>
         </div>
     </div>
 
     <!-- Conversion Funnel -->
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 mb-6 transition-colors">
         <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">전환 퍼널</h3>
         <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">가입 → 첫 이벤트 → 참여자 확보 → 재생성 단계별 전환율</p>
         <div id="funnelLoading" class="animate-pulse space-y-4">
@@ -143,12 +143,12 @@
     </div>
 
     <!-- TTV Distribution -->
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 mb-6 transition-colors">
         <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">Time to Value (TTV)</h3>
         <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">가입 후 첫 이벤트 생성까지 걸린 시간 분포</p>
         <div id="ttvLoading" class="animate-pulse">
             <!-- Summary Cards Skeleton -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                 <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                     <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-12 mx-auto mb-2"></div>
                     <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-16 mx-auto"></div>
@@ -178,7 +178,7 @@
         </div>
         <div id="ttvContent" class="hidden">
             <!-- TTV Summary Cards -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                 <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
                     <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">평균</p>
                     <p class="text-lg font-semibold text-gray-900 dark:text-white" id="ttvAverage">-</p>
@@ -197,14 +197,14 @@
                 </div>
             </div>
             <!-- TTV Distribution Chart -->
-            <div class="h-64">
+            <div class="h-56 sm:h-64 w-full">
                 <canvas id="ttvChart"></canvas>
             </div>
         </div>
     </div>
 
     <!-- WAU/MAU Stickiness -->
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 mb-6 transition-colors">
         <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">Stickiness (WAU/MAU)</h3>
         <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">최근 30일 방문자 중 최근 7일에도 방문한 비율 - 높을수록 자주 재방문</p>
         <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">
@@ -214,7 +214,7 @@
         </p>
         <div id="stickinessLoading" class="animate-pulse">
             <!-- Summary Cards Skeleton -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <div class="bg-accent-500/20 rounded-lg p-4">
                     <div class="h-3 bg-accent-400/30 rounded w-20 mx-auto mb-2"></div>
                     <div class="h-6 bg-accent-400/30 rounded w-16 mx-auto"></div>
@@ -233,7 +233,7 @@
         </div>
         <div id="stickinessContent" class="hidden">
             <!-- Stickiness Summary Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <div class="bg-accent-500 text-white rounded-lg p-4 text-center">
                     <p class="text-xs uppercase mb-1 opacity-80">현재 Stickiness</p>
                     <p class="text-2xl font-bold" id="stickinessValue">-</p>
@@ -248,15 +248,15 @@
                 </div>
             </div>
             <!-- Stickiness Trend Chart -->
-            <div class="h-64">
+            <div class="h-56 sm:h-64 w-full">
                 <canvas id="stickinessChart"></canvas>
             </div>
         </div>
     </div>
 
     <!-- Cohort Retention Table -->
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
-        <div class="flex items-center justify-between mb-4">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
+        <div class="flex flex-wrap items-start sm:items-center justify-between gap-3 mb-4">
             <div>
                 <h3 class="text-sm font-medium text-gray-900 dark:text-white">코호트 리텐션</h3>
                 <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">가입월별 유저의 월간 재방문율 추이</p>
@@ -340,8 +340,8 @@
     </div>
 
     <!-- User List Modal -->
-    <div id="retentionModal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div id="retentionModal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg w-full max-w-[95vw] sm:max-w-3xl lg:max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
             <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="retentionModalLabel">유저 목록</h3>
                 <button onclick="closeRetentionModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
@@ -367,7 +367,7 @@
                     </div>
                 </div>
             </div>
-            <div class="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex flex-wrap items-center justify-between gap-2 p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700">
                 <button type="button" onclick="sendEmailToSelected()" id="btnSendEmailToSelected"
                         class="px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 btn-hover flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled>
@@ -442,7 +442,10 @@
         }
 
         fetch(url)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
             .then(data => {
                 if (data.is_success && data.payload) {
                     renderRetentionUsers(data.payload, type);
@@ -798,13 +801,19 @@
         document.getElementById('stickinessContent').classList.add('hidden');
 
         fetch('/api/v1/admin/statistics/stickiness?months=12')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
             .then(data => {
                 if (data.is_success && data.payload) {
                     renderStickiness(data.payload);
                 }
             })
-            .catch(error => console.error('Error loading stickiness:', error))
+            .catch(error => {
+                console.error('Error loading stickiness:', error);
+                showToast('스티키니스 데이터를 불러오는데 실패했습니다.', 'error');
+            })
             .finally(() => {
                 document.getElementById('stickinessLoading').classList.add('hidden');
                 document.getElementById('stickinessContent').classList.remove('hidden');
@@ -938,13 +947,19 @@
         }
 
         fetch(url)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
             .then(data => {
                 if (data.is_success && data.payload) {
                     renderTtv(data.payload);
                 }
             })
-            .catch(error => console.error('Error loading TTV:', error))
+            .catch(error => {
+                console.error('Error loading TTV:', error);
+                showToast('TTV 데이터를 불러오는데 실패했습니다.', 'error');
+            })
             .finally(() => {
                 document.getElementById('ttvLoading').classList.add('hidden');
                 document.getElementById('ttvContent').classList.remove('hidden');
@@ -1023,13 +1038,19 @@
         }
 
         fetch(url)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
             .then(data => {
                 if (data.is_success && data.payload) {
                     renderFunnel(data.payload);
                 }
             })
-            .catch(error => console.error('Error loading funnel:', error))
+            .catch(error => {
+                console.error('Error loading funnel:', error);
+                showToast('퍼널 데이터를 불러오는데 실패했습니다.', 'error');
+            })
             .finally(() => {
                 document.getElementById('funnelLoading').classList.add('hidden');
                 document.getElementById('funnelContent').classList.remove('hidden');
@@ -1095,13 +1116,19 @@
         document.getElementById('cohortContent').classList.add('hidden');
 
         fetch(`/api/v1/admin/statistics/cohort?months=${months}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
             .then(data => {
                 if (data.is_success && data.payload) {
                     renderCohortTable(data.payload);
                 }
             })
-            .catch(error => console.error('Error loading cohort:', error))
+            .catch(error => {
+                console.error('Error loading cohort:', error);
+                showToast('코호트 데이터를 불러오는데 실패했습니다.', 'error');
+            })
             .finally(() => {
                 document.getElementById('cohortLoading').classList.add('hidden');
                 document.getElementById('cohortContent').classList.remove('hidden');

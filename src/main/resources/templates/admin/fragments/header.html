@@ -4,8 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>OneTime Admin</title>
-    <!-- Favicon -->
+    <!-- Favicon & PWA -->
     <link rel="icon" type="image/png" th:href="@{/admin/img/favicon.png}">
+    <link rel="manifest" th:href="@{/admin/manifest.json}">
+    <link rel="apple-touch-icon" th:href="@{/admin/img/favicon.png}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="OneTime Admin">
+    <meta name="theme-color" content="#677CEE">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -43,10 +49,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@0.460.0" crossorigin="anonymous"></script>
 
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
 
     <!-- Chart Tooltip Utilities -->
     <script>
@@ -130,6 +136,7 @@
     <style>
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
         }
 
         /* Tabular Numbers for consistent digit widths */
@@ -225,6 +232,16 @@
             filter: none;
         }
     </style>
+
+    <!-- Global XSS Escape Utility -->
+    <script>
+        window.escapeHtml = function(str) {
+            if (str == null) return '-';
+            const div = document.createElement('div');
+            div.textContent = String(str);
+            return div.innerHTML;
+        };
+    </script>
 
     <!-- Global Toast System -->
     <script>

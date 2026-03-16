@@ -9,7 +9,7 @@
 <div layout:fragment="content">
     <!-- Header -->
     <div class="mb-6">
-        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">유저 통계</h1>
+        <h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">유저 통계</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">서비스 사용자 현황을 확인하세요</p>
     </div>
 
@@ -17,20 +17,20 @@
     <div th:replace="~{admin/fragments/date-filter :: dateFilter}"></div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover">
             <p class="text-sm text-gray-500 dark:text-gray-400">총 가입 유저</p>
             <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                th:text="${#numbers.formatInteger(data.totalUsers, 0, 'COMMA')}">0</p>
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">선택 기간 내 가입자 수</p>
         </div>
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover">
             <p class="text-sm text-gray-500 dark:text-gray-400">활성 유저</p>
             <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                th:text="${#numbers.formatInteger(data.activeUsers, 0, 'COMMA')}">0</p>
             <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">선택 기간 내 로그인한 유저</p>
         </div>
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover">
             <p class="text-sm text-gray-500 dark:text-gray-400">마케팅 동의율</p>
             <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
                th:text="${#numbers.formatDecimal(data.marketingAgreementRate, 1, 1) + '%'}">0%</p>
@@ -39,11 +39,12 @@
     </div>
 
     <!-- Distribution Tables -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
         <!-- Provider Distribution -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
             <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">OAuth 제공자 분포</h3>
             <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">소셜 로그인 플랫폼별 가입자 수</p>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-gray-700">
@@ -58,12 +59,14 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
 
         <!-- Language Distribution -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
             <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">언어 분포</h3>
             <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">사용자 설정 언어별 분포</p>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-gray-700">
@@ -78,11 +81,12 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 
     <!-- Monthly Signups Chart -->
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mb-6 transition-colors">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 mb-6 transition-colors">
         <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">월별 가입자</h3>
         <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">매월 새로 가입한 사용자 수 추이</p>
         <div class="h-64">
@@ -91,13 +95,13 @@
     </div>
 
     <!-- User List -->
-    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
-        <div class="flex items-center justify-between mb-4">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
+        <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
             <div>
                 <h3 class="text-sm font-medium text-gray-900 dark:text-white">유저 목록</h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">선택한 기간 내 가입한 유저</p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
                 <button onclick="exportUsersCsv()"
                         class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 btn-hover flex items-center gap-1">
                     <i data-lucide="download" class="w-4 h-4"></i>
@@ -202,7 +206,7 @@
                     <tbody id="userListBody"></tbody>
                 </table>
             </div>
-            <div class="flex justify-center mt-4" id="userPagination"></div>
+            <div class="flex flex-wrap justify-center mt-4 gap-1" id="userPagination"></div>
         </div>
     </div>
 
@@ -210,7 +214,7 @@
     <div id="userDetailModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen px-4">
             <div class="fixed inset-0 bg-black bg-opacity-30 dark:bg-opacity-50" onclick="closeUserModal()"></div>
-            <div class="relative bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg shadow-xl max-w-2xl w-full p-6">
+            <div class="relative bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg shadow-xl max-w-2xl w-full p-4 sm:p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">유저 상세 정보</h3>
                     <button onclick="closeUserModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
@@ -220,7 +224,7 @@
                 <div id="userDetailLoading" class="text-center py-8">
                     <div class="inline-block w-6 h-6 border-2 border-gray-200 dark:border-gray-600 border-t-accent-500 rounded-full animate-spin"></div>
                 </div>
-                <div id="userDetailContent" class="hidden grid grid-cols-2 gap-6">
+                <div id="userDetailContent" class="hidden">
                     <!-- Basic Info -->
                     <div>
                         <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">기본 정보</h4>
@@ -338,11 +342,18 @@
         if (endDate) url += `&endDate=${endDate}`;
 
         fetch(url)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
             .then(data => {
                 if (data.is_success && data.payload) {
                     renderUserList(data.payload);
                 }
+            })
+            .catch(err => {
+                console.error('유저 목록 로드 실패:', err);
+                showToast('유저 목록을 불러오는데 실패했습니다.', 'error');
             })
             .finally(() => {
                 document.getElementById('userListLoading').classList.add('hidden');
@@ -377,14 +388,15 @@
         } else {
             users.forEach(user => {
                 const badgeClass = isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700';
+                const userId = parseInt(user.id, 10);
                 tbody += `
-                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" onclick="showUserDetail(${user.id})">
-                        <td class="py-2 px-3 text-gray-900 dark:text-white">${user.name || '-'}</td>
-                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.email || '-'}</td>
-                        <td class="py-2 px-3 text-center"><span class="text-xs px-2 py-0.5 ${badgeClass} rounded">${user.provider || '-'}</span></td>
-                        <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${user.language || '-'}</td>
+                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" onclick="showUserDetail(${userId})">
+                        <td class="py-2 px-3 text-gray-900 dark:text-white">${escapeHtml(user.name)}</td>
+                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${escapeHtml(user.email)}</td>
+                        <td class="py-2 px-3 text-center"><span class="text-xs px-2 py-0.5 ${badgeClass} rounded">${escapeHtml(user.provider)}</span></td>
+                        <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${escapeHtml(user.language)}</td>
                         <td class="py-2 px-3 text-center text-gray-600 dark:text-gray-400">${user.participant_count || 0}개</td>
-                        <td class="py-2 px-3 text-center text-gray-400 dark:text-gray-500">${user.created_date || '-'}</td>
+                        <td class="py-2 px-3 text-center text-gray-400 dark:text-gray-500">${escapeHtml(user.created_date)}</td>
                     </tr>
                 `;
             });
@@ -400,16 +412,18 @@
         const startPage = pageGroup * 10 + 1;
         const endPage = Math.min(startPage + 9, totalPages);
 
-        let html = '<div class="flex gap-1">';
-        html += `<button onclick="loadUserList(1)" class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${currentPage === 1 ? 'text-gray-300 dark:text-gray-600' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">«</button>`;
-        html += `<button onclick="loadUserList(${startPage - 1})" class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${startPage === 1 ? 'text-gray-300 dark:text-gray-600' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">‹</button>`;
+        let html = '<div class="flex flex-wrap gap-1">';
+        const atFirst = currentPage <= 1;
+        const atLast = currentPage >= totalPages;
+        html += `<button onclick="loadUserList(1)" ${atFirst ? 'disabled' : ''} class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${atFirst ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">«</button>`;
+        html += `<button onclick="loadUserList(${startPage - 1})" ${startPage <= 1 ? 'disabled' : ''} class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${startPage === 1 ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">‹</button>`;
 
         for (let i = startPage; i <= endPage; i++) {
             html += `<button onclick="loadUserList(${i})" class="px-3 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${i === currentPage ? 'bg-accent-500 text-white border-accent-500' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">${i}</button>`;
         }
 
-        html += `<button onclick="loadUserList(${endPage + 1})" class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${endPage >= totalPages ? 'text-gray-300 dark:text-gray-600' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">›</button>`;
-        html += `<button onclick="loadUserList(${totalPages})" class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${currentPage === totalPages ? 'text-gray-300 dark:text-gray-600' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">»</button>`;
+        html += `<button onclick="loadUserList(${endPage + 1})" ${endPage >= totalPages ? 'disabled' : ''} class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${endPage >= totalPages ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">›</button>`;
+        html += `<button onclick="loadUserList(${totalPages})" ${atLast ? 'disabled' : ''} class="px-2 py-1 text-sm border border-gray-200 dark:border-gray-600 rounded ${atLast ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}">»</button>`;
         html += '</div>';
 
         document.getElementById('userPagination').innerHTML = html;
@@ -432,20 +446,32 @@
         document.getElementById('userDetailContent').classList.add('hidden');
 
         fetch(`/api/v1/admin/statistics/users/${userId}/detail`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
             .then(data => {
                 if (data.is_success && data.payload) {
                     renderUserDetail(data.payload);
                 }
             })
+            .catch(err => {
+                console.error('유저 상세 로드 실패:', err);
+                showToast('유저 상세 정보를 불러오는데 실패했습니다.', 'error');
+            })
             .finally(() => {
                 document.getElementById('userDetailLoading').classList.add('hidden');
-                document.getElementById('userDetailContent').classList.remove('hidden');
+                const detailContent = document.getElementById('userDetailContent');
+                detailContent.classList.remove('hidden');
+                detailContent.classList.add('grid', 'grid-cols-1', 'sm:grid-cols-2', 'gap-4', 'sm:gap-6');
             });
     }
 
     function closeUserModal() {
         document.getElementById('userDetailModal').classList.add('hidden');
+        const detailContent = document.getElementById('userDetailContent');
+        detailContent.classList.add('hidden');
+        detailContent.classList.remove('grid', 'grid-cols-1', 'sm:grid-cols-2', 'gap-4', 'sm:gap-6');
     }
 
     function renderUserDetail(user) {

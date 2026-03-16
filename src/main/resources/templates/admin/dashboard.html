@@ -8,16 +8,16 @@
 <body>
 <div layout:fragment="content">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-6">
         <div>
-            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">대시보드</h1>
+            <h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">대시보드</h1>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">서비스 현황을 한눈에 확인하세요</p>
         </div>
-        <div class="flex items-center gap-3">
-            <span class="text-sm text-gray-400 dark:text-gray-500" th:text="'데이터 기준: ' + ${#temporals.format(#temporals.createNow(), 'HH:mm:ss')}">
+        <div class="flex items-center gap-3 flex-shrink-0">
+            <span class="text-xs sm:text-sm text-gray-400 dark:text-gray-500" th:text="'데이터 기준: ' + ${#temporals.format(#temporals.createNow(), 'HH:mm:ss')}">
                 데이터 기준: 12:00:00
             </span>
-            <button onclick="location.reload()"
+            <button onclick="location.reload()" aria-label="새로고침"
                     class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 btn-hover">
                 <i data-lucide="refresh-cw" class="w-4 h-4 inline"></i>
             </button>
@@ -28,9 +28,9 @@
     <div th:replace="~{admin/fragments/date-filter :: dateFilter}"></div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <!-- Total Users -->
-        <a href="/admin/statistics/users" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
+        <a href="/admin/statistics/users" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">총 가입 유저</p>
@@ -54,7 +54,7 @@
         </a>
 
         <!-- Total Events -->
-        <a href="/admin/statistics/events" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
+        <a href="/admin/statistics/events" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">총 생성 이벤트</p>
@@ -78,7 +78,7 @@
         </a>
 
         <!-- MAU -->
-        <a href="/admin/statistics/retention" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
+        <a href="/admin/statistics/retention" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">MAU (최근 30일)</p>
@@ -102,7 +102,7 @@
         </a>
 
         <!-- Dormant Rate -->
-        <a href="/admin/statistics/retention" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
+        <a href="/admin/statistics/retention" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">휴면율 (60일+)</p>
@@ -128,9 +128,9 @@
     </div>
 
     <!-- Additional Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
         <!-- Avg Participants -->
-        <a href="/admin/statistics/events" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
+        <a href="/admin/statistics/events" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">평균 참여자/이벤트</p>
@@ -144,8 +144,24 @@
             </div>
         </a>
 
+        <!-- Confirmation Rate -->
+        <a href="/admin/statistics/events" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">이벤트 확정률</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
+                       th:text="${#numbers.formatDecimal(summary.confirmationRate, 1, 1) + '%'}">0%</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1"
+                       th:text="'확정 ' + ${#numbers.formatInteger(summary.confirmedEvents, 0, 'COMMA')} + ' / 전체 ' + ${#numbers.formatInteger(summary.totalEvents, 0, 'COMMA')}">확정/전체 이벤트</p>
+                </div>
+                <div class="w-10 h-10 bg-green-50 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="check-circle" class="w-5 h-5 text-green-600 dark:text-green-400"></i>
+                </div>
+            </div>
+        </a>
+
         <!-- Marketing Targets -->
-        <a href="/admin/statistics/marketing" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
+        <a href="/admin/statistics/marketing" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">마케팅 타겟</p>
@@ -161,9 +177,9 @@
     </div>
 
     <!-- Charts Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
         <!-- Monthly Signups Chart -->
-        <div class="lg:col-span-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+        <div class="lg:col-span-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
             <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">월별 신규 가입</h3>
             <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">매월 새로 가입한 사용자 수 추이</p>
             <div class="h-64">
@@ -172,7 +188,7 @@
         </div>
 
         <!-- OAuth Provider Chart -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
             <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">OAuth 제공자 비율</h3>
             <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">소셜 로그인 제공자 분포</p>
             <div class="h-48">
@@ -183,9 +199,9 @@
     </div>
 
     <!-- Second Charts Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <!-- Weekday Chart -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
             <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">요일별 이벤트</h3>
             <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">이벤트 생성이 많은 요일 분석</p>
             <div class="h-64">
@@ -194,7 +210,7 @@
         </div>
 
         <!-- Top Keywords Table -->
-        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5 transition-colors">
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
             <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">이벤트 제목 키워드 TOP 10</h3>
             <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">이벤트 제목에 자주 등장하는 키워드</p>
             <div class="overflow-x-auto">
