@@ -10,6 +10,8 @@ public record DashboardSummaryResponse(
         long totalUsers,
         long activeUsers,
         long totalEvents,
+        long confirmedEvents,
+        double confirmationRate,
         long mau,
         double avgParticipantsPerEvent,
         double dormantRate,
@@ -73,15 +75,21 @@ public record DashboardSummaryResponse(
             long totalUsers,
             long activeUsers,
             long totalEvents,
+            long confirmedEvents,
             long mau,
             double avgParticipantsPerEvent,
             double dormantRate,
             long marketingTargetUsers
     ) {
+        double confirmationRate = totalEvents > 0
+                ? Math.round((double) confirmedEvents / totalEvents * 1000.0) / 10.0
+                : 0.0;
         return new DashboardSummaryResponse(
                 totalUsers,
                 activeUsers,
                 totalEvents,
+                confirmedEvents,
+                confirmationRate,
                 mau,
                 avgParticipantsPerEvent,
                 dormantRate,
@@ -95,16 +103,22 @@ public record DashboardSummaryResponse(
             long totalUsers,
             long activeUsers,
             long totalEvents,
+            long confirmedEvents,
             long mau,
             double avgParticipantsPerEvent,
             double dormantRate,
             long marketingTargetUsers,
             ComparisonData comparison
     ) {
+        double confirmationRate = totalEvents > 0
+                ? Math.round((double) confirmedEvents / totalEvents * 1000.0) / 10.0
+                : 0.0;
         return new DashboardSummaryResponse(
                 totalUsers,
                 activeUsers,
                 totalEvents,
+                confirmedEvents,
+                confirmationRate,
                 mau,
                 avgParticipantsPerEvent,
                 dormantRate,

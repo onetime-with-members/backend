@@ -1,17 +1,18 @@
 package side.onetime.dto.admin.response;
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import side.onetime.domain.Event;
-import side.onetime.domain.Schedule;
-import side.onetime.domain.enums.Category;
-import side.onetime.util.DateUtil;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+
+import side.onetime.domain.Event;
+import side.onetime.domain.Schedule;
+import side.onetime.domain.enums.Category;
+import side.onetime.util.DateUtil;
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record DashboardEvent(
@@ -21,6 +22,7 @@ public record DashboardEvent(
         String startTime,
         String endTime,
         Category category,
+        String eventStatus,
         String creatorNickname,
         int participantCount,
         String createdDate,
@@ -85,6 +87,7 @@ public record DashboardEvent(
                 event.getStartTime(),
                 event.getEndTime(),
                 event.getCategory(),
+                event.getStatus().name(),
                 creatorNickname,
                 participantCount,
                 event.getCreatedDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd (E) a hh:mm", Locale.KOREAN)),

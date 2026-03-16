@@ -22,6 +22,7 @@ import side.onetime.dto.admin.email.response.UserSearchResult;
 import side.onetime.dto.admin.statistics.response.CohortRetentionResponse;
 import side.onetime.dto.admin.statistics.response.DashboardChartsResponse;
 import side.onetime.dto.admin.statistics.response.DashboardSummaryResponse;
+import side.onetime.dto.admin.statistics.response.EventConfirmationStatsResponse;
 import side.onetime.dto.admin.statistics.response.EventStatisticsResponse;
 import side.onetime.dto.admin.statistics.response.FunnelAnalysisResponse;
 import side.onetime.dto.admin.statistics.response.MarketingTargetDetailResponse;
@@ -33,15 +34,14 @@ import side.onetime.dto.admin.statistics.response.TtvDistributionResponse;
 import side.onetime.dto.admin.statistics.response.UserDetailResponse;
 import side.onetime.dto.admin.statistics.response.UserStatisticsResponse;
 import side.onetime.repository.StatisticsRepository;
-import side.onetime.repository.UserRepository;
 import side.onetime.repository.custom.StatisticsRepositoryCustom;
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class StatisticsService {
 
-    private final UserRepository userRepository;
     private final StatisticsRepository statisticsRepository;
     private final StatisticsRepositoryCustom statisticsRepositoryCustom;
 
@@ -143,7 +143,8 @@ public class StatisticsService {
         );
 
         return DashboardSummaryResponse.of(
-                current.totalUsers, current.activeUsers, current.totalEvents, current.mau,
+                current.totalUsers, current.activeUsers, current.totalEvents,
+                current.confirmedEvents, current.mau,
                 Math.round(current.avgParticipants * 100.0) / 100.0,
                 Math.round(current.dormantRate * 100.0) / 100.0,
                 current.marketingTargetUsers,
@@ -163,6 +164,9 @@ public class StatisticsService {
         // Native Query로 이벤트 통계 조회
         Object[] eventStats = getFirstRow(statisticsRepository.getEventStatsByDateRange(range.start(), range.end()));
         long totalEvents = extractLong(eventStats, 0);
+
+        // 확정 이벤트 수
+        long confirmedEvents = nullToZero(statisticsRepository.countConfirmedEvents(range.start(), range.end()));
 
         // Active users - refresh_token 기반 (기간 내 로그인)
         List<Object[]> dauData = statisticsRepository.findDailyActiveUsers(range.start(), range.end());
@@ -195,7 +199,7 @@ public class StatisticsService {
         long totalUsersInRange = extractLong(dormantData, 1);
         double dormantRate = totalUsersInRange > 0 ? (double) dormantUsers / totalUsersInRange * 100 : 0;
 
-        return new SummaryData(totalUsers, activeUsers, totalEvents, mau, avgParticipants, dormantRate, marketingTargetUsers);
+        return new SummaryData(totalUsers, activeUsers, totalEvents, confirmedEvents, mau, avgParticipants, dormantRate, marketingTargetUsers);
     }
 
     /**
@@ -205,6 +209,7 @@ public class StatisticsService {
             long totalUsers,
             long activeUsers,
             long totalEvents,
+            long confirmedEvents,
             long mau,
             double avgParticipants,
             double dormantRate,
@@ -336,8 +341,13 @@ public class StatisticsService {
         // Top keywords - Native Query
         List<EventStatisticsResponse.KeywordData> topKeywords = extractTopKeywordsFromNativeQuery(range.start(), range.end());
 
+        // 확정 이벤트 통계
+        long confirmedEvents = nullToZero(statisticsRepository.countConfirmedEvents(range.start(), range.end()));
+        Double avgHours = statisticsRepository.findAvgConfirmationHours(range.start(), range.end());
+        double avgConfirmationHours = avgHours != null ? avgHours : 0.0;
+
         return EventStatisticsResponse.of(
-                totalEvents, activeEvents,
+                totalEvents, activeEvents, confirmedEvents, avgConfirmationHours,
                 Math.round(avgParticipants * 100.0) / 100.0,
                 categoryDistribution, weekdayDistribution, monthlyEvents, topKeywords
         );
@@ -1054,6 +1064,57 @@ public class StatisticsService {
         }
 
         return StickinessResponse.of(currentStickiness, currentWau, currentMau, trend);
+    }
+
+    // ==================== 이벤트 확정 통계 ====================
+
+    /**
+     * 이벤트 확정 통계 조회
+     * 확정률, 확정자 유형 분포, 카테고리별 확정률, 일별 추이
+     */
+    public EventConfirmationStatsResponse getEventConfirmationStats(LocalDate startDate, LocalDate endDate) {
+        DateTimeRange range = DateTimeRange.of(startDate, endDate);
+
+        // 기본 카운트
+        Object[] eventStats = getFirstRow(statisticsRepository.getEventStatsByDateRange(range.start(), range.end()));
+        long totalEvents = extractLong(eventStats, 0);
+        long confirmedEvents = nullToZero(statisticsRepository.countConfirmedEvents(range.start(), range.end()));
+
+        // 평균 확정 소요시간
+        Double avgHours = statisticsRepository.findAvgConfirmationHours(range.start(), range.end());
+        double avgConfirmationHours = avgHours != null ? avgHours : 0.0;
+
+        // 확정자 유형 분포
+        List<Object[]> roleRows = statisticsRepository.findConfirmerRoleDistribution(range.start(), range.end());
+        Map<String, Long> confirmerRoleDistribution = new LinkedHashMap<>();
+        for (Object[] row : roleRows) {
+            confirmerRoleDistribution.put((String) row[0], ((Number) row[1]).longValue());
+        }
+
+        // 카테고리별 확정률
+        List<Object[]> categoryRows = statisticsRepository.findCategoryConfirmationRates(range.start(), range.end());
+        List<EventConfirmationStatsResponse.CategoryConfirmationRate> categoryRates = categoryRows.stream()
+                .map(row -> EventConfirmationStatsResponse.CategoryConfirmationRate.of(
+                        (String) row[0],
+                        ((Number) row[1]).longValue(),
+                        ((Number) row[2]).longValue()
+                ))
+                .toList();
+
+        // 일별 추이
+        List<Object[]> trendRows = statisticsRepository.findDailyConfirmationTrend(range.start(), range.end());
+        List<EventConfirmationStatsResponse.DailyConfirmationTrend> dailyTrend = trendRows.stream()
+                .map(row -> new EventConfirmationStatsResponse.DailyConfirmationTrend(
+                        row[0].toString(),
+                        ((Number) row[1]).longValue(),
+                        ((Number) row[2]).longValue()
+                ))
+                .toList();
+
+        return EventConfirmationStatsResponse.of(
+                confirmedEvents, totalEvents, avgConfirmationHours,
+                confirmerRoleDistribution, categoryRates, dailyTrend
+        );
     }
 
     // ==================== 유저 상세 정보 ====================

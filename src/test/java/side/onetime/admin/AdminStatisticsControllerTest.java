@@ -1,5 +1,11 @@
 package side.onetime.admin;
 
+import static org.mockito.ArgumentMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.time.LocalDate;
+import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -7,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Pageable;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
+
 import side.onetime.configuration.AdminControllerTestConfig;
 import side.onetime.controller.AdminStatisticsController;
 import side.onetime.domain.enums.Category;
@@ -17,16 +24,15 @@ import side.onetime.dto.admin.response.DashboardUser;
 import side.onetime.dto.admin.response.GetAllDashboardEventsResponse;
 import side.onetime.dto.admin.response.GetAllDashboardUsersResponse;
 import side.onetime.dto.admin.response.PageInfo;
-import side.onetime.dto.admin.statistics.response.*;
+import side.onetime.dto.admin.statistics.response.CohortRetentionResponse;
+import side.onetime.dto.admin.statistics.response.FunnelAnalysisResponse;
+import side.onetime.dto.admin.statistics.response.MarketingTargetDetailResponse;
+import side.onetime.dto.admin.statistics.response.StickinessResponse;
+import side.onetime.dto.admin.statistics.response.TimeWeekdayHeatmapResponse;
+import side.onetime.dto.admin.statistics.response.TtvDistributionResponse;
+import side.onetime.dto.admin.statistics.response.UserDetailResponse;
 import side.onetime.service.AdminService;
 import side.onetime.service.StatisticsService;
-
-import java.time.LocalDate;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AdminStatisticsController.class)
 public class AdminStatisticsControllerTest extends AdminControllerTestConfig {
@@ -46,7 +52,7 @@ public class AdminStatisticsControllerTest extends AdminControllerTestConfig {
         List<DashboardEvent> events = List.of(
                 new DashboardEvent(
                         1L, "uuid-1", "팀 회의", "09:00", "18:00",
-                        Category.DATE, "홍길동", 5, "2025-03-01 10:00:00",
+                        Category.DATE, "ACTIVE", "홍길동", 5, "2025-03-01 10:00:00",
                         List.of("2025.03.15"), "2025.03.15", "09:00 - 18:00"
                 )
         );

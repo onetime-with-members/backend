@@ -315,7 +315,7 @@ public class AdminControllerTest extends AdminControllerTestConfig {
         List<DashboardEvent> events = List.of(
                 new DashboardEvent(
                         100L, "1", "이벤트 제목", "10:00", "12:00",
-                        Category.DATE, "테스트유저", 10, "2025-03-01 12:00:00",
+                        Category.DATE, "ACTIVE", "테스트유저", 10, "2025-03-01 12:00:00",
                         List.of("2025.04.01"), "2025.04.01", "10:00 - 12:00"
                 )
         );
@@ -368,6 +368,7 @@ public class AdminControllerTest extends AdminControllerTestConfig {
                                                 fieldWithPath("payload.dashboard_events[].start_time").type(JsonFieldType.STRING).description("시작 시간"),
                                                 fieldWithPath("payload.dashboard_events[].end_time").type(JsonFieldType.STRING).description("종료 시간"),
                                                 fieldWithPath("payload.dashboard_events[].category").type(JsonFieldType.STRING).description("카테고리 (DATE 또는 DAY)"),
+                                                fieldWithPath("payload.dashboard_events[].event_status").type(JsonFieldType.STRING).description("이벤트 상태 (ACTIVE, CONFIRMED)"),
                                                 fieldWithPath("payload.dashboard_events[].creator_nickname").type(JsonFieldType.STRING).description("이벤트 생성자 닉네임"),
                                                 fieldWithPath("payload.dashboard_events[].participant_count").type(JsonFieldType.NUMBER).description("참여 인원 수"),
                                                 fieldWithPath("payload.dashboard_events[].created_date").type(JsonFieldType.STRING).description("생성일자"),

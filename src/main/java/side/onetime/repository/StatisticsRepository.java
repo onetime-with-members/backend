@@ -3,16 +3,13 @@ package side.onetime.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
 
 import side.onetime.domain.User;
 
-/**
- * 통계 전용 Repository
- */
-public interface StatisticsRepository extends JpaRepository<User, Long> {
+public interface StatisticsRepository extends Repository<User, Long> {
 
     // ==================== DAU / MAU (refresh_token 기준) ====================
 
@@ -272,7 +269,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             JOIN event_participations ep ON e.events_id = ep.events_id
             LEFT JOIN members m ON e.events_id = m.events_id
             WHERE ep.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
-              AND e.status = 'ACTIVE'
+              AND e.status != 'DELETED'
               AND e.created_date >= :startDate
               AND e.created_date < :endDate
               AND e.created_date < DATE_SUB(NOW(), INTERVAL 3 DAY)
@@ -585,7 +582,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         LEFT JOIN event_participations ep ON e.events_id = ep.events_id
             AND ep.participation_role NOT IN ('CREATOR')
         LEFT JOIN members m ON e.events_id = m.events_id
-        WHERE e.status = 'ACTIVE'
+        WHERE e.status != 'DELETED'
           AND e.created_date >= :startDate AND e.created_date < :endDate
         """, nativeQuery = true)
     List<Object[]> getAvgParticipantsData(
@@ -768,7 +765,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             WHERE u.status = 'ACTIVE'
               AND u.created_date >= :startDate AND u.created_date < :endDate
               AND ep_creator.participation_role IN ('CREATOR', 'CREATOR_AND_PARTICIPANT')
-              AND e.status = 'ACTIVE'
+              AND e.status != 'DELETED'
             GROUP BY ep_creator.users_id, e.events_id
             HAVING COUNT(ep_participant.event_participations_id) > 0
                 OR COUNT(m.members_id) > 0
@@ -1079,7 +1076,7 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
             FROM members
             GROUP BY events_id
         ) m_sub ON e.events_id = m_sub.events_id
-        WHERE e.status = 'ACTIVE'
+        WHERE e.status != 'DELETED'
           AND (:search IS NULL OR e.title LIKE CONCAT('%', :search, '%'))
           AND (:startDate IS NULL OR e.created_date >= :startDate)
           AND (:endDate IS NULL OR e.created_date < :endDate)
@@ -1087,6 +1084,118 @@ public interface StatisticsRepository extends JpaRepository<User, Long> {
         """, nativeQuery = true)
     List<Object[]> findEventsForCsvExport(
             @Param("search") String search,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    // ==================== 이벤트 확정 통계 ====================
+
+    /**
+     * 확정 이벤트 수 (기간 내 생성된 이벤트 중 확정된 것)
+     */
+    @Query(value = """
+        SELECT COUNT(*)
+        FROM events e
+        WHERE e.status = 'CONFIRMED'
+          AND e.created_date >= :startDate AND e.created_date < :endDate
+        """, nativeQuery = true)
+    Long countConfirmedEvents(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * 확정자 유형(confirmer_role) 분포
+     * 반환: [confirmer_role, count]
+     */
+    @Query(value = """
+        SELECT ec.confirmer_role, COUNT(*) AS cnt
+        FROM event_confirmations ec
+        JOIN events e ON ec.events_id = e.events_id
+        WHERE e.created_date >= :startDate AND e.created_date < :endDate
+          AND e.status != 'DELETED'
+        GROUP BY ec.confirmer_role
+        ORDER BY cnt DESC
+        """, nativeQuery = true)
+    List<Object[]> findConfirmerRoleDistribution(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * 카테고리별 확정률
+     * 반환: [category, total_count, confirmed_count]
+     */
+    @Query(value = """
+        SELECT
+            e.category,
+            COUNT(*) AS total_count,
+            SUM(CASE WHEN e.status = 'CONFIRMED' THEN 1 ELSE 0 END) AS confirmed_count
+        FROM events e
+        WHERE e.status != 'DELETED'
+          AND e.created_date >= :startDate AND e.created_date < :endDate
+        GROUP BY e.category
+        """, nativeQuery = true)
+    List<Object[]> findCategoryConfirmationRates(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * 이벤트 생성→확정 평균 소요시간 (시간 단위)
+     * event_confirmations.created_date - events.created_date 의 평균
+     */
+    @Query(value = """
+        SELECT AVG(TIMESTAMPDIFF(MINUTE, e.created_date, ec.created_date)) / 60.0
+        FROM event_confirmations ec
+        JOIN events e ON ec.events_id = e.events_id
+        WHERE e.status != 'DELETED'
+          AND e.created_date >= :startDate AND e.created_date < :endDate
+        """, nativeQuery = true)
+    Double findAvgConfirmationHours(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    /**
+     * 일별 확정/생성 추이
+     * 반환: [date, confirmed_count, created_count]
+     */
+    @Query(value = """
+        SELECT
+            dates.date,
+            COALESCE(conf.cnt, 0) AS confirmed_count,
+            COALESCE(created.cnt, 0) AS created_count
+        FROM (
+            SELECT DISTINCT DATE(e.created_date) AS date
+            FROM events e
+            WHERE e.created_date >= :startDate AND e.created_date < :endDate
+              AND e.status != 'DELETED'
+            UNION
+            SELECT DISTINCT DATE(ec.created_date) AS date
+            FROM event_confirmations ec
+            JOIN events e ON ec.events_id = e.events_id
+            WHERE ec.created_date >= :startDate AND ec.created_date < :endDate
+              AND e.status != 'DELETED'
+        ) dates
+        LEFT JOIN (
+            SELECT DATE(ec.created_date) AS date, COUNT(*) AS cnt
+            FROM event_confirmations ec
+            JOIN events e ON ec.events_id = e.events_id
+            WHERE ec.created_date >= :startDate AND ec.created_date < :endDate
+              AND e.status != 'DELETED'
+            GROUP BY DATE(ec.created_date)
+        ) conf ON dates.date = conf.date
+        LEFT JOIN (
+            SELECT DATE(e.created_date) AS date, COUNT(*) AS cnt
+            FROM events e
+            WHERE e.created_date >= :startDate AND e.created_date < :endDate
+              AND e.status != 'DELETED'
+            GROUP BY DATE(e.created_date)
+        ) created ON dates.date = created.date
+        ORDER BY dates.date
+        """, nativeQuery = true)
+    List<Object[]> findDailyConfirmationTrend(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );

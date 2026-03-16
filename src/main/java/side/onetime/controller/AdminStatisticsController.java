@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +23,7 @@ import side.onetime.dto.admin.email.response.UserSearchResult;
 import side.onetime.dto.admin.response.GetAllDashboardEventsResponse;
 import side.onetime.dto.admin.response.GetAllDashboardUsersResponse;
 import side.onetime.dto.admin.statistics.response.CohortRetentionResponse;
+import side.onetime.dto.admin.statistics.response.EventConfirmationStatsResponse;
 import side.onetime.dto.admin.statistics.response.FunnelAnalysisResponse;
 import side.onetime.dto.admin.statistics.response.MarketingTargetDetailResponse;
 import side.onetime.dto.admin.statistics.response.StickinessResponse;
@@ -34,25 +36,18 @@ import side.onetime.service.AdminService;
 import side.onetime.service.StatisticsService;
 import side.onetime.util.DateUtil;
 
-/**
- * Admin Statistics API Controller
- * 마케팅 타겟 상세 목록 조회용 API
- *
- * 공통 파라미터:
- * - sort: created_date_desc(기본), created_date_asc, name_asc, name_desc
- * - search: 이름, 이메일, 닉네임 검색
- */
 @Hidden
+@Validated
 @RestController
 @RequestMapping("/api/v1/admin/statistics")
 @RequiredArgsConstructor
 @IsAdmin
 public class AdminStatisticsController {
 
+    private static final LocalDate DEFAULT_START_DATE = LocalDate.of(2020, 1, 1);
+
     private final StatisticsService statisticsService;
     private final AdminService adminService;
-
-    // ==================== Events / Users 목록 ====================
 
     /**
      * 이벤트 목록 조회 (페이지네이션, 정렬, 검색, 기간 필터, 시간대/요일 필터)
@@ -70,7 +65,7 @@ public class AdminStatisticsController {
     @GetMapping("/events")
     public ResponseEntity<ApiResponse<GetAllDashboardEventsResponse>> getAllEvents(
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "10") @Max(100) int size,
             @RequestParam(defaultValue = "created_date") String keyword,
             @RequestParam(defaultValue = "desc") String sorting,
             @RequestParam(required = false) String search,
@@ -97,7 +92,7 @@ public class AdminStatisticsController {
     @GetMapping("/users")
     public ResponseEntity<ApiResponse<GetAllDashboardUsersResponse>> getAllUsers(
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "10") @Max(100) int size,
             @RequestParam(defaultValue = "created_date") String keyword,
             @RequestParam(defaultValue = "desc") String sorting,
             @RequestParam(required = false) String search,
@@ -107,8 +102,6 @@ public class AdminStatisticsController {
         GetAllDashboardUsersResponse response = adminService.getAllDashboardUsers(pageable, keyword, sorting, search, startDate, endDate);
         return ApiResponse.onSuccess(SuccessStatus._GET_ALL_DASHBOARD_USERS, response);
     }
-
-    // ==================== User Search (Email) ====================
 
     /**
      * 유저 검색 (이름/이메일/닉네임)
@@ -131,8 +124,6 @@ public class AdminStatisticsController {
         return ApiResponse.onSuccess(SuccessStatus._OK, response);
     }
 
-    // ==================== Funnel Analysis ====================
-
     /**
      * 전환 퍼널 분석
      * 가입 -> 첫 이벤트 생성 -> 참여자 1명+ 받음 -> 2번째 이벤트 생성
@@ -149,8 +140,6 @@ public class AdminStatisticsController {
         return ApiResponse.onSuccess(SuccessStatus._GET_FUNNEL_ANALYSIS, response);
     }
 
-    // ==================== Cohort Retention ====================
-
     /**
      * 코호트 리텐션 분석
      * 가입월 기준 코호트별 M0~M11 리텐션율 반환
@@ -163,8 +152,6 @@ public class AdminStatisticsController {
         CohortRetentionResponse response = statisticsService.getCohortRetention(months);
         return ApiResponse.onSuccess(SuccessStatus._GET_COHORT_RETENTION, response);
     }
-
-    // ==================== TTV (Time to Value) ====================
 
     /**
      * TTV 분포 분석
@@ -182,8 +169,6 @@ public class AdminStatisticsController {
         return ApiResponse.onSuccess(SuccessStatus._GET_TTV_DISTRIBUTION, response);
     }
 
-    // ==================== Time × Weekday Heatmap ====================
-
     /**
      * 이벤트 생성 시간대 × 요일 히트맵
      *
@@ -199,8 +184,6 @@ public class AdminStatisticsController {
         return ApiResponse.onSuccess(SuccessStatus._GET_TIME_WEEKDAY_HEATMAP, response);
     }
 
-    // ==================== WAU/MAU Stickiness ====================
-
     /**
      * WAU/MAU 점착도 분석
      *
@@ -213,7 +196,18 @@ public class AdminStatisticsController {
         return ApiResponse.onSuccess(SuccessStatus._GET_STICKINESS, response);
     }
 
-    // ==================== Marketing Targets ====================
+    /**
+     * 이벤트 확정 통계
+     * 확정률, 확정자 유형 분포, 카테고리별 확정률, 일별 추이
+     */
+    @GetMapping("/events/confirmation")
+    public ResponseEntity<ApiResponse<EventConfirmationStatsResponse>> getEventConfirmationStats(
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
+        LocalDate[] dates = DateUtil.resolveDateRange(startDate, endDate);
+        EventConfirmationStatsResponse response = statisticsService.getEventConfirmationStats(dates[0], dates[1]);
+        return ApiResponse.onSuccess(SuccessStatus._GET_EVENT_CONFIRMATION_STATS, response);
+    }
 
     /**
      * 마케팅 동의 유저 목록
@@ -225,7 +219,7 @@ public class AdminStatisticsController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        LocalDate start = startDate != null ? startDate : LocalDate.of(2020, 1, 1);
+        LocalDate start = startDate != null ? startDate : DEFAULT_START_DATE;
         LocalDate end = endDate != null ? endDate : LocalDate.now();
         MarketingTargetDetailResponse response = statisticsService.getMarketingAgreedUsers(sort, search, start, end);
         return ApiResponse.onSuccess(SuccessStatus._GET_MARKETING_TARGET_DETAIL, response);
@@ -242,7 +236,7 @@ public class AdminStatisticsController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        LocalDate start = startDate != null ? startDate : LocalDate.of(2020, 1, 1);
+        LocalDate start = startDate != null ? startDate : DEFAULT_START_DATE;
         LocalDate end = endDate != null ? endDate : LocalDate.now();
         MarketingTargetDetailResponse response = statisticsService.getDormantUsers(days, sort, search, start, end);
         return ApiResponse.onSuccess(SuccessStatus._GET_MARKETING_TARGET_DETAIL, response);
@@ -259,7 +253,7 @@ public class AdminStatisticsController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        LocalDate start = startDate != null ? startDate : LocalDate.of(2020, 1, 1);
+        LocalDate start = startDate != null ? startDate : DEFAULT_START_DATE;
         LocalDate end = endDate != null ? endDate : LocalDate.now();
         MarketingTargetDetailResponse response = statisticsService.getNoEventUsers(daysAfterSignup, sort, search, start, end);
         return ApiResponse.onSuccess(SuccessStatus._GET_MARKETING_TARGET_DETAIL, response);
@@ -275,7 +269,7 @@ public class AdminStatisticsController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        LocalDate start = startDate != null ? startDate : LocalDate.of(2020, 1, 1);
+        LocalDate start = startDate != null ? startDate : DEFAULT_START_DATE;
         LocalDate end = endDate != null ? endDate : LocalDate.now();
         MarketingTargetDetailResponse response = statisticsService.getOneTimeUsers(sort, search, start, end);
         return ApiResponse.onSuccess(SuccessStatus._GET_MARKETING_TARGET_DETAIL, response);
@@ -291,7 +285,7 @@ public class AdminStatisticsController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        LocalDate start = startDate != null ? startDate : LocalDate.of(2020, 1, 1);
+        LocalDate start = startDate != null ? startDate : DEFAULT_START_DATE;
         LocalDate end = endDate != null ? endDate : LocalDate.now();
         MarketingTargetDetailResponse response = statisticsService.getVipUsers(sort, search, start, end);
         return ApiResponse.onSuccess(SuccessStatus._GET_MARKETING_TARGET_DETAIL, response);
@@ -307,7 +301,7 @@ public class AdminStatisticsController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        LocalDate start = startDate != null ? startDate : LocalDate.of(2020, 1, 1);
+        LocalDate start = startDate != null ? startDate : DEFAULT_START_DATE;
         LocalDate end = endDate != null ? endDate : LocalDate.now();
         MarketingTargetDetailResponse response = statisticsService.getZeroParticipantEvents(sort, search, start, end);
         return ApiResponse.onSuccess(SuccessStatus._GET_MARKETING_TARGET_DETAIL, response);
@@ -321,7 +315,7 @@ public class AdminStatisticsController {
     public ResponseEntity<ApiResponse<MarketingTargetDetailResponse>> getReturningUsers(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        LocalDate start = startDate != null ? startDate : LocalDate.of(2020, 1, 1);
+        LocalDate start = startDate != null ? startDate : DEFAULT_START_DATE;
         LocalDate end = endDate != null ? endDate : LocalDate.now();
         MarketingTargetDetailResponse response = statisticsService.getReturningUsers(start, end);
         return ApiResponse.onSuccess(SuccessStatus._GET_MARKETING_TARGET_DETAIL, response);
@@ -336,7 +330,7 @@ public class AdminStatisticsController {
             @RequestParam(defaultValue = "7") int days,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        LocalDate start = startDate != null ? startDate : LocalDate.of(2020, 1, 1);
+        LocalDate start = startDate != null ? startDate : DEFAULT_START_DATE;
         LocalDate end = endDate != null ? endDate : LocalDate.now();
         MarketingTargetDetailResponse response = statisticsService.getDormantUsersForRetention(days, start, end);
         return ApiResponse.onSuccess(SuccessStatus._GET_MARKETING_TARGET_DETAIL, response);

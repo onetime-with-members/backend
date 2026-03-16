@@ -1,8 +1,9 @@
 package side.onetime.global.common.status;
 
+import org.springframework.http.HttpStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
 import side.onetime.global.common.code.BaseCode;
 import side.onetime.global.common.dto.ReasonDto;
 
@@ -100,6 +101,7 @@ public enum SuccessStatus implements BaseCode {
     _GET_TTV_DISTRIBUTION(HttpStatus.OK, "200", "TTV 분포 조회에 성공했습니다."),
     _GET_TIME_WEEKDAY_HEATMAP(HttpStatus.OK, "200", "시간대×요일 히트맵 조회에 성공했습니다."),
     _GET_STICKINESS(HttpStatus.OK, "200", "점착도 조회에 성공했습니다."),
+    _GET_EVENT_CONFIRMATION_STATS(HttpStatus.OK, "200", "이벤트 확정 통계 조회에 성공했습니다."),
     // Email
     _SEND_EMAIL(HttpStatus.OK, "200", "이메일이 발송 대기열에 등록되었습니다."),
     _SEND_TEST_EMAIL(HttpStatus.OK, "200", "테스트 이메일이 발송 대기열에 등록되었습니다."),
