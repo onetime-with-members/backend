@@ -2,7 +2,7 @@
 
 > 최종 업데이트: 2026-03-17
 
-이 문서는 OneTime(일정 조율 서비스) 백엔드의 기술 스택과 아키텍처를 설명한다. 익명·회원 모두 참여 가능한 이벤트 스케줄링, OAuth2 소셜 로그인, Token Rotation 기반 보안이라는 도메인 요구사항 위에서 **"왜 이것을 골랐는가"**에 초점을 맞춘다.
+이 문서는 OneTime(일정 조율 서비스) 백엔드의 기술 스택과 아키텍처를 설명한다. 익명·회원 모두 참여 가능한 이벤트 스케줄링, OAuth2 소셜 로그인, Token Rotation 기반 보안이라는 도메인 요구사항 위에서 **"왜 이것을 골랐는가"에** 초점을 맞춘다.
 
 ---
 
@@ -16,56 +16,80 @@ flowchart TB
         AdminUser([관리자])
     end
 
+    subgraph GHA["GitHub Actions (CI/CD)"]
+        Build[Gradle Build + Test]
+        DockerBuild[Docker Build]
+        ECRPush[ECR Push]
+        SSMTrigger[SSM 배포 트리거]
+    end
+
     subgraph AWS["AWS Cloud (ap-northeast-2)"]
-        ALB[ALB<br/>HTTPS :443]
-
-        subgraph EC2["EC2 Instance"]
-            App[API Server :8090<br/>Spring Boot 3.3.2]
-            Docker[Docker Container<br/>Corretto 17]
+        subgraph ProdEC2["Prod EC2"]
+            ProdNginx[Nginx :443<br/>Let's Encrypt SSL<br/>fail2ban]
+            ProdBlue[Blue :8091<br/>Spring Boot]
+            ProdGreen[Green :8092<br/>Spring Boot]
         end
 
-        subgraph RDS["RDS"]
-            MySQL[(MySQL 8.0)]
+        subgraph DevEC2["Dev EC2"]
+            DevNginx[Nginx :443<br/>Let's Encrypt SSL]
+            DevBlue[Blue :8091<br/>Spring Boot]
+            DevGreen[Green :8092<br/>Spring Boot]
+            DiscordBot[Discord Bot :3000]
         end
 
-        S3[(S3 Bucket<br/>QR 코드 / 배너 이미지)]
+        RDS[(RDS MySQL 8.0)]
+        S3[(S3 Bucket<br/>QR 코드 / 배너)]
         ECR[ECR Registry]
-        SSM[AWS SSM<br/>배포 명령]
-        CodeDeploy[CodeDeploy<br/>appspec.yml]
+        SQS[SQS<br/>이메일 큐]
+        CloudWatch[CloudWatch Logs]
     end
 
     subgraph External["External Services"]
-        Google[Google OAuth2]
-        Kakao[Kakao OAuth2]
-        Naver[Naver OAuth2]
+        OAuth[OAuth2<br/>Google / Kakao / Naver]
+        SES[AWS SES<br/>이메일 발송]
+        Discord[Discord Webhook<br/>배포 알림]
     end
 
-    User --> ALB
-    Anon --> ALB
-    AdminUser --> ALB
+    User & Anon --> ProdNginx
+    AdminUser --> ProdNginx
+    AdminUser --> DevNginx
 
-    ALB --> App
-    App --> MySQL
-    App --> S3
-    App -->|OAuth2 Login| Google
-    App -->|OAuth2 Login| Kakao
-    App -->|OAuth2 Login| Naver
+    ProdNginx -->|proxy_pass| ProdBlue
+    ProdNginx -.->|Blue/Green 전환| ProdGreen
+    DevNginx -->|proxy_pass| DevBlue
+    DevNginx -.->|Blue/Green 전환| DevGreen
+    DevNginx -->|discord.onetime.run| DiscordBot
 
-    ECR -.->|Docker 이미지| EC2
-    SSM -.->|배포 트리거| EC2
+    ProdBlue & DevBlue --> RDS
+    ProdBlue & DevBlue --> S3
+    ProdBlue & DevBlue --> SQS
+    ProdBlue & DevBlue -->|OAuth2| OAuth
+    SQS -->|Batch 소비| SES
+
+    Build --> DockerBuild --> ECRPush --> SSMTrigger
+    SSMTrigger -.->|deploy.sh| ProdEC2
+    SSMTrigger -.->|deploy.sh| DevEC2
+    ProdBlue & DevBlue -->|awslogs| CloudWatch
+    SSMTrigger -.->|성공/실패| Discord
 
     classDef db fill:#E3F2FD,stroke:#1976D2
     classDef app fill:#FFF3E0,stroke:#FF9800
     classDef ext fill:#F3E5F5,stroke:#9C27B0
     classDef infra fill:#E8F5E9,stroke:#4CAF50
+    classDef ci fill:#FFFDE7,stroke:#FBC02D
 
-    class MySQL db
-    class App,Docker app
-    class Google,Kakao,Naver ext
-    class ALB,S3,ECR,SSM,CodeDeploy infra
+    class RDS db
+    class ProdBlue,ProdGreen,DevBlue,DevGreen,DiscordBot app
+    class OAuth,SES,Discord ext
+    class ProdNginx,DevNginx,S3,ECR,SQS,CloudWatch infra
+    class Build,DockerBuild,ECRPush,SSMTrigger ci
 ```
 
-**핵심 원칙:** 회원(OAuth2)과 비회원(PIN 기반)이 동일한 이벤트에 참여할 수 있는 **이중 인증 모델**을 중심으로 설계한다. JWT Access Token + MySQL 기반 Refresh Token Rotation으로 보안을 확보하면서도, 비회원은 4자리 PIN만으로 간편하게 참여한다.
+**핵심 구조:**
+- **Blue/Green 무중단 배포**: Docker Compose로 Blue(:8091)/Green(:8092) 컨테이너 교대 실행, Nginx가 라우팅 전환
+- **이중 인증 모델**: 회원(OAuth2 JWT) + 비회원(4자리 PIN)이 동일 이벤트에 참여
+- **이메일 비동기**: API → SQS 발행 → Batch 서버에서 SES 발송
+- **환경 분리**: Dev(`dev-api.onetime.run`) / Prod(`api.onetime.run`) 별도 EC2
 
 ---
 
@@ -452,29 +476,42 @@ GlobalExceptionHandler
 ```mermaid
 flowchart LR
     subgraph Dev["Dev Pipeline"]
-        PR[PR to develop/release] --> Build1[Gradle Build]
-        Build1 --> Docker1[Docker Build ARM64]
+        PR[PR to develop/release] --> Build1[Gradle Build + Test]
+        Build1 --> Docker1[Docker Build]
         Docker1 --> ECR1[ECR Push]
-        ECR1 --> SSM1[SSM 명령 실행]
+        ECR1 --> SSM1[SSM → deploy.sh]
+        SSM1 --> BG1[Blue/Green 전환]
+        BG1 --> Discord1[Discord 알림]
     end
 
     subgraph Prod["Prod Pipeline"]
-        Merge[PR Merged to main] --> Build2[Gradle Build]
-        Build2 --> Docker2[Docker Build ARM64]
+        Merge[PR Merged to main] --> Build2[Gradle Build + Test]
+        Build2 --> Docker2[Docker Build]
         Docker2 --> ECR2[ECR Push]
-        ECR2 --> SSM2[SSM 명령 실행]
+        ECR2 --> SSM2[SSM → deploy.sh]
+        SSM2 --> BG2[Blue/Green 전환]
+        BG2 --> Discord2[Discord 알림]
     end
 ```
 
-| 환경 | 트리거 | 레지스트리 | 배포 방식 |
-|------|--------|-----------|----------|
-| Dev | PR to develop/release | ECR | AWS SSM |
-| Prod | PR Merged to main | ECR | AWS SSM |
+| 환경 | 트리거 | 도메인 | 배포 방식 |
+|------|--------|--------|----------|
+| Dev | PR to develop/release | `dev-api.onetime.run` | ECR → SSM → Blue/Green |
+| Prod | PR Merged to main | `api.onetime.run` | ECR → SSM → Blue/Green |
 
-**Docker 이미지:**
+**배포 흐름 (deploy.sh):**
+1. ECR 로그인 + Docker 이미지 Pull
+2. 비활성 컨테이너(Blue/Green) 시작
+3. Health Check (20초 대기 + 120초 타임아웃)
+4. Nginx 라우팅 전환 (`nginx -t` + `reload`)
+5. 이전 컨테이너 종료
+6. Discord 성공/실패 알림
+
+**Docker 구성:**
 - 베이스: `amazoncorretto:17-alpine-jdk`
-- TZ: `Asia/Seoul`
-- 포트: 8090
+- Blue: `:8091` → `:8090` (컨테이너 내부)
+- Green: `:8092` → `:8090` (컨테이너 내부)
+- 로깅: `awslogs` 드라이버 → CloudWatch
 
 **추가 워크플로우:**
 - `commit-labeler.yaml` — 커밋 타입별 PR 자동 라벨링 (feat, fix, refactor 등)
