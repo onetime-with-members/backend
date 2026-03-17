@@ -526,11 +526,11 @@
                 const safeName = escapeHtml(user.name || '');
                 const safeUserId = parseInt(user.userId) || 0;
                 tbody += `
-                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" onclick="toggleUser('${safeEmail}', '${safeName}', ${safeUserId})">
+                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer search-result-row"
+                        data-email="${safeEmail}" data-name="${safeName}" data-user-id="${safeUserId}">
                         <td class="text-center py-2">
                             <input type="checkbox" class="user-checkbox rounded border-gray-300 dark:border-gray-600"
-                                   data-email="${safeEmail}" ${checked}
-                                   onclick="event.stopPropagation(); toggleUser('${safeEmail}', '${safeName}', ${safeUserId})">
+                                   data-email="${safeEmail}" ${checked}>
                         </td>
                         <td class="py-2 text-gray-900 dark:text-white">${safeName || '-'}</td>
                         <td class="py-2 text-gray-600 dark:text-gray-400">${safeEmail || '-'}</td>
@@ -540,6 +540,16 @@
         }
         document.getElementById('searchResultBody').innerHTML = tbody;
     }
+
+    document.getElementById('searchResultBody').addEventListener('click', function(e) {
+        const row = e.target.closest('.search-result-row');
+        if (!row) return;
+        const checkbox = row.querySelector('.user-checkbox');
+        if (e.target !== checkbox) {
+            checkbox.checked = !checkbox.checked;
+        }
+        toggleUser(row.dataset.email, row.dataset.name, parseInt(row.dataset.userId) || 0);
+    });
 
     document.getElementById('userSearchInput').addEventListener('keyup', function(e) {
         clearTimeout(searchTimeout);
@@ -1141,7 +1151,6 @@
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeTemplateModal();
-            closeScheduleModal();
             closeLogDetailModal();
         }
     });
