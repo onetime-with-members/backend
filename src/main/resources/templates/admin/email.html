@@ -457,9 +457,11 @@
         } else {
             let chips = '';
             selectedUsers.forEach((user, email) => {
+                const displayName = escapeHtml(user.name || email);
+                const safeEmail = escapeHtml(email);
                 chips += `<span class="inline-flex items-center px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
-                    ${user.name || email}
-                    <button class="ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" onclick="removeUser('${email}')">&times;</button>
+                    ${displayName}
+                    <button class="ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" onclick="removeUser('${safeEmail}')">&times;</button>
                 </span>`;
             });
             area.innerHTML = chips;
@@ -520,15 +522,18 @@
         } else {
             users.forEach(user => {
                 const checked = selectedUsers.has(user.email) ? 'checked' : '';
+                const safeEmail = escapeHtml(user.email);
+                const safeName = escapeHtml(user.name || '');
+                const safeUserId = parseInt(user.userId) || 0;
                 tbody += `
-                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" onclick="toggleUser('${user.email}', '${user.name || ''}', ${user.userId})">
+                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" onclick="toggleUser('${safeEmail}', '${safeName}', ${safeUserId})">
                         <td class="text-center py-2">
                             <input type="checkbox" class="user-checkbox rounded border-gray-300 dark:border-gray-600"
-                                   data-email="${user.email}" ${checked}
-                                   onclick="event.stopPropagation(); toggleUser('${user.email}', '${user.name || ''}', ${user.userId})">
+                                   data-email="${safeEmail}" ${checked}
+                                   onclick="event.stopPropagation(); toggleUser('${safeEmail}', '${safeName}', ${safeUserId})">
                         </td>
-                        <td class="py-2 text-gray-900 dark:text-white">${user.name || '-'}</td>
-                        <td class="py-2 text-gray-600 dark:text-gray-400">${user.email || '-'}</td>
+                        <td class="py-2 text-gray-900 dark:text-white">${safeName || '-'}</td>
+                        <td class="py-2 text-gray-600 dark:text-gray-400">${safeEmail || '-'}</td>
                     </tr>
                 `;
             });
@@ -726,17 +731,21 @@
         } else {
             templates.forEach(t => {
                 const updatedAt = new Date(t.updatedAt).toLocaleString('ko-KR');
+                const safeName = escapeHtml(t.name);
+                const safeSubject = escapeHtml(t.subject);
+                const truncatedSubject = safeSubject.length > 40 ? safeSubject.substring(0, 40) + '...' : safeSubject;
+                const safeId = parseInt(t.id);
                 tbody += `
                     <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
-                        <td class="py-3 px-4 text-gray-900 dark:text-white font-medium">${t.name}</td>
-                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400">${t.subject.length > 40 ? t.subject.substring(0, 40) + '...' : t.subject}</td>
+                        <td class="py-3 px-4 text-gray-900 dark:text-white font-medium">${safeName}</td>
+                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400">${truncatedSubject}</td>
                         <td class="py-3 px-4"><span class="px-2 py-0.5 text-xs ${t.contentType === 'HTML' ? 'bg-accent-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} rounded">${t.contentType}</span></td>
                         <td class="py-3 px-4 text-gray-600 dark:text-gray-400">${updatedAt}</td>
                         <td class="py-3 px-4">
-                            <button class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 mr-1" onclick="editTemplate(${t.id})">
+                            <button class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 mr-1" onclick="editTemplate(${safeId})">
                                 <i data-lucide="edit-2" class="w-4 h-4"></i>
                             </button>
-                            <button class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400" onclick="deleteTemplate(${t.id})">
+                            <button class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400" onclick="deleteTemplate(${safeId})">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </td>
@@ -928,13 +937,17 @@
                                    log.status === 'DELIVERED' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
                                    log.status === 'BOUNCED' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
                 const sentAt = new Date(log.sentAt).toLocaleString('ko-KR');
-                const errorMsg = log.errorMessage ?
-                    `<span class="text-red-500 dark:text-red-400 text-xs" title="${log.errorMessage}">${log.errorMessage.substring(0, 30)}...</span>` : '-';
+                const safeRecipient = escapeHtml(log.recipient);
+                const safeSubject = escapeHtml(log.subject);
+                const truncatedSubject = safeSubject.length > 30 ? safeSubject.substring(0, 30) + '...' : safeSubject;
+                const safeErrorMessage = log.errorMessage ? escapeHtml(log.errorMessage) : null;
+                const errorMsg = safeErrorMessage ?
+                    `<span class="text-red-500 dark:text-red-400 text-xs" title="${safeErrorMessage}">${safeErrorMessage.substring(0, 30)}...</span>` : '-';
 
                 tbody += `
                     <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer" onclick="showLogDetail(${idx})">
-                        <td class="py-3 px-4 text-gray-900 dark:text-white">${log.recipient}</td>
-                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400">${log.subject.length > 30 ? log.subject.substring(0, 30) + '...' : log.subject}</td>
+                        <td class="py-3 px-4 text-gray-900 dark:text-white">${safeRecipient}</td>
+                        <td class="py-3 px-4 text-gray-600 dark:text-gray-400">${truncatedSubject}</td>
                         <td class="py-3 px-4 text-gray-600 dark:text-gray-400">${log.targetGroup || '-'}</td>
                         <td class="py-3 px-4"><span class="px-2 py-0.5 text-xs rounded ${statusClass}">${log.status}</span></td>
                         <td class="py-3 px-4 text-gray-600 dark:text-gray-400">${sentAt}</td>

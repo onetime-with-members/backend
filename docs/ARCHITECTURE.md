@@ -453,7 +453,7 @@ erDiagram
 
 ## 에러 처리
 
-```
+```text
 GlobalExceptionHandler
 ├── CustomException (도메인별 에러)
 │   ├── UserErrorStatus     — 사용자 관련

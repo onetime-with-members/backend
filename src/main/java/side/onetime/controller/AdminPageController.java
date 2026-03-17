@@ -22,6 +22,7 @@ import side.onetime.auth.dto.CustomAdminDetails;
 import side.onetime.dto.admin.request.LoginAdminUserRequest;
 import side.onetime.dto.admin.response.LoginAdminUserResponse;
 import side.onetime.exception.CustomException;
+import side.onetime.repository.RefreshTokenRepository;
 import side.onetime.service.AdminService;
 import side.onetime.service.StatisticsService;
 import side.onetime.util.ClientInfoExtractor;
@@ -41,6 +42,7 @@ public class AdminPageController {
 
     private final AdminService adminService;
     private final StatisticsService statisticsService;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final JwtUtil jwtUtil;
     private final ClientInfoExtractor clientInfoExtractor;
 
@@ -105,11 +107,19 @@ public class AdminPageController {
 
     /**
      * 로그아웃 처리
-     * 쿠키에서 토큰 삭제 후 로그인 페이지로 리다이렉트
+     * 서버 측 refresh token revoke + 쿠키 삭제 후 로그인 페이지로 리다이렉트
      */
-
     @PostMapping("/logout")
     public String logout(HttpServletRequest request, HttpServletResponse response) {
+        try {
+            String accessToken = CookieUtil.extractAdminAccessToken(request);
+            if (accessToken != null) {
+                Long adminId = jwtUtil.getClaimFromToken(accessToken, "userId", Long.class);
+                refreshTokenRepository.revokeAllByUserId(adminId, "ADMIN");
+            }
+        } catch (Exception e) {
+            log.debug("[Admin] 로그아웃 시 토큰 revoke 실패 - 사유: {}", e.getMessage());
+        }
         CookieUtil.clearAdminTokenCookies(request, response);
         return "redirect:/admin/login";
     }

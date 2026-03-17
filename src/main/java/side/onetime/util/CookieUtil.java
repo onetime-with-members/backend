@@ -36,6 +36,13 @@ public class CookieUtil {
     }
 
     /**
+     * Admin Access Token 추출
+     */
+    public static String extractAdminAccessToken(HttpServletRequest request) {
+        return getCookieValue(request, ADMIN_ACCESS_TOKEN_COOKIE).orElse(null);
+    }
+
+    /**
      * 쿠키 설정 (Secure, SameSite 지원)
      *
      * @param request  요청 객체 (HTTPS 여부 감지용)

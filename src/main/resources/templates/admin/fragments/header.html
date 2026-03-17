@@ -276,7 +276,7 @@
             toast.className = `${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 toast-enter`;
             toast.innerHTML = `
                 <i data-lucide="${icon}" class="w-5 h-5 flex-shrink-0"></i>
-                <span class="text-sm">${message}</span>
+                <span class="text-sm">${escapeHtml(message)}</span>
                 <button onclick="this.parentElement.classList.replace('toast-enter', 'toast-exit'); setTimeout(() => this.parentElement.remove(), 200);" class="ml-2 hover:opacity-80">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
