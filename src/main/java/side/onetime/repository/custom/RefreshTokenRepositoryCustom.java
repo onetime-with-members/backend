@@ -8,16 +8,18 @@ public interface RefreshTokenRepositoryCustom {
      * 특정 사용자 + 브라우저의 ACTIVE 토큰을 REVOKED로 변경 (로그아웃)
      *
      * @param userId    사용자 ID
+     * @param userType  사용자 타입 (USER, ADMIN)
      * @param browserId 브라우저 식별자
      */
-    void revokeByUserIdAndBrowserId(Long userId, String browserId);
+    void revokeByUserIdAndBrowserId(Long userId, String userType, String browserId);
 
     /**
      * 특정 사용자의 모든 ACTIVE 토큰을 REVOKED로 변경 (전체 로그아웃, 탈퇴)
      *
-     * @param userId 사용자 ID
+     * @param userId   사용자 ID
+     * @param userType 사용자 타입 (USER, ADMIN)
      */
-    void revokeAllByUserId(Long userId);
+    void revokeAllByUserId(Long userId, String userType);
 
     /**
      * 특정 토큰 패밀리의 모든 ACTIVE/ROTATED 토큰을 REVOKED로 변경 (공격 탐지 시)

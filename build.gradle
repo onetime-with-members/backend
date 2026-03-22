@@ -34,6 +34,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-test'
 
+    // Thymeleaf (Admin Dashboard)
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.3.0'
+
     // DB
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'com.mysql:mysql-connector-j'
@@ -70,6 +74,9 @@ dependencies {
     implementation 'io.awspring.cloud:spring-cloud-aws-starter:3.1.1'
     implementation 'software.amazon.awssdk:s3:2.25.30'
 
+    // AWS SQS (Email Queue)
+    implementation 'software.amazon.awssdk:sqs:2.25.30'
+
     // org.json
     implementation 'org.json:json:20231013'
 
@@ -82,6 +89,10 @@ dependencies {
 
     // Logback
     implementation 'net.logstash.logback:logstash-logback-encoder:8.1'
+
+    // Cache (Caffeine)
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
 
     // Feign
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:4.1.4'
@@ -107,6 +118,11 @@ ext {
 tasks.named('test') {
     useJUnitPlatform()
     outputs.dir snippetsDir
+    testLogging {
+        events "failed"
+        exceptionFormat "full"
+        showStandardStreams false
+    }
 }
 
 sourceSets {

@@ -235,6 +235,18 @@ public class BarBannerService {
                             )
                     );
         }
+
+        barBannerStagings.forEach(BarBannerStaging::markAsImported);
+    }
+
+    /**
+     * 띠배너 스테이징 데이터 건수 조회 메서드.
+     *
+     * @return 스테이징 테이블에 저장된 띠배너 수
+     */
+    @Transactional(readOnly = true)
+    public long getBarBannerStagingCount() {
+        return barBannerStagingRepository.countByIsImportedFalse();
     }
 
     /**

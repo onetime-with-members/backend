@@ -5,9 +5,10 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record LoginAdminUserResponse(
-        String accessToken
+        String accessToken,
+        String refreshToken
 ) {
-    public static LoginAdminUserResponse of(String accessToken) {
-        return new LoginAdminUserResponse(accessToken);
+    public static LoginAdminUserResponse of(String accessToken, String refreshToken) {
+        return new LoginAdminUserResponse(accessToken, refreshToken);
     }
 }

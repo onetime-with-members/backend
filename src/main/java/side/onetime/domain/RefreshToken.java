@@ -114,6 +114,8 @@ public class RefreshToken extends BaseEntity {
         token.expiryAt = expiryAt;
         token.userIp = userIp;
         token.userAgent = userAgent;
+        token.lastUsedAt = issuedAt;
+        token.lastUsedIp = userIp;
         token.reissueCount = 0;
         return token;
     }
@@ -144,19 +146,10 @@ public class RefreshToken extends BaseEntity {
         token.expiryAt = newExpiryAt;
         token.userIp = newUserIp;
         token.userAgent = newUserAgent;
+        token.lastUsedAt = newIssuedAt;
+        token.lastUsedIp = newUserIp;
         token.reissueCount = this.reissueCount + 1;
         return token;
-    }
-
-    /**
-     * 토큰 상태를 ROTATED로 변경 (Token Rotation 시)
-     *
-     * @param lastUsedIp 마지막 사용 IP
-     */
-    public void markAsRotated(String lastUsedIp) {
-        this.status = TokenStatus.ROTATED;
-        this.lastUsedAt = LocalDateTime.now();
-        this.lastUsedIp = lastUsedIp;
     }
 
     /**

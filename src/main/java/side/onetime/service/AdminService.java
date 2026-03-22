@@ -1,11 +1,14 @@
 package side.onetime.service;
 
-import java.util.Comparator;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,8 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import side.onetime.domain.AdminUser;
 import side.onetime.domain.Event;
-import side.onetime.domain.EventParticipation;
-import side.onetime.domain.Member;
+import side.onetime.domain.RefreshToken;
 import side.onetime.domain.Schedule;
 import side.onetime.domain.User;
 import side.onetime.domain.enums.AdminStatus;
@@ -35,8 +37,9 @@ import side.onetime.exception.status.AdminErrorStatus;
 import side.onetime.repository.AdminRepository;
 import side.onetime.repository.EventParticipationRepository;
 import side.onetime.repository.EventRepository;
-import side.onetime.repository.MemberRepository;
+import side.onetime.repository.RefreshTokenRepository;
 import side.onetime.repository.ScheduleRepository;
+import side.onetime.repository.StatisticsRepository;
 import side.onetime.repository.UserRepository;
 import side.onetime.util.AdminAuthorizationUtil;
 import side.onetime.util.JwtUtil;
@@ -50,8 +53,10 @@ public class AdminService {
     private final EventRepository eventRepository;
     private final EventParticipationRepository eventParticipationRepository;
     private final ScheduleRepository scheduleRepository;
-    private final MemberRepository memberRepository;
     private final UserRepository userRepository;
+    private final StatisticsRepository statisticsRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     /**
@@ -68,7 +73,7 @@ public class AdminService {
         if (adminRepository.existsAdminUsersByEmail(request.email())) {
             throw new CustomException(AdminErrorStatus._IS_DUPLICATED_EMAIL);
         }
-        AdminUser newAdminUser = request.toEntity();
+        AdminUser newAdminUser = request.toEntity(passwordEncoder.encode(request.password()));
         adminRepository.save(newAdminUser);
     }
 
@@ -81,19 +86,42 @@ public class AdminService {
      * - 비밀번호가 일치하지 않으면 예외가 발생합니다.
      *
      * @param request 로그인 요청 정보 (이메일, 비밀번호)
+     * @param browserId 브라우저 식별자 (User-Agent 해시)
+     * @param userIp 클라이언트 IP
+     * @param userAgent User-Agent 문자열
      */
-    @Transactional(readOnly = true)
-    public LoginAdminUserResponse loginAdminUser(LoginAdminUserRequest request) {
+    @Transactional
+    public LoginAdminUserResponse loginAdminUser(LoginAdminUserRequest request, String browserId, String userIp, String userAgent) {
 
         AdminUser adminUser = adminRepository.findAdminUserByEmail(request.email())
                         .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
         if (AdminStatus.PENDING_APPROVAL == adminUser.getAdminStatus()) {
             throw new CustomException(AdminErrorStatus._IS_NOT_APPROVED_ADMIN_USER);
         }
-        if (!request.password().equals(adminUser.getPassword())) {
+        if (!passwordEncoder.matches(request.password(), adminUser.getPassword())) {
             throw new CustomException(AdminErrorStatus._IS_NOT_EQUAL_PASSWORD);
         }
-        return LoginAdminUserResponse.of(jwtUtil.generateAccessToken(adminUser.getId(), "ADMIN"));
+
+        Long adminId = adminUser.getId();
+
+        // 기존 브라우저의 ACTIVE 토큰 revoke
+        refreshTokenRepository.revokeByUserIdAndBrowserId(adminId, "ADMIN", browserId);
+
+        // 새 토큰 생성
+        String jti = UUID.randomUUID().toString();
+        String accessToken = jwtUtil.generateAccessToken(adminId, "ADMIN");
+        String refreshTokenValue = jwtUtil.generateRefreshToken(adminId, "ADMIN", browserId, jti);
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiryAt = jwtUtil.calculateRefreshTokenExpiryAt(now);
+
+        RefreshToken refreshToken = RefreshToken.create(
+                adminId, "ADMIN", jti, browserId, refreshTokenValue,
+                now, expiryAt, userIp, userAgent
+        );
+        refreshTokenRepository.save(refreshToken);
+
+        return LoginAdminUserResponse.of(accessToken, refreshTokenValue);
     }
 
     /**
@@ -193,54 +221,61 @@ public class AdminService {
      */
     @Transactional(readOnly = true)
     public GetAllDashboardEventsResponse getAllDashboardEvents(Pageable pageable, String keyword, String sorting) {
+        return getAllDashboardEvents(pageable, keyword, sorting, null, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public GetAllDashboardEventsResponse getAllDashboardEvents(Pageable pageable, String keyword, String sorting,
+                                                                String search, LocalDate startDate, LocalDate endDate) {
+        return getAllDashboardEvents(pageable, keyword, sorting, search, startDate, endDate, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public GetAllDashboardEventsResponse getAllDashboardEvents(Pageable pageable, String keyword, String sorting,
+                                                                String search, LocalDate startDate, LocalDate endDate,
+                                                                Integer hour, Integer dayOfWeek) {
         adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
                 .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
 
-        boolean isSortByParticipant = keyword.equals("participant_count");
+        LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
+        LocalDateTime endDateTime = endDate != null ? endDate.plusDays(1).atStartOfDay() : null;
 
-        List<Event> allEvents = isSortByParticipant
-                ? eventRepository.findAll()
-                : eventRepository.findAllWithSort(pageable, keyword, sorting);
-
-        int totalElements = (int) eventRepository.count();
+        // 검색/필터 적용된 이벤트 조회
+        List<Event> pagedEvents = eventRepository.findAllWithFilters(pageable, keyword, sorting, search, startDateTime, endDateTime, hour, dayOfWeek);
+        long totalElements = eventRepository.countWithFilters(search, startDateTime, endDateTime, hour, dayOfWeek);
         int totalPages = (int) Math.ceil((double) totalElements / pageable.getPageSize());
-
-        List<Event> pagedEvents = isSortByParticipant
-                ? allEvents.stream()
-                .sorted(Comparator.comparingInt(event -> {
-                    Long eventId = event.getId();
-                    int userCount = (int) eventParticipationRepository.findAllByEventIdIn(List.of(eventId)).stream()
-                            .filter(ep -> ep.getParticipationRole() != ParticipationRole.CREATOR)
-                            .count();
-                    int memberCount = (int) memberRepository.findAllByEventIdIn(List.of(eventId)).stream().count();
-                    return userCount + memberCount;
-                }))
-                .skip(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .toList()
-                : allEvents;
 
         List<Long> eventIds = pagedEvents.stream().map(Event::getId).toList();
 
         Map<Long, List<Schedule>> scheduleMap = scheduleRepository.findAllByEventIdIn(eventIds).stream()
                 .collect(Collectors.groupingBy(s -> s.getEvent().getId()));
 
-        Map<Long, List<EventParticipation>> epMap = eventParticipationRepository.findAllByEventIdIn(eventIds).stream()
-                .filter(ep -> ep.getParticipationRole() != ParticipationRole.CREATOR)
-                .collect(Collectors.groupingBy(ep -> ep.getEvent().getId()));
+        List<Object[]> participantData = statisticsRepository.countParticipantsByEventIds(eventIds);
+        Map<Long, Long> participantCountMap = participantData.stream()
+                .collect(Collectors.toMap(
+                        row -> ((Number) row[0]).longValue(),
+                        row -> ((Number) row[1]).longValue()
+                ));
 
-        Map<Long, List<Member>> memberMap = memberRepository.findAllByEventIdIn(eventIds).stream()
-                .collect(Collectors.groupingBy(m -> m.getEvent().getId()));
+        // 생성자 정보 조회 (CREATOR 또는 CREATOR_AND_PARTICIPANT)
+        Map<Long, String> creatorNicknameMap = eventParticipationRepository.findAllByEventIdIn(eventIds).stream()
+                .filter(ep -> ep.getParticipationRole() == ParticipationRole.CREATOR || ep.getParticipationRole() == ParticipationRole.CREATOR_AND_PARTICIPANT)
+                .filter(ep -> ep.getUser() != null)
+                .collect(Collectors.toMap(
+                        ep -> ep.getEvent().getId(),
+                        ep -> ep.getUser().getNickname() != null ? ep.getUser().getNickname() : ep.getUser().getName(),
+                        (existing, replacement) -> existing // 중복 시 첫 번째 값 유지
+                ));
 
         List<DashboardEvent> dashboardEvents = pagedEvents.stream()
                 .map(event -> {
                     List<Schedule> schedules = scheduleMap.getOrDefault(event.getId(), List.of());
-                    int userCount = epMap.getOrDefault(event.getId(), List.of()).size();
-                    int memberCount = memberMap.getOrDefault(event.getId(), List.of()).size();
-                    return DashboardEvent.of(event, schedules, userCount + memberCount);
+                    int participantCount = participantCountMap.getOrDefault(event.getId(), 0L).intValue();
+                    String creatorNickname = creatorNicknameMap.getOrDefault(event.getId(), "-");
+                    return DashboardEvent.of(event, schedules, participantCount, creatorNickname);
                 }).toList();
 
-        PageInfo pageInfo = PageInfo.of(pageable.getPageNumber() + 1, pageable.getPageSize(), totalElements, totalPages);
+        PageInfo pageInfo = PageInfo.of(pageable.getPageNumber() + 1, pageable.getPageSize(), (int) totalElements, totalPages);
         return GetAllDashboardEventsResponse.of(dashboardEvents, pageInfo);
     }
 
@@ -251,8 +286,6 @@ public class AdminService {
      * 사용자 목록은 정렬 기준(keyword)과 정렬 방향(sorting)에 따라 정렬되며,
      * 각 사용자 데이터는 참여 이벤트 수를 포함한 DashboardUser DTO로 변환됩니다.
      *
-     * 전체 유저 수를 기준으로 totalElements와 totalPages를 계산하여 PageInfo에 포함합니다.
-     *
      * @param pageable 페이지 정보 (페이지 번호, 크기 등)
      * @param keyword 정렬 기준 필드 (예: name, email, created_date 등)
      * @param sorting 정렬 방향 ("asc" 또는 "desc")
@@ -260,24 +293,41 @@ public class AdminService {
      */
     @Transactional(readOnly = true)
     public GetAllDashboardUsersResponse getAllDashboardUsers(Pageable pageable, String keyword, String sorting) {
+        return getAllDashboardUsers(pageable, keyword, sorting, null, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public GetAllDashboardUsersResponse getAllDashboardUsers(Pageable pageable, String keyword, String sorting,
+                                                              String search, LocalDate startDate, LocalDate endDate) {
         adminRepository.findById(AdminAuthorizationUtil.getLoginAdminId())
                 .orElseThrow(() -> new CustomException(AdminErrorStatus._NOT_FOUND_ADMIN_USER));
 
-        List<User> users = userRepository.findAllWithSort(pageable, keyword, sorting);
+        LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
+        LocalDateTime endDateTime = endDate != null ? endDate.plusDays(1).atStartOfDay() : null;
+
+        // 검색/필터 적용된 유저 조회
+        List<User> users = userRepository.findAllWithFilters(pageable, keyword, sorting, search, startDateTime, endDateTime);
+        long totalElements = userRepository.countWithFilters(search, startDateTime, endDateTime);
+        int totalPages = (int) Math.ceil((double) totalElements / pageable.getPageSize());
+
+        // 배치 쿼리로 유저별 참여 수 한 번에 조회 (N+1 해결)
+        List<Long> userIds = users.stream().map(User::getId).toList();
+        Map<Long, Long> participationCountMap = statisticsRepository.countParticipationsByUserIds(userIds).stream()
+                .collect(Collectors.toMap(
+                        row -> ((Number) row[0]).longValue(),
+                        row -> ((Number) row[1]).longValue()
+                ));
 
         List<DashboardUser> dashboardUsers = users.stream()
                 .map(user -> {
-                    int participantCount = eventParticipationRepository.findAllByUserWithEvent(user).size();
+                    int participantCount = participationCountMap.getOrDefault(user.getId(), 0L).intValue();
                     return DashboardUser.from(user, participantCount);
                 }).toList();
-
-        int totalElements = (int) userRepository.count();
-        int totalPages = (int) Math.ceil((double) totalElements / pageable.getPageSize());
 
         PageInfo pageInfo = PageInfo.of(
                 pageable.getPageNumber() + 1,
                 pageable.getPageSize(),
-                totalElements,
+                (int) totalElements,
                 totalPages
         );
 

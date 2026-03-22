@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout/default}">
+<head>
+    <title>마케팅 타겟 - OneTime Admin</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Header -->
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">마케팅 타겟</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">마케팅 대상 그룹을 관리합니다</p>
+        </div>
+    </div>
+
+    <!-- Date Filter -->
+    <div th:replace="~{admin/fragments/date-filter :: dateFilter}"></div>
+
+    <!-- Info Alert -->
+    <div class="bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-800 rounded-lg p-4 mb-6 flex items-center gap-3">
+        <i data-lucide="info" class="w-5 h-5 text-accent-500 flex-shrink-0"></i>
+        <p class="text-sm text-accent-700 dark:text-accent-300">카드를 클릭하면 상세 목록을 확인할 수 있습니다.</p>
+    </div>
+
+    <!-- Summary Cards Row 1 -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+        <!-- Marketing Agreed -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
+             onclick="showDetail('agreed')">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">마케팅 동의</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
+                       th:text="${#numbers.formatInteger(data.marketingAgreedUsers, 0, 'COMMA')}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">마케팅 수신 동의한 유저</p>
+                </div>
+                <div class="w-10 h-10 bg-accent-50 dark:bg-accent-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="check-square" class="w-5 h-5 text-accent-600 dark:text-accent-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dormant Users -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
+             onclick="showDetail('dormant')">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">휴면 유저</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
+                       th:text="${#numbers.formatInteger(data.dormantUsers, 0, 'COMMA')}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">30일+ 미접속</p>
+                </div>
+                <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="user-x" class="w-5 h-5 text-amber-600 dark:text-amber-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Event Users -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
+             onclick="showDetail('noEvent')">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">이벤트 미생성</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
+                       th:text="${#numbers.formatInteger(data.noEventUsers, 0, 'COMMA')}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">가입 7일+ 경과, 이벤트 0개</p>
+                </div>
+                <div class="w-10 h-10 bg-red-50 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="user-minus" class="w-5 h-5 text-red-600 dark:text-red-400"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards Row 2 -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <!-- One-time Users -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
+             onclick="showDetail('oneTime')">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">일회성 유저</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
+                       th:text="${#numbers.formatInteger(data.oneTimeUsers, 0, 'COMMA')}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">이벤트 1회만 생성</p>
+                </div>
+                <div class="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                    <i data-lucide="user" class="w-5 h-5 text-gray-600 dark:text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIP Users -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
+             onclick="showDetail('vip')">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">VIP 유저</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
+                       th:text="${#numbers.formatInteger(data.vipUsers, 0, 'COMMA')}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">이벤트 5회 이상 생성</p>
+                </div>
+                <div class="w-10 h-10 bg-green-50 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="crown" class="w-5 h-5 text-green-600 dark:text-green-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zero Participant Events -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
+             onclick="showDetail('zeroParticipant')">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">참여자 0명 이벤트</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
+                       th:text="${#numbers.formatInteger(data.zeroParticipantEvents, 0, 'COMMA')}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">아무도 참여 안 한 이벤트</p>
+                </div>
+                <div class="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                    <i data-lucide="calendar-x" class="w-5 h-5 text-gray-600 dark:text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="detailModal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg w-full max-w-[95vw] sm:max-w-3xl lg:max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="detailModalLabel">Detail View</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-auto p-4">
+                <div id="detailLoading" class="flex justify-center py-12">
+                    <div class="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 dark:border-gray-600 border-t-accent-500"></div>
+                </div>
+                <div id="detailContent" class="hidden">
+                    <div class="flex gap-2 mb-4">
+                        <span class="px-3 py-1 text-xs bg-accent-500 text-white rounded-full" id="totalCountBadge">Total: 0</span>
+                        <span class="px-3 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full hidden" id="selectedCountBadge">Selected: 0</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm" id="detailTable">
+                            <thead id="detailTableHead"></thead>
+                            <tbody id="detailTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-2 p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" onclick="sendEmailToSelected()" id="btnSendEmailToSelected"
+                        class="px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled>
+                    <i data-lucide="mail" class="w-4 h-4"></i>
+                    이메일 전송
+                </button>
+                <button type="button" onclick="closeModal()"
+                        class="px-4 py-2 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script th:inline="javascript">
+    const typeConfig = {
+        agreed: {
+            title: '마케팅 동의 사용자',
+            endpoint: '/api/v1/admin/statistics/marketing/agreed',
+            isEvent: false
+        },
+        dormant: {
+            title: '휴면 사용자',
+            endpoint: '/api/v1/admin/statistics/marketing/dormant',
+            isEvent: false
+        },
+        noEvent: {
+            title: '이벤트 미생성 사용자',
+            endpoint: '/api/v1/admin/statistics/marketing/no-event',
+            isEvent: false
+        },
+        oneTime: {
+            title: '일회성 사용자',
+            endpoint: '/api/v1/admin/statistics/marketing/one-time',
+            isEvent: false
+        },
+        vip: {
+            title: 'VIP 사용자',
+            endpoint: '/api/v1/admin/statistics/marketing/vip',
+            isEvent: false
+        },
+        zeroParticipant: {
+            title: '참여자 0명 이벤트',
+            endpoint: '/api/v1/admin/statistics/marketing/zero-participant',
+            isEvent: true
+        }
+    };
+
+    let currentType = null;
+    let currentUsers = [];
+    const selectedMarketingUsers = new Map();
+
+    function getDateParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const startDate = urlParams.get('startDate') || '';
+        const endDate = urlParams.get('endDate') || '';
+        const params = new URLSearchParams();
+        if (startDate) params.set('startDate', startDate);
+        if (endDate) params.set('endDate', endDate);
+        return params.toString();
+    }
+
+    function showDetail(type) {
+        const config = typeConfig[type];
+        if (!config) return;
+
+        currentType = type;
+        selectedMarketingUsers.clear();
+        updateSelectionUI();
+
+        document.getElementById('detailModalLabel').textContent = config.title;
+        document.getElementById('detailLoading').classList.remove('hidden');
+        document.getElementById('detailContent').classList.add('hidden');
+        document.getElementById('detailModal').classList.remove('hidden');
+
+        const dateParams = getDateParams();
+        const url = dateParams ? config.endpoint + '?' + dateParams : config.endpoint;
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    renderDetail(data.payload, config.isEvent);
+                } else {
+                    showAlert('데이터를 불러오는데 실패했습니다', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('데이터를 불러오는데 실패했습니다', 'error');
+            })
+            .finally(() => {
+                document.getElementById('detailLoading').classList.add('hidden');
+                document.getElementById('detailContent').classList.remove('hidden');
+                lucide.createIcons();
+            });
+    }
+
+    function closeModal() {
+        document.getElementById('detailModal').classList.add('hidden');
+        selectedMarketingUsers.clear();
+        updateSelectionUI();
+    }
+
+    // Delegated event listener for marketing checkboxes (replaces inline onchange)
+    document.addEventListener('change', function(e) {
+        const cb = e.target.closest('.marketing-user-checkbox');
+        if (!cb) return;
+        const userId = cb.dataset.userId;
+        const email = cb.dataset.userEmail;
+        const name = cb.dataset.userName;
+        const nickname = cb.dataset.userNickname;
+        const key = String(userId);
+        if (cb.checked) {
+            selectedMarketingUsers.set(key, { userId, email, name, nickname });
+        } else {
+            selectedMarketingUsers.delete(key);
+        }
+        updateSelectionUI();
+    });
+
+    function toggleUser(userId, email, name, nickname) {
+        const key = `${userId}`;
+        if (selectedMarketingUsers.has(key)) {
+            selectedMarketingUsers.delete(key);
+        } else {
+            selectedMarketingUsers.set(key, { userId, email, name, nickname });
+        }
+        updateSelectionUI();
+    }
+
+    function toggleAllUsers(checked) {
+        if (checked) {
+            currentUsers.forEach(user => {
+                if (user.email) {
+                    selectedMarketingUsers.set(`${user.userId}`, {
+                        userId: user.userId,
+                        email: user.email,
+                        name: user.name,
+                        nickname: user.nickname
+                    });
+                }
+            });
+        } else {
+            selectedMarketingUsers.clear();
+        }
+        updateSelectionUI();
+    }
+
+    function updateSelectionUI() {
+        const count = selectedMarketingUsers.size;
+        const badge = document.getElementById('selectedCountBadge');
+        const btn = document.getElementById('btnSendEmailToSelected');
+
+        if (count > 0) {
+            badge.textContent = 'Selected: ' + count;
+            badge.classList.remove('hidden');
+            btn.disabled = false;
+        } else {
+            badge.classList.add('hidden');
+            btn.disabled = true;
+        }
+
+        document.querySelectorAll('.marketing-user-checkbox').forEach(cb => {
+            cb.checked = selectedMarketingUsers.has(cb.dataset.userId);
+        });
+
+        const headerCb = document.getElementById('selectAllCheckbox');
+        if (headerCb) {
+            const allCbs = document.querySelectorAll('.marketing-user-checkbox');
+            headerCb.checked = allCbs.length > 0 && count === allCbs.length;
+            headerCb.indeterminate = count > 0 && count < allCbs.length;
+        }
+    }
+
+    function sendEmailToSelected() {
+        if (selectedMarketingUsers.size === 0) {
+            showAlert('사용자를 선택해주세요', 'warning');
+            return;
+        }
+
+        const usersArray = Array.from(selectedMarketingUsers.values());
+        localStorage.setItem('preselectedEmailUsers', JSON.stringify(usersArray));
+        window.location.href = '/admin/email';
+    }
+
+    // Close modal on backdrop click
+    document.getElementById('detailModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeModal();
+    });
+
+    function renderDetail(data, isEvent) {
+        const items = isEvent ? data.events : data.users;
+
+        document.getElementById('totalCountBadge').textContent = 'Total: ' + data.totalCount.toLocaleString();
+
+        if (isEvent) {
+            currentUsers = (items || []).map(e => ({
+                eventId: e.eventId,
+                userId: e.creatorUserId || e.eventId,
+                email: e.creatorEmail,
+                name: e.creatorName,
+                nickname: e.creatorNickname
+            }));
+            renderEventTable(items);
+        } else {
+            currentUsers = items || [];
+            renderUserTable(items);
+        }
+    }
+
+    function renderUserTable(users) {
+        const isDark = document.documentElement.classList.contains('dark');
+        const badgeClass = isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700';
+
+        const thead = `
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+                <th class="py-2 px-3 w-10">
+                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleAllUsers(this.checked)"
+                           class="w-4 h-4 text-accent-500 border-gray-300 dark:border-gray-600 rounded focus:ring-accent-500">
+                </th>
+                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">ID</th>
+                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">Email</th>
+                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">이름</th>
+                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">닉네임</th>
+                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">Provider</th>
+                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">마케팅</th>
+                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">가입일</th>
+                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">비고</th>
+            </tr>
+        `;
+        document.getElementById('detailTableHead').innerHTML = thead;
+
+        let tbody = '';
+        if (!users || users.length === 0) {
+            tbody = `<tr><td colspan="9" class="py-12">
+                <div class="flex flex-col items-center justify-center text-center">
+                    <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+                        <i data-lucide="users" class="w-6 h-6 text-gray-400 dark:text-gray-500"></i>
+                    </div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">해당하는 유저가 없습니다</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">조건에 맞는 마케팅 타겟이 없어요</p>
+                </div>
+            </td></tr>`;
+        } else {
+            users.forEach(user => {
+                let extra = '';
+                if (user.daysInactive !== null && user.daysInactive !== undefined) {
+                    extra = `<span class="px-2 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded">${user.daysInactive}d 미접속</span>`;
+                } else if (user.daysSinceSignup !== null && user.daysSinceSignup !== undefined) {
+                    extra = `<span class="px-2 py-0.5 text-xs ${badgeClass} rounded">${user.daysSinceSignup}d 경과</span>`;
+                } else if (user.eventCount !== null && user.eventCount !== undefined) {
+                    extra = `<span class="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">${user.eventCount} events</span>`;
+                }
+
+                const hasEmail = !!user.email;
+                const checkboxDisabled = hasEmail ? '' : 'disabled';
+                const rowOpacity = hasEmail ? '' : 'opacity-50';
+
+                tbody += `
+                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 ${rowOpacity}">
+                        <td class="py-2 px-3">
+                            <input type="checkbox" class="marketing-user-checkbox w-4 h-4 text-accent-500 border-gray-300 dark:border-gray-600 rounded focus:ring-accent-500"
+                                   data-user-id="${escapeHtml(String(user.userId))}"
+                                   data-user-email="${escapeHtml(user.email || '')}"
+                                   data-user-name="${escapeHtml(user.name || '')}"
+                                   data-user-nickname="${escapeHtml(user.nickname || '')}"
+                                   ${checkboxDisabled}>
+                        </td>
+                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${escapeHtml(String(user.userId || ''))}</td>
+                        <td class="py-2 px-3 text-gray-900 dark:text-white">${escapeHtml(user.email)}</td>
+                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${escapeHtml(user.name)}</td>
+                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${escapeHtml(user.nickname)}</td>
+                        <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs ${badgeClass} rounded">${escapeHtml(user.provider)}</span></td>
+                        <td class="py-2 px-3">${user.marketingPolicyAgreement ? '<i data-lucide="check" class="w-4 h-4 text-green-600 dark:text-green-400"></i>' : '<i data-lucide="x" class="w-4 h-4 text-red-500 dark:text-red-400"></i>'}</td>
+                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.createdDate ? new Date(user.createdDate).toLocaleDateString() : '-'}</td>
+                        <td class="py-2 px-3">${extra}</td>
+                    </tr>
+                `;
+            });
+        }
+        document.getElementById('detailTableBody').innerHTML = tbody;
+    }
+
+    function renderEventTable(events) {
+        const isDark = document.documentElement.classList.contains('dark');
+        const badgeClass = isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700';
+
+        const thead = `
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+                <th class="py-2 px-3 w-10">
+                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleAllUsers(this.checked)"
+                           class="w-4 h-4 text-accent-500 border-gray-300 dark:border-gray-600 rounded focus:ring-accent-500">
+                </th>
+                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">Event ID</th>
+                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">제목</th>
+                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">카테고리</th>
+                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">생성자</th>
+                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">생성자 Email</th>
+                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">생성일</th>
+                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">경과일</th>
+            </tr>
+        `;
+        document.getElementById('detailTableHead').innerHTML = thead;
+
+        let tbody = '';
+        if (!events || events.length === 0) {
+            tbody = `<tr><td colspan="8" class="py-12">
+                <div class="flex flex-col items-center justify-center text-center">
+                    <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+                        <i data-lucide="calendar-check" class="w-6 h-6 text-gray-400 dark:text-gray-500"></i>
+                    </div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">해당하는 이벤트가 없습니다</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">모든 이벤트에 참여자가 있어요</p>
+                </div>
+            </td></tr>`;
+        } else {
+            events.forEach(event => {
+                const hasEmail = !!event.creatorEmail;
+                const checkboxDisabled = hasEmail ? '' : 'disabled';
+                const rowOpacity = hasEmail ? '' : 'opacity-50';
+                const uniqueId = event.creatorUserId || event.eventId;
+
+                tbody += `
+                    <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 ${rowOpacity}">
+                        <td class="py-2 px-3">
+                            <input type="checkbox" class="marketing-user-checkbox w-4 h-4 text-accent-500 border-gray-300 dark:border-gray-600 rounded focus:ring-accent-500"
+                                   data-user-id="${escapeHtml(String(uniqueId))}"
+                                   data-user-email="${escapeHtml(event.creatorEmail || '')}"
+                                   data-user-name="${escapeHtml(event.creatorName || '')}"
+                                   data-user-nickname="${escapeHtml(event.creatorNickname || '')}"
+                                   ${checkboxDisabled}>
+                        </td>
+                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${escapeHtml(String(event.eventId || ''))}</td>
+                        <td class="py-2 px-3 text-gray-900 dark:text-white">${escapeHtml(event.title)}</td>
+                        <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs ${badgeClass} rounded">${escapeHtml(event.category)}</span></td>
+                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${escapeHtml(event.creatorNickname || event.creatorName)}</td>
+                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${escapeHtml(event.creatorEmail)}</td>
+                        <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${event.createdDate ? new Date(event.createdDate).toLocaleDateString() : '-'}</td>
+                        <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded">${event.daysSinceCreated || 0}d</span></td>
+                    </tr>
+                `;
+            });
+        }
+        document.getElementById('detailTableBody').innerHTML = tbody;
+    }
+</script>
+</th:block>
+</body>
+</html>

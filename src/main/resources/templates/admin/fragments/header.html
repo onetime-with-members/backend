@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OneTime Admin</title>
+    <!-- Favicon & PWA -->
+    <link rel="icon" type="image/png" th:href="@{/admin/img/favicon.png}">
+    <link rel="manifest" th:href="@{/admin/manifest.json}">
+    <link rel="apple-touch-icon" th:href="@{/admin/img/favicon.png}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="OneTime Admin">
+    <meta name="theme-color" content="#677CEE">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    },
+                    colors: {
+                        border: '#e5e5e5',
+                        accent: {
+                            50: '#f0f3ff',
+                            100: '#e0e6ff',
+                            200: '#c7d2ff',
+                            300: '#a5b4fd',
+                            400: '#8198f3',
+                            500: '#677CEE',
+                            600: '#5367d6',
+                            700: '#4555bd',
+                            800: '#3a47a4',
+                            900: '#2e3880',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@0.460.0" crossorigin="anonymous"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
+
+    <!-- Chart Tooltip Utilities -->
+    <script>
+        // Enhanced tooltip configuration for all charts
+        window.ChartTooltipConfig = {
+            // Custom tooltip styling
+            getTooltipStyle: function() {
+                const isDark = document.documentElement.classList.contains('dark');
+                return {
+                    backgroundColor: isDark ? 'rgba(17, 24, 39, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                    titleColor: isDark ? '#f9fafb' : '#111827',
+                    bodyColor: isDark ? '#d1d5db' : '#4b5563',
+                    borderColor: isDark ? '#374151' : '#e5e7eb',
+                    borderWidth: 1,
+                    padding: 12,
+                    cornerRadius: 8,
+                    displayColors: true,
+                    titleFont: { size: 13, weight: '600' },
+                    bodyFont: { size: 12 },
+                    footerFont: { size: 11 },
+                    footerColor: isDark ? '#9ca3af' : '#6b7280'
+                };
+            },
+
+            // Calculate trend indicator
+            getTrendIndicator: function(current, previous) {
+                if (!previous || previous === 0) return '';
+                const change = ((current - previous) / previous * 100).toFixed(1);
+                if (change > 0) return ' (+' + change + '%)';
+                if (change < 0) return ' (' + change + '%)';
+                return ' (0%)';
+            },
+
+            // Format number with locale
+            formatNumber: function(value) {
+                return value.toLocaleString('ko-KR');
+            },
+
+            // Get contextual footer based on average
+            getContextFooter: function(value, average, label) {
+                if (!average) return '';
+                const diff = value - average;
+                const sign = diff >= 0 ? '+' : '';
+                return label + ' 평균 대비: ' + sign + diff.toFixed(1);
+            }
+        };
+
+        // Apply default tooltip options to Chart.js
+        Chart.defaults.plugins.tooltip.backgroundColor = function(context) {
+            return document.documentElement.classList.contains('dark')
+                ? 'rgba(17, 24, 39, 0.95)'
+                : 'rgba(255, 255, 255, 0.95)';
+        };
+        Chart.defaults.plugins.tooltip.titleColor = function(context) {
+            return document.documentElement.classList.contains('dark') ? '#f9fafb' : '#111827';
+        };
+        Chart.defaults.plugins.tooltip.bodyColor = function(context) {
+            return document.documentElement.classList.contains('dark') ? '#d1d5db' : '#4b5563';
+        };
+        Chart.defaults.plugins.tooltip.borderColor = function(context) {
+            return document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb';
+        };
+        Chart.defaults.plugins.tooltip.borderWidth = 1;
+        Chart.defaults.plugins.tooltip.padding = 12;
+        Chart.defaults.plugins.tooltip.cornerRadius = 8;
+        Chart.defaults.plugins.tooltip.titleFont = { size: 13, weight: '600' };
+        Chart.defaults.plugins.tooltip.bodyFont = { size: 12 };
+    </script>
+
+    <!-- Dark Mode Script (before DOM loads to prevent flash) -->
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+
+    <!-- Custom styles -->
+    <style>
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Tabular Numbers for consistent digit widths */
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Button hover micro-interactions */
+        .btn-hover {
+            transition: all 0.15s ease-out;
+        }
+        .btn-hover:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .btn-hover:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .dark .btn-hover:hover:not(:disabled) {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Card hover effects */
+        .card-hover {
+            transition: all 0.2s ease-out;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+        }
+        .dark .card-hover:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Toast animations */
+        @keyframes toast-slide-in {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes toast-slide-out {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        .toast-enter {
+            animation: toast-slide-in 0.3s ease-out forwards;
+        }
+        .toast-exit {
+            animation: toast-slide-out 0.2s ease-in forwards;
+        }
+
+        /* Scrollbar - Light */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+
+        /* Scrollbar - Dark */
+        .dark ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+
+        /* Chart.js dark mode */
+        .dark canvas {
+            filter: none;
+        }
+    </style>
+
+    <!-- Global XSS Escape Utility -->
+    <script>
+        window.escapeHtml = function(str) {
+            if (str == null) return '-';
+            const div = document.createElement('div');
+            div.textContent = String(str);
+            return div.innerHTML;
+        };
+    </script>
+
+    <!-- Global Toast System -->
+    <script>
+        window.showToast = function(message, type = 'info', duration = 5000) {
+            // Create toast container if not exists
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = 'fixed bottom-4 right-4 z-50 flex flex-col gap-2';
+                document.body.appendChild(container);
+            }
+
+            // Determine colors based on type
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-amber-500',
+                info: 'bg-accent-500'
+            };
+            const icons = {
+                success: 'check-circle',
+                error: 'alert-circle',
+                warning: 'alert-triangle',
+                info: 'info'
+            };
+            const bgColor = colors[type] || colors.info;
+            const icon = icons[type] || icons.info;
+
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 toast-enter`;
+            toast.innerHTML = `
+                <i data-lucide="${icon}" class="w-5 h-5 flex-shrink-0"></i>
+                <span class="text-sm">${escapeHtml(message)}</span>
+                <button onclick="this.parentElement.classList.replace('toast-enter', 'toast-exit'); setTimeout(() => this.parentElement.remove(), 200);" class="ml-2 hover:opacity-80">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            `;
+
+            container.appendChild(toast);
+
+            // Initialize lucide icons for this toast
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons({ nodes: [toast] });
+            }
+
+            // Auto remove after duration
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.classList.replace('toast-enter', 'toast-exit');
+                    setTimeout(() => toast.remove(), 200);
+                }
+            }, duration);
+
+            return toast;
+        };
+    </script>
+</head>
+</html>

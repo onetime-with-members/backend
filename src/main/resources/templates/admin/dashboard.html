@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout/default}">
+<head>
+    <title>대시보드 - OneTime Admin</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Header -->
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-6">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">대시보드</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">서비스 현황을 한눈에 확인하세요</p>
+        </div>
+        <div class="flex items-center gap-3 flex-shrink-0">
+            <span class="text-xs sm:text-sm text-gray-400 dark:text-gray-500" th:text="'데이터 기준: ' + ${#temporals.format(#temporals.createNow(), 'HH:mm:ss')}">
+                데이터 기준: 12:00:00
+            </span>
+            <button onclick="location.reload()" aria-label="새로고침"
+                    class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 btn-hover">
+                <i data-lucide="refresh-cw" class="w-4 h-4 inline"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Date Filter -->
+    <div th:replace="~{admin/fragments/date-filter :: dateFilter}"></div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        <!-- Total Users -->
+        <a href="/admin/statistics/users" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">총 가입 유저</p>
+                    <div class="flex items-center gap-2 mt-1">
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-white tabular-nums"
+                           th:text="${#numbers.formatInteger(summary.totalUsers, 0, 'COMMA')}">0</p>
+                        <th:block th:if="${summary.comparison != null and summary.comparison.totalUsersChange != null}">
+                            <span th:class="${summary.comparison.totalUsersChange >= 0 ? 'text-green-500' : 'text-red-500'}"
+                                  class="text-xs font-medium flex items-center">
+                                <i th:data-lucide="${summary.comparison.totalUsersChange >= 0 ? 'trending-up' : 'trending-down'}" class="w-3 h-3 mr-0.5"></i>
+                                <span th:text="${(summary.comparison.totalUsersChange >= 0 ? '+' : '') + #numbers.formatDecimal(summary.comparison.totalUsersChange, 1, 1) + '%'}"></span>
+                            </span>
+                        </th:block>
+                    </div>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">선택 기간 내 가입자 수</p>
+                </div>
+                <div class="w-10 h-10 bg-accent-50 dark:bg-accent-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="users" class="w-5 h-5 text-accent-600 dark:text-accent-400"></i>
+                </div>
+            </div>
+        </a>
+
+        <!-- Total Events -->
+        <a href="/admin/statistics/events" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">총 생성 이벤트</p>
+                    <div class="flex items-center gap-2 mt-1">
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-white tabular-nums"
+                           th:text="${#numbers.formatInteger(summary.totalEvents, 0, 'COMMA')}">0</p>
+                        <th:block th:if="${summary.comparison != null and summary.comparison.totalEventsChange != null}">
+                            <span th:class="${summary.comparison.totalEventsChange >= 0 ? 'text-green-500' : 'text-red-500'}"
+                                  class="text-xs font-medium flex items-center">
+                                <i th:data-lucide="${summary.comparison.totalEventsChange >= 0 ? 'trending-up' : 'trending-down'}" class="w-3 h-3 mr-0.5"></i>
+                                <span th:text="${(summary.comparison.totalEventsChange >= 0 ? '+' : '') + #numbers.formatDecimal(summary.comparison.totalEventsChange, 1, 1) + '%'}"></span>
+                            </span>
+                        </th:block>
+                    </div>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">선택 기간 내 생성된 이벤트</p>
+                </div>
+                <div class="w-10 h-10 bg-accent-50 dark:bg-accent-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="calendar" class="w-5 h-5 text-accent-600 dark:text-accent-400"></i>
+                </div>
+            </div>
+        </a>
+
+        <!-- MAU -->
+        <a href="/admin/statistics/retention" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">MAU (최근 30일)</p>
+                    <div class="flex items-center gap-2 mt-1">
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-white tabular-nums"
+                           th:text="${#numbers.formatInteger(summary.mau, 0, 'COMMA')}">0</p>
+                        <th:block th:if="${summary.comparison != null and summary.comparison.mauChange != null}">
+                            <span th:class="${summary.comparison.mauChange >= 0 ? 'text-green-500' : 'text-red-500'}"
+                                  class="text-xs font-medium flex items-center">
+                                <i th:data-lucide="${summary.comparison.mauChange >= 0 ? 'trending-up' : 'trending-down'}" class="w-3 h-3 mr-0.5"></i>
+                                <span th:text="${(summary.comparison.mauChange >= 0 ? '+' : '') + #numbers.formatDecimal(summary.comparison.mauChange, 1, 1) + '%'}"></span>
+                            </span>
+                        </th:block>
+                    </div>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">월간 로그인한 고유 사용자</p>
+                </div>
+                <div class="w-10 h-10 bg-accent-50 dark:bg-accent-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="trending-up" class="w-5 h-5 text-accent-600 dark:text-accent-400"></i>
+                </div>
+            </div>
+        </a>
+
+        <!-- Dormant Rate -->
+        <a href="/admin/statistics/retention" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">휴면율 (60일+)</p>
+                    <div class="flex items-center gap-2 mt-1">
+                        <p class="text-2xl font-semibold text-gray-900 dark:text-white tabular-nums"
+                           th:text="${#numbers.formatDecimal(summary.dormantRate, 1, 1) + '%'}">0%</p>
+                        <th:block th:if="${summary.comparison != null and summary.comparison.dormantRateChange != null and summary.comparison.dormantRateChange != 0}">
+                            <!-- 휴면율은 낮아지면 좋은 것이므로 색상 반대 -->
+                            <span th:class="${summary.comparison.dormantRateChange <= 0 ? 'text-green-500' : 'text-red-500'}"
+                                  class="text-xs font-medium flex items-center">
+                                <i th:data-lucide="${summary.comparison.dormantRateChange <= 0 ? 'trending-down' : 'trending-up'}" class="w-3 h-3 mr-0.5"></i>
+                                <span th:text="${(summary.comparison.dormantRateChange >= 0 ? '+' : '') + #numbers.formatDecimal(summary.comparison.dormantRateChange, 1, 1) + 'p'}"></span>
+                            </span>
+                        </th:block>
+                    </div>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">60일+ 미접속 유저 비율</p>
+                </div>
+                <div class="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                    <i data-lucide="moon" class="w-5 h-5 text-gray-600 dark:text-gray-400"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Additional Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
+        <!-- Avg Participants -->
+        <a href="/admin/statistics/events" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">평균 참여자/이벤트</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
+                       th:text="${#numbers.formatDecimal(summary.avgParticipantsPerEvent, 1, 2)}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">이벤트당 평균 참여 인원</p>
+                </div>
+                <div class="w-10 h-10 bg-accent-50 dark:bg-accent-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="user-plus" class="w-5 h-5 text-accent-600 dark:text-accent-400"></i>
+                </div>
+            </div>
+        </a>
+
+        <!-- Confirmation Rate -->
+        <a href="/admin/statistics/events" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">이벤트 확정률</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
+                       th:text="${#numbers.formatDecimal(summary.confirmationRate, 1, 1) + '%'}">0%</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1"
+                       th:text="'확정 ' + ${#numbers.formatInteger(summary.confirmedEvents, 0, 'COMMA')} + ' / 전체 ' + ${#numbers.formatInteger(summary.totalEvents, 0, 'COMMA')}">확정/전체 이벤트</p>
+                </div>
+                <div class="w-10 h-10 bg-green-50 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="check-circle" class="w-5 h-5 text-green-600 dark:text-green-400"></i>
+                </div>
+            </div>
+        </a>
+
+        <!-- Marketing Targets -->
+        <a href="/admin/statistics/marketing" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 card-hover hover:border-accent-300 dark:hover:border-accent-600 cursor-pointer block">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">마케팅 타겟</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
+                       th:text="${#numbers.formatInteger(summary.marketingTargetUsers, 0, 'COMMA')}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">마케팅 수신 동의 유저</p>
+                </div>
+                <div class="w-10 h-10 bg-accent-50 dark:bg-accent-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="target" class="w-5 h-5 text-accent-600 dark:text-accent-400"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
+        <!-- Monthly Signups Chart -->
+        <div class="lg:col-span-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">월별 신규 가입</h3>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">매월 새로 가입한 사용자 수 추이</p>
+            <div class="h-64">
+                <canvas id="signupsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- OAuth Provider Chart -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">OAuth 제공자 비율</h3>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">소셜 로그인 제공자 분포</p>
+            <div class="h-48">
+                <canvas id="providersChart"></canvas>
+            </div>
+            <div class="mt-4 flex flex-wrap justify-center gap-3 text-xs text-gray-600 dark:text-gray-400" id="providerLegend"></div>
+        </div>
+    </div>
+
+    <!-- Second Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <!-- Weekday Chart -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">요일별 이벤트</h3>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">이벤트 생성이 많은 요일 분석</p>
+            <div class="h-64">
+                <canvas id="weekdayChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Top Keywords Table -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">이벤트 제목 키워드 TOP 10</h3>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">이벤트 제목에 자주 등장하는 키워드</p>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-gray-700">
+                            <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">순위</th>
+                            <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">키워드</th>
+                            <th class="text-right py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">개수</th>
+                            <th class="text-right py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">비율</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item, stat : ${charts.topKeywords}" class="border-b border-gray-100 dark:border-gray-800">
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400" th:text="${stat.index + 1}">1</td>
+                            <td class="py-2 px-3 text-gray-900 dark:text-white font-medium" th:text="${item.keyword}">Keyword</td>
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400 text-right" th:text="${item.count}">0</td>
+                            <td class="py-2 px-3 text-accent-600 dark:text-accent-400 text-right"
+                                th:text="${#numbers.formatDecimal(item.percentage, 1, 1) + '%'}">0%</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(charts.topKeywords)}">
+                            <td colspan="4" class="py-12">
+                                <div class="flex flex-col items-center justify-center text-center">
+                                    <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+                                        <i data-lucide="hash" class="w-6 h-6 text-gray-400 dark:text-gray-500"></i>
+                                    </div>
+                                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">키워드 데이터 없음</p>
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">선택한 기간에 생성된 이벤트가 없어요</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script th:inline="javascript">
+    const signupsData = /*[[${charts.monthlySignups}]]*/ {labels: [], data: []};
+    const providersData = /*[[${charts.providers}]]*/ {labels: [], data: []};
+    const weekdayData = /*[[${charts.weekdayDistribution}]]*/ {labels: [], data: []};
+
+    // Accent colors (blue palette)
+    const accentColors = ['#677CEE', '#8198f3', '#a5b4fd', '#c7d2ff', '#5367d6', '#4555bd'];
+    const isDark = document.documentElement.classList.contains('dark');
+
+    function getChartColors() {
+        const dark = document.documentElement.classList.contains('dark');
+        return {
+            text: dark ? '#9ca3af' : '#6b7280',
+            grid: dark ? '#374151' : '#f0f0f0',
+            accent: '#677CEE',
+            accentBg: dark ? 'rgba(103, 124, 238, 0.2)' : 'rgba(103, 124, 238, 0.1)'
+        };
+    }
+
+    const colors = getChartColors();
+
+    // Calculate average for context
+    const signupsAvg = signupsData.data.reduce((a, b) => a + b, 0) / signupsData.data.length || 0;
+
+    // Monthly Signups Chart with comparison
+    const signupsDatasets = [{
+        label: '현재 기간',
+        data: signupsData.data,
+        backgroundColor: colors.accentBg,
+        borderColor: colors.accent,
+        pointBackgroundColor: colors.accent,
+        fill: true,
+        tension: 0.3
+    }];
+
+    // 이전 기간 데이터가 있으면 점선으로 추가
+    if (signupsData.previous_data && signupsData.previous_data.length > 0) {
+        signupsDatasets.push({
+            label: '이전 기간',
+            data: signupsData.previous_data,
+            borderColor: isDark ? 'rgba(156, 163, 175, 0.5)' : 'rgba(107, 114, 128, 0.4)',
+            backgroundColor: 'transparent',
+            borderDash: [5, 5],
+            pointRadius: 2,
+            pointBackgroundColor: isDark ? 'rgba(156, 163, 175, 0.5)' : 'rgba(107, 114, 128, 0.4)',
+            tension: 0.3
+        });
+    }
+
+    const signupsChart = new Chart(document.getElementById('signupsChart'), {
+        type: 'line',
+        data: {
+            labels: signupsData.labels,
+            datasets: signupsDatasets
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: signupsData.previous_data && signupsData.previous_data.length > 0,
+                    position: 'bottom',
+                    labels: { color: colors.text, usePointStyle: true }
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return context[0].label + ' 신규 가입';
+                        },
+                        label: function(context) {
+                            const label = context.dataset.label;
+                            return label + ': ' + ChartTooltipConfig.formatNumber(context.raw) + '명';
+                        },
+                        afterBody: function(context) {
+                            // 현재 기간과 이전 기간 비교
+                            if (signupsData.previous_data && context[0].datasetIndex === 0) {
+                                const idx = context[0].dataIndex;
+                                const current = signupsData.data[idx];
+                                const prev = signupsData.previous_data[idx];
+                                if (prev !== undefined && prev > 0) {
+                                    const change = ((current - prev) / prev * 100).toFixed(1);
+                                    const sign = change >= 0 ? '+' : '';
+                                    return '이전 기간 대비: ' + sign + change + '%';
+                                }
+                            }
+                            return '';
+                        },
+                        footer: function(context) {
+                            const value = context[0].raw;
+                            const diff = value - signupsAvg;
+                            const sign = diff >= 0 ? '+' : '';
+                            return '월 평균(' + Math.round(signupsAvg) + '명) 대비: ' + sign + Math.round(diff) + '명';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: colors.grid },
+                    ticks: { color: colors.text }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: colors.text }
+                }
+            }
+        }
+    });
+
+    // Calculate providers total
+    const providersTotal = providersData.data.reduce((a, b) => a + b, 0);
+
+    // Providers Doughnut Chart
+    const providersChart = new Chart(document.getElementById('providersChart'), {
+        type: 'doughnut',
+        data: {
+            labels: providersData.labels,
+            datasets: [{
+                data: providersData.data,
+                backgroundColor: accentColors.slice(0, providersData.labels.length),
+                borderWidth: 0
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return context[0].label + ' 로그인';
+                        },
+                        label: function(context) {
+                            const value = context.raw;
+                            const percentage = providersTotal > 0 ? ((value / providersTotal) * 100).toFixed(1) : 0;
+                            return ChartTooltipConfig.formatNumber(value) + '명 (' + percentage + '%)';
+                        },
+                        footer: function(context) {
+                            return '전체 ' + ChartTooltipConfig.formatNumber(providersTotal) + '명 중';
+                        }
+                    }
+                }
+            },
+            cutout: '70%'
+        }
+    });
+
+    // Generate legend
+    const legendContainer = document.getElementById('providerLegend');
+    providersData.labels.forEach((label, index) => {
+        const span = document.createElement('span');
+        span.className = 'flex items-center gap-1';
+        span.innerHTML = `<span class="w-2 h-2 rounded-full" style="background-color: ${accentColors[index]}"></span>${label}`;
+        legendContainer.appendChild(span);
+    });
+
+    // Calculate weekday average
+    const weekdayAvg = weekdayData.data.reduce((a, b) => a + b, 0) / weekdayData.data.length || 0;
+    const weekdayTotal = weekdayData.data.reduce((a, b) => a + b, 0);
+
+    // Weekday Bar Chart
+    const weekdayChart = new Chart(document.getElementById('weekdayChart'), {
+        type: 'bar',
+        data: {
+            labels: weekdayData.labels,
+            datasets: [{
+                label: 'Events',
+                data: weekdayData.data,
+                backgroundColor: colors.accent,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return context[0].label + '요일 이벤트';
+                        },
+                        label: function(context) {
+                            const value = context.raw;
+                            const percentage = weekdayTotal > 0 ? ((value / weekdayTotal) * 100).toFixed(1) : 0;
+                            return ChartTooltipConfig.formatNumber(value) + '개 (' + percentage + '%)';
+                        },
+                        footer: function(context) {
+                            const value = context[0].raw;
+                            const diff = value - weekdayAvg;
+                            const sign = diff >= 0 ? '+' : '';
+                            return '요일 평균(' + Math.round(weekdayAvg) + '개) 대비: ' + sign + Math.round(diff) + '개';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: colors.grid },
+                    ticks: { color: colors.text }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: colors.text }
+                }
+            }
+        }
+    });
+
+    // Listen for theme changes
+    window.addEventListener('themeChanged', function(e) {
+        const newColors = getChartColors();
+
+        // Update signups chart
+        signupsChart.data.datasets[0].backgroundColor = newColors.accentBg;
+        signupsChart.options.scales.y.grid.color = newColors.grid;
+        signupsChart.options.scales.y.ticks.color = newColors.text;
+        signupsChart.options.scales.x.ticks.color = newColors.text;
+        signupsChart.update();
+
+        // Update weekday chart
+        weekdayChart.options.scales.y.grid.color = newColors.grid;
+        weekdayChart.options.scales.y.ticks.color = newColors.text;
+        weekdayChart.options.scales.x.ticks.color = newColors.text;
+        weekdayChart.update();
+    });
+</script>
+</th:block>
+</body>
+</html>

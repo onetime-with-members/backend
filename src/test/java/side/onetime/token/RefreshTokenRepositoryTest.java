@@ -149,7 +149,7 @@ class RefreshTokenRepositoryTest extends DatabaseTestConfig {
             flushAndClear();
 
             // when
-            refreshTokenRepository.revokeByUserIdAndBrowserId(TEST_USER_ID, TEST_BROWSER_ID);
+            refreshTokenRepository.revokeByUserIdAndBrowserId(TEST_USER_ID, TEST_USER_TYPE, TEST_BROWSER_ID);
             flushAndClear();
 
             // then
@@ -173,7 +173,7 @@ class RefreshTokenRepositoryTest extends DatabaseTestConfig {
             flushAndClear();
 
             // when
-            refreshTokenRepository.revokeAllByUserId(TEST_USER_ID);
+            refreshTokenRepository.revokeAllByUserId(TEST_USER_ID, TEST_USER_TYPE);
             flushAndClear();
 
             // then

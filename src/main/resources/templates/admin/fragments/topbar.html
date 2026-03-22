@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<header th:fragment="topbar" class="h-14 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-4 lg:px-6 transition-colors duration-200 sticky top-0 z-20">
+    <!-- Left: Hamburger (mobile) + Page Title -->
+    <div class="flex items-center gap-3 min-w-0">
+        <!-- Hamburger menu button - visible on mobile only -->
+        <button onclick="openMobileSidebar()"
+                class="lg:hidden p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors flex-shrink-0"
+                aria-label="메뉴 열기">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+        <h1 class="text-base lg:text-lg font-semibold text-gray-900 dark:text-white truncate" th:text="${pageTitle ?: '대시보드'}">Dashboard</h1>
+    </div>
+
+    <!-- Right Side -->
+    <div class="flex items-center gap-2 lg:gap-4 flex-shrink-0">
+        <!-- Command Palette Button -->
+        <button onclick="openCommandPalette()"
+                class="flex items-center gap-2 px-2 lg:px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                title="검색 (Cmd+K)">
+            <i data-lucide="search" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">검색</span>
+            <kbd class="hidden sm:inline px-1.5 py-0.5 text-xs bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">⌘K</kbd>
+        </button>
+
+        <!-- Date Display - hidden on small screens -->
+        <span class="hidden md:inline text-sm text-gray-500 dark:text-gray-400" th:text="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+            2026-01-26
+        </span>
+
+        <!-- Divider - hidden on small screens -->
+        <div class="hidden md:block h-5 w-px bg-gray-200 dark:bg-gray-700"></div>
+
+        <!-- Dark Mode Toggle -->
+        <button id="themeToggle" type="button"
+                class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+                title="테마 변경" aria-label="테마 변경">
+            <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+            <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
+        </button>
+
+        <!-- Divider -->
+        <div class="h-5 w-px bg-gray-200 dark:bg-gray-700"></div>
+
+        <!-- User Menu -->
+        <div class="relative" id="userMenu">
+            <button class="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors max-w-[120px] lg:max-w-none"
+                    onclick="toggleUserMenu()">
+                <span class="truncate" th:text="${adminName ?: 'Admin'}">Admin</span>
+                <i data-lucide="chevron-down" class="w-4 h-4 flex-shrink-0"></i>
+            </button>
+
+            <!-- Dropdown -->
+            <div id="userDropdown"
+                 class="hidden absolute right-0 top-full mt-2 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 z-50">
+                <form th:action="@{/admin/logout}" method="post" class="m-0">
+                    <button type="submit"
+                            class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white w-full text-left">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                        <span>로그아웃</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</header>
+
+<script th:fragment="topbar-script">
+    function toggleUserMenu() {
+        const dropdown = document.getElementById('userDropdown');
+        dropdown.classList.toggle('hidden');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        const menu = document.getElementById('userMenu');
+        const dropdown = document.getElementById('userDropdown');
+        if (menu && !menu.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    // Dark Mode Toggle - exposed globally for command palette
+    window.toggleTheme = function() {
+        const html = document.documentElement;
+        const isDark = html.classList.contains('dark');
+
+        if (isDark) {
+            html.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+        } else {
+            html.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        }
+
+        // Re-render Lucide icons
+        lucide.createIcons();
+
+        // Dispatch custom event for charts to update
+        window.dispatchEvent(new CustomEvent('themeChanged', { detail: { isDark: !isDark } }));
+    };
+
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+</script>
+</html>

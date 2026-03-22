@@ -21,10 +21,10 @@ public record DashboardUser(
         String sleepStartTime,
         String sleepEndTime,
         Language language,
-        int participationCount,
+        int participantCount,
         String createdDate
 ) {
-    public static DashboardUser from(User user, int participationCount) {
+    public static DashboardUser from(User user, int participantCount) {
         return new DashboardUser(
                 user.getId(),
                 user.getName(),
@@ -38,7 +38,7 @@ public record DashboardUser(
                 user.getSleepStartTime(),
                 user.getSleepEndTime(),
                 user.getLanguage(),
-                participationCount,
+                participantCount,
                 user.getCreatedDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
         );
     }

@@ -38,7 +38,9 @@ out/
 
 ### Claude Code ###
 .claude
-/docs
+docs/sql/
+docs/security/
+.serena
 
 ### Auto-generated files ###
 src/main/resources/static/docs/open-api-3.0.1.json

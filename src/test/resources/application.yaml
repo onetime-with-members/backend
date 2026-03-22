@@ -22,6 +22,8 @@ spring:
         static: ap-northeast-2
       s3:
         bucket: test-bucket
+      sqs:
+        queue-url: "https://sqs.ap-northeast-2.amazonaws.com/000000000000/test-queue"
 
   security:
     oauth2:

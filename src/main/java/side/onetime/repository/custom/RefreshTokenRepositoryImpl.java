@@ -18,11 +18,12 @@ public class RefreshTokenRepositoryImpl implements RefreshTokenRepositoryCustom 
 
     @Override
     @Transactional
-    public void revokeByUserIdAndBrowserId(Long userId, String browserId) {
+    public void revokeByUserIdAndBrowserId(Long userId, String userType, String browserId) {
         queryFactory.update(refreshToken)
                 .set(refreshToken.status, TokenStatus.REVOKED)
                 .set(refreshToken.updatedDate, LocalDateTime.now())
                 .where(refreshToken.userId.eq(userId)
+                        .and(refreshToken.userType.eq(userType))
                         .and(refreshToken.browserId.eq(browserId))
                         .and(refreshToken.status.eq(TokenStatus.ACTIVE)))
                 .execute();
@@ -30,11 +31,12 @@ public class RefreshTokenRepositoryImpl implements RefreshTokenRepositoryCustom 
 
     @Override
     @Transactional
-    public void revokeAllByUserId(Long userId) {
+    public void revokeAllByUserId(Long userId, String userType) {
         queryFactory.update(refreshToken)
                 .set(refreshToken.status, TokenStatus.REVOKED)
                 .set(refreshToken.updatedDate, LocalDateTime.now())
                 .where(refreshToken.userId.eq(userId)
+                        .and(refreshToken.userType.eq(userType))
                         .and(refreshToken.status.eq(TokenStatus.ACTIVE)))
                 .execute();
     }

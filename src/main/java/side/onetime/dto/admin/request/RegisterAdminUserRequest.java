@@ -2,6 +2,7 @@ package side.onetime.dto.admin.request;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -26,11 +27,11 @@ public record RegisterAdminUserRequest(
         String password
 ) {
 
-        public AdminUser toEntity() {
+        public AdminUser toEntity(String encodedPassword) {
                 return AdminUser.builder()
                         .name(name)
                         .email(email)
-                        .password(password)
+                        .password(encodedPassword)
                         .build();
         }
 }
