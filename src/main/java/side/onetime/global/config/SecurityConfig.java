@@ -141,7 +141,10 @@ public class SecurityConfig {
 				.requestMatchers(HttpMethod.PUT, PUBLIC_PUT_URLS).permitAll()
 				// 6. Safety-Net: 위에서 허용되지 않은 /api/** 요청은 인증 필요
 				.requestMatchers("/api/**").authenticated()
-				// 7. 그 외 (정적 리소스 등)
+				// 7. 어드민 페이지: 로그인/정적 리소스 허용, 나머지 인증 필요
+				.requestMatchers("/admin/login", "/admin/css/**", "/admin/js/**", "/admin/vendor/**", "/admin/manifest.json").permitAll()
+				.requestMatchers("/admin/**").authenticated()
+				// 8. 그 외 (정적 리소스 등)
 				.anyRequest().permitAll()
 			)
 			.oauth2Login(oauth -> oauth

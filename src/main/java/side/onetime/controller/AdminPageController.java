@@ -69,7 +69,6 @@ public class AdminPageController {
     /**
      * 로그인 페이지 렌더링
      */
-
     @GetMapping("/login")
     public String loginPage() {
         return "admin/login";
@@ -79,7 +78,6 @@ public class AdminPageController {
      * 로그인 처리
      * 성공 시 JWT 토큰을 쿠키에 저장하고 대시보드로 리다이렉트
      */
-
     @PostMapping("/login")
     public String login(@RequestParam String email,
                         @RequestParam String password,
@@ -246,5 +244,16 @@ public class AdminPageController {
         model.addAttribute("currentPage", "banner");
         model.addAttribute("pageTitle", "Banner Management");
         return "admin/banner";
+    }
+
+    /**
+     * 매핑되지 않는 어드민 경로 처리 (커스텀 404 페이지)
+     */
+    @GetMapping("/**")
+    public String notFound(HttpServletRequest request, Model model) {
+        model.addAttribute("currentUri", request.getRequestURI());
+        model.addAttribute("currentPage", "");
+        model.addAttribute("pageTitle", "404 Not Found");
+        return "admin/404";
     }
 }

@@ -58,14 +58,15 @@ public class JwtFilter extends OncePerRequestFilter {
         String refreshToken = null;
         boolean isAdminRequest = false;
 
-        // 1. Check Authorization header first (for API requests)
+        // 1. API 요청의 Authorization 헤더에서 토큰 추출
         String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             token = jwtUtil.getTokenFromHeader(authorizationHeader);
         }
 
-        // 2. Check cookie for admin pages
-        if (token == null) {
+        // 2. 어드민 요청(페이지 + API)의 쿠키에서 토큰 추출
+        String requestUri = request.getRequestURI();
+        if (token == null && (requestUri.startsWith("/admin") || requestUri.startsWith("/api/v1/admin"))) {
             var adminAccessToken = CookieUtil.getAdminAccessToken(request);
             if (adminAccessToken.isPresent()) {
                 token = adminAccessToken.get();

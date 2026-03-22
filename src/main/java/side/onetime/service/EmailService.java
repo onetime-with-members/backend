@@ -250,7 +250,7 @@ public class EmailService {
      */
     @Transactional(readOnly = true)
     public List<EmailTemplateResponse> getTemplates() {
-        return emailTemplateRepository.findAllByOrderByUpdatedAtDesc()
+        return emailTemplateRepository.findAllByOrderByUpdatedDateDesc()
                 .stream()
                 .map(EmailTemplateResponse::from)
                 .toList();

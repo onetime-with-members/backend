@@ -8,7 +8,7 @@ import side.onetime.domain.EmailTemplate;
 
 public interface EmailTemplateRepository extends JpaRepository<EmailTemplate, Long> {
 
-    List<EmailTemplate> findAllByOrderByUpdatedAtDesc();
+    List<EmailTemplate> findAllByOrderByUpdatedDateDesc();
 
     boolean existsByName(String name);
 

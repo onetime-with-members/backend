@@ -26,8 +26,8 @@ public record EmailTemplateResponse(
                 template.getSubject(),
                 template.getContent(),
                 template.getContentType(),
-                template.getCreatedAt(),
-                template.getUpdatedAt()
+                template.getCreatedDate(),
+                template.getUpdatedDate()
         );
     }
 }
