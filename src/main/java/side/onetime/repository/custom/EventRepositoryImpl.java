@@ -13,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberTemplate;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -171,5 +173,119 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
 
         query.offset(pageable.getOffset()).limit(pageable.getPageSize());
         return query.fetch();
+    }
+
+    /**
+     * 검색, 기간 필터를 포함한 이벤트 조회 메서드
+     */
+    @Override
+    public List<Event> findAllWithFilters(Pageable pageable, String sortField, String sorting,
+                                           String search, LocalDateTime startDate, LocalDateTime endDate) {
+        return findAllWithFilters(pageable, sortField, sorting, search, startDate, endDate, null, null);
+    }
+
+    /**
+     * 검색, 기간, 시간대, 요일 필터를 포함한 이벤트 조회 메서드
+     */
+    @Override
+    public List<Event> findAllWithFilters(Pageable pageable, String sortField, String sorting,
+                                           String search, LocalDateTime startDate, LocalDateTime endDate,
+                                           Integer hour, Integer dayOfWeek) {
+        Order order = sorting.equalsIgnoreCase("asc") ? Order.ASC : Order.DESC;
+        String field = NamingUtil.toCamelCase(sortField);
+
+        QEvent event = QEvent.event;
+
+        JPAQuery<Event> query = queryFactory.selectFrom(event)
+                .where(event.status.in(EventStatus.ACTIVE, EventStatus.CONFIRMED));
+
+        // 검색 조건
+        if (search != null && !search.trim().isEmpty()) {
+            query.where(event.title.containsIgnoreCase(search.trim()));
+        }
+
+        // 기간 필터 (생성일 기준)
+        if (startDate != null) {
+            query.where(event.createdDate.goe(startDate));
+        }
+        if (endDate != null) {
+            query.where(event.createdDate.lt(endDate));
+        }
+
+        // 시간대 필터 (HOUR)
+        if (hour != null) {
+            NumberTemplate<Integer> hourExpr = Expressions.numberTemplate(Integer.class,
+                    "HOUR({0})", event.createdDate);
+            query.where(hourExpr.eq(hour));
+        }
+
+        // 요일 필터 (DAYOFWEEK: 1=SUN, 2=MON, ..., 7=SAT)
+        if (dayOfWeek != null) {
+            NumberTemplate<Integer> dayOfWeekExpr = Expressions.numberTemplate(Integer.class,
+                    "DAYOFWEEK({0})", event.createdDate);
+            query.where(dayOfWeekExpr.eq(dayOfWeek));
+        }
+
+        // 정렬
+        PathBuilder<Event> pathBuilder = new PathBuilder<>(Event.class, "event");
+        OrderSpecifier<?> orderSpecifier = switch (field) {
+            case "id" -> new OrderSpecifier<>(order, pathBuilder.getNumber("id", Long.class));
+            case "title", "startTime", "endTime" -> new OrderSpecifier<>(order, pathBuilder.getString(field));
+            case "category" -> new OrderSpecifier<>(order, pathBuilder.getEnum(field, Category.class));
+            case "createdDate" -> new OrderSpecifier<>(order, pathBuilder.getComparable(field, LocalDateTime.class));
+            default -> new OrderSpecifier<>(order, pathBuilder.getComparable("createdDate", LocalDateTime.class));
+        };
+        query.orderBy(orderSpecifier);
+
+        query.offset(pageable.getOffset()).limit(pageable.getPageSize());
+        return query.fetch();
+    }
+
+    /**
+     * 검색, 기간 필터를 포함한 이벤트 개수 조회
+     */
+    @Override
+    public long countWithFilters(String search, LocalDateTime startDate, LocalDateTime endDate) {
+        return countWithFilters(search, startDate, endDate, null, null);
+    }
+
+    /**
+     * 검색, 기간, 시간대, 요일 필터를 포함한 이벤트 개수 조회
+     */
+    @Override
+    public long countWithFilters(String search, LocalDateTime startDate, LocalDateTime endDate,
+                                  Integer hour, Integer dayOfWeek) {
+        QEvent event = QEvent.event;
+
+        JPAQuery<Long> query = queryFactory.select(event.count())
+                .from(event)
+                .where(event.status.in(EventStatus.ACTIVE, EventStatus.CONFIRMED));
+
+        if (search != null && !search.trim().isEmpty()) {
+            query.where(event.title.containsIgnoreCase(search.trim()));
+        }
+        if (startDate != null) {
+            query.where(event.createdDate.goe(startDate));
+        }
+        if (endDate != null) {
+            query.where(event.createdDate.lt(endDate));
+        }
+
+        // 시간대 필터 (HOUR)
+        if (hour != null) {
+            NumberTemplate<Integer> hourExpr = Expressions.numberTemplate(Integer.class,
+                    "HOUR({0})", event.createdDate);
+            query.where(hourExpr.eq(hour));
+        }
+
+        // 요일 필터 (DAYOFWEEK: 1=SUN, 2=MON, ..., 7=SAT)
+        if (dayOfWeek != null) {
+            NumberTemplate<Integer> dayOfWeekExpr = Expressions.numberTemplate(Integer.class,
+                    "DAYOFWEEK({0})", event.createdDate);
+            query.where(dayOfWeekExpr.eq(dayOfWeek));
+        }
+
+        Long count = query.fetchOne();
+        return count != null ? count : 0;
     }
 }

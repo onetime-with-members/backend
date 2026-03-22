@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<footer th:fragment="footer" class="h-12 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex items-center justify-center transition-colors duration-200">
+    <span class="text-xs text-gray-400 dark:text-gray-500">Copyright © OneTime Admin 2026</span>
+</footer>
+
+<th:block th:fragment="scripts">
+    <!-- Topbar Script -->
+    <script th:replace="~{admin/fragments/topbar :: topbar-script}"></script>
+</th:block>
+</html>

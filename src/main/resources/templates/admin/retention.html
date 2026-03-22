@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{admin/layout/default}">
+<head>
+    <title>리텐션 분석 - OneTime Admin</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Header -->
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">리텐션 분석</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">사용자 유지율을 분석합니다</p>
+        </div>
+    </div>
+
+    <!-- Date Filter -->
+    <div th:replace="~{admin/fragments/date-filter :: dateFilter}"></div>
+
+    <!-- Info Alert -->
+    <div class="bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-800 rounded-lg p-4 mb-6 flex items-center gap-3">
+        <i data-lucide="info" class="w-5 h-5 text-accent-500 flex-shrink-0"></i>
+        <p class="text-sm text-accent-700 dark:text-accent-300">카드를 클릭하면 해당 유저 목록을 확인할 수 있습니다.</p>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- Dormant 7d+ -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
+             onclick="showRetentionDetail('dormant7')">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">휴면 7일+</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
+                       th:text="${#numbers.formatInteger(data.dormantUsers7Days, 0, 'COMMA')}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">7일 이상 미접속</p>
+                </div>
+                <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="user-x" class="w-5 h-5 text-amber-600 dark:text-amber-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dormant 30d+ -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
+             onclick="showRetentionDetail('dormant30')">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">휴면 30일+</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
+                       th:text="${#numbers.formatInteger(data.dormantUsers30Days, 0, 'COMMA')}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">30일 이상 미접속</p>
+                </div>
+                <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="user-x" class="w-5 h-5 text-amber-600 dark:text-amber-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dormant 90d+ -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
+             onclick="showRetentionDetail('dormant90')">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">휴면 90일+</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
+                       th:text="${#numbers.formatInteger(data.dormantUsers90Days, 0, 'COMMA')}">0</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">90일 이상 미접속 (이탈 위험)</p>
+                </div>
+                <div class="w-10 h-10 bg-red-50 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="user-minus" class="w-5 h-5 text-red-600 dark:text-red-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Returning Rate -->
+        <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer card-hover hover:border-accent-400 dark:hover:border-accent-600"
+             onclick="showRetentionDetail('returning')">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">복귀율</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1 tabular-nums"
+                       th:text="${#numbers.formatDecimal(data.returningUserRate, 1, 1) + '%'}">0%</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">이벤트 2회+ 참여 유저 (생성/참여 포함)</p>
+                </div>
+                <div class="w-10 h-10 bg-green-50 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                    <i data-lucide="rotate-ccw" class="w-5 h-5 text-green-600 dark:text-green-400"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly MAU Chart -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 mb-6 transition-colors">
+        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">월간 활성 사용자 (MAU)</h3>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">매월 로그인한 고유 사용자 수 추이</p>
+        <div class="h-56 sm:h-64 w-full">
+            <canvas id="mauChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Conversion Funnel -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 mb-6 transition-colors">
+        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">전환 퍼널</h3>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">가입 → 첫 이벤트 → 참여자 확보 → 재생성 단계별 전환율</p>
+        <div id="funnelLoading" class="animate-pulse space-y-4">
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                </div>
+                <div class="h-8 bg-gray-100 dark:bg-gray-800 rounded w-full"></div>
+            </div>
+            <div class="flex justify-center"><div class="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded"></div></div>
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-28"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                </div>
+                <div class="h-8 bg-gray-100 dark:bg-gray-800 rounded w-3/4"></div>
+            </div>
+            <div class="flex justify-center"><div class="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded"></div></div>
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                </div>
+                <div class="h-8 bg-gray-100 dark:bg-gray-800 rounded w-1/2"></div>
+            </div>
+            <div class="flex justify-center"><div class="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded"></div></div>
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-36"></div>
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-14"></div>
+                </div>
+                <div class="h-8 bg-gray-100 dark:bg-gray-800 rounded w-1/4"></div>
+            </div>
+        </div>
+        <div id="funnelContent" class="hidden">
+            <div id="funnelChart"></div>
+        </div>
+    </div>
+
+    <!-- TTV Distribution -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 mb-6 transition-colors">
+        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">Time to Value (TTV)</h3>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">가입 후 첫 이벤트 생성까지 걸린 시간 분포</p>
+        <div id="ttvLoading" class="animate-pulse">
+            <!-- Summary Cards Skeleton -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-12 mx-auto mb-2"></div>
+                    <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-16 mx-auto"></div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-12 mx-auto mb-2"></div>
+                    <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-16 mx-auto"></div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 mx-auto mb-2"></div>
+                    <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-12 mx-auto"></div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20 mx-auto mb-2"></div>
+                    <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-24 mx-auto"></div>
+                </div>
+            </div>
+            <!-- Chart Skeleton -->
+            <div class="h-64 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-end justify-around p-4 gap-2">
+                <div class="w-12 bg-gray-200 dark:bg-gray-700 rounded-t" style="height: 60%"></div>
+                <div class="w-12 bg-gray-200 dark:bg-gray-700 rounded-t" style="height: 45%"></div>
+                <div class="w-12 bg-gray-200 dark:bg-gray-700 rounded-t" style="height: 30%"></div>
+                <div class="w-12 bg-gray-200 dark:bg-gray-700 rounded-t" style="height: 20%"></div>
+                <div class="w-12 bg-gray-200 dark:bg-gray-700 rounded-t" style="height: 15%"></div>
+                <div class="w-12 bg-gray-200 dark:bg-gray-700 rounded-t" style="height: 10%"></div>
+            </div>
+        </div>
+        <div id="ttvContent" class="hidden">
+            <!-- TTV Summary Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">평균</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="ttvAverage">-</p>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">중앙값</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="ttvMedian">-</p>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">활성화율</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="ttvActivation">-</p>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">이벤트 생성 유저</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="ttvUsersWithEvent">-</p>
+                </div>
+            </div>
+            <!-- TTV Distribution Chart -->
+            <div class="h-56 sm:h-64 w-full">
+                <canvas id="ttvChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- WAU/MAU Stickiness -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 mb-6 transition-colors">
+        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">Stickiness (WAU/MAU)</h3>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">최근 30일 방문자 중 최근 7일에도 방문한 비율 - 높을수록 자주 재방문</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">
+            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 bg-amber-400 rounded-full"></span>10~20% 낮음</span>
+            <span class="inline-flex items-center gap-1 ml-3"><span class="w-2 h-2 bg-blue-400 rounded-full"></span>20~30% 보통</span>
+            <span class="inline-flex items-center gap-1 ml-3"><span class="w-2 h-2 bg-green-400 rounded-full"></span>30%+ 좋음</span>
+        </p>
+        <div id="stickinessLoading" class="animate-pulse">
+            <!-- Summary Cards Skeleton -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div class="bg-accent-500/20 rounded-lg p-4">
+                    <div class="h-3 bg-accent-400/30 rounded w-20 mx-auto mb-2"></div>
+                    <div class="h-6 bg-accent-400/30 rounded w-16 mx-auto"></div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 mx-auto mb-2"></div>
+                    <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-12 mx-auto"></div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 mx-auto mb-2"></div>
+                    <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-12 mx-auto"></div>
+                </div>
+            </div>
+            <!-- Chart Skeleton -->
+            <div class="h-64 bg-gray-100 dark:bg-gray-800 rounded-lg"></div>
+        </div>
+        <div id="stickinessContent" class="hidden">
+            <!-- Stickiness Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div class="bg-accent-500 text-white rounded-lg p-4 text-center">
+                    <p class="text-xs uppercase mb-1 opacity-80">현재 Stickiness</p>
+                    <p class="text-2xl font-bold" id="stickinessValue">-</p>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">최근 7일 WAU</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="stickinessWau">-</p>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">최근 30일 MAU</p>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white" id="stickinessMau">-</p>
+                </div>
+            </div>
+            <!-- Stickiness Trend Chart -->
+            <div class="h-56 sm:h-64 w-full">
+                <canvas id="stickinessChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cohort Retention Table -->
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-5 transition-colors">
+        <div class="flex flex-wrap items-start sm:items-center justify-between gap-3 mb-4">
+            <div>
+                <h3 class="text-sm font-medium text-gray-900 dark:text-white">코호트 리텐션</h3>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">가입월별 유저의 월간 재방문율 추이</p>
+            </div>
+            <select id="cohortMonths"
+                    class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500">
+                <option value="6">6개월</option>
+                <option value="12" selected>12개월</option>
+            </select>
+        </div>
+        <div id="cohortLoading" class="animate-pulse">
+            <div class="overflow-x-auto">
+                <div class="space-y-2">
+                    <!-- Header -->
+                    <div class="flex gap-2 py-2 border-b border-gray-200 dark:border-gray-700">
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-12"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-10"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-10"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-10"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-10"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-10"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-10"></div>
+                    </div>
+                    <!-- Rows -->
+                    <div class="flex gap-2 py-2 border-b border-gray-100 dark:border-gray-800">
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-16"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-12"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                    </div>
+                    <div class="flex gap-2 py-2 border-b border-gray-100 dark:border-gray-800">
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-16"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-12"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                    </div>
+                    <div class="flex gap-2 py-2 border-b border-gray-100 dark:border-gray-800">
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-16"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-12"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                    </div>
+                    <div class="flex gap-2 py-2 border-b border-gray-100 dark:border-gray-800">
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-16"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-12"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                        <div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-10"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="cohortContent" class="hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs" id="cohortTable">
+                    <thead id="cohortHeader"></thead>
+                    <tbody id="cohortBody"></tbody>
+                </table>
+            </div>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-3">
+                <i data-lucide="info" class="w-3 h-3 inline mr-1"></i>
+                M0 = 가입월, M1 = 1개월 후. 높을수록 유저 정착률이 좋음
+            </p>
+        </div>
+    </div>
+
+    <!-- User List Modal -->
+    <div id="retentionModal" class="hidden fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg w-full max-w-[95vw] sm:max-w-3xl lg:max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="retentionModalLabel">유저 목록</h3>
+                <button onclick="closeRetentionModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-auto p-4">
+                <div id="retentionLoading" class="flex justify-center py-12">
+                    <div class="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 dark:border-gray-600 border-t-accent-500"></div>
+                </div>
+                <div id="retentionContent" class="hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex gap-2">
+                            <span class="px-3 py-1 text-xs bg-accent-500 text-white rounded-full" id="retentionTotalBadge">Total: 0</span>
+                            <span class="px-3 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full hidden" id="retentionSelectedBadge">Selected: 0</span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm" id="retentionTable">
+                            <thead id="retentionTableHead"></thead>
+                            <tbody id="retentionTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-2 p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" onclick="sendEmailToSelected()" id="btnSendEmailToSelected"
+                        class="px-4 py-2 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 btn-hover flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled>
+                    <i data-lucide="mail" class="w-4 h-4"></i>
+                    이메일 전송
+                </button>
+                <button type="button" onclick="closeRetentionModal()"
+                        class="px-4 py-2 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script th:inline="javascript">
+    const mauData = /*[[${data.monthlyMau}]]*/ [];
+
+    // ==================== Retention Modal ====================
+    const retentionTypeConfig = {
+        dormant7: {
+            title: '휴면 7일+ 사용자',
+            endpoint: '/api/v1/admin/statistics/retention/dormant?days=7'
+        },
+        dormant30: {
+            title: '휴면 30일+ 사용자',
+            endpoint: '/api/v1/admin/statistics/retention/dormant?days=30'
+        },
+        dormant90: {
+            title: '휴면 90일+ 사용자',
+            endpoint: '/api/v1/admin/statistics/retention/dormant?days=90'
+        },
+        returning: {
+            title: '복귀 유저 (이벤트 2회+ 참여)',
+            endpoint: '/api/v1/admin/statistics/retention/returning'
+        }
+    };
+
+    function getDateParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const startDate = urlParams.get('startDate') || '';
+        const endDate = urlParams.get('endDate') || '';
+        let params = '';
+        if (startDate) params += (params ? '&' : '?') + 'startDate=' + startDate;
+        if (endDate) params += (params ? '&' : '?') + 'endDate=' + endDate;
+        return params;
+    }
+
+    function showRetentionDetail(type) {
+        const config = retentionTypeConfig[type];
+        if (!config) return;
+
+        document.getElementById('retentionModalLabel').textContent = config.title;
+        document.getElementById('retentionLoading').classList.remove('hidden');
+        document.getElementById('retentionContent').classList.add('hidden');
+        document.getElementById('retentionModal').classList.remove('hidden');
+
+        // Get date params from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const startDate = urlParams.get('startDate') || '';
+        const endDate = urlParams.get('endDate') || '';
+
+        // Build URL with date params for all types
+        const params = new URLSearchParams();
+        if (startDate) params.set('startDate', startDate);
+        if (endDate) params.set('endDate', endDate);
+        const paramStr = params.toString();
+        let url = config.endpoint;
+        if (paramStr) {
+            url += (url.includes('?') ? '&' : '?') + paramStr;
+        }
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    renderRetentionUsers(data.payload, type);
+                } else {
+                    showAlert('데이터를 불러오는데 실패했습니다', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('데이터를 불러오는데 실패했습니다', 'error');
+            })
+            .finally(() => {
+                document.getElementById('retentionLoading').classList.add('hidden');
+                document.getElementById('retentionContent').classList.remove('hidden');
+                lucide.createIcons();
+            });
+    }
+
+    // Selected users state for retention modal
+    const selectedRetentionUsers = new Map();
+
+    function closeRetentionModal() {
+        document.getElementById('retentionModal').classList.add('hidden');
+        // Clear selection when closing modal
+        selectedRetentionUsers.clear();
+        updateRetentionSelectionUI();
+    }
+
+    function toggleRetentionUser(userId, email, name, nickname) {
+        const key = `${userId}`;
+        if (selectedRetentionUsers.has(key)) {
+            selectedRetentionUsers.delete(key);
+        } else {
+            selectedRetentionUsers.set(key, { userId, email, name, nickname });
+        }
+        updateRetentionSelectionUI();
+    }
+
+    function toggleAllRetentionUsers(checked, users) {
+        if (checked) {
+            users.forEach(user => {
+                if (user.email) {
+                    selectedRetentionUsers.set(`${user.userId}`, {
+                        userId: user.userId,
+                        email: user.email,
+                        name: user.name,
+                        nickname: user.nickname
+                    });
+                }
+            });
+        } else {
+            selectedRetentionUsers.clear();
+        }
+        updateRetentionSelectionUI();
+    }
+
+    function updateRetentionSelectionUI() {
+        const count = selectedRetentionUsers.size;
+        const badge = document.getElementById('retentionSelectedBadge');
+        const btn = document.getElementById('btnSendEmailToSelected');
+
+        if (count > 0) {
+            badge.textContent = 'Selected: ' + count;
+            badge.classList.remove('hidden');
+            btn.disabled = false;
+        } else {
+            badge.classList.add('hidden');
+            btn.disabled = true;
+        }
+
+        // Update checkboxes
+        document.querySelectorAll('.retention-user-checkbox').forEach(cb => {
+            cb.checked = selectedRetentionUsers.has(cb.dataset.userId);
+        });
+
+        // Update header checkbox
+        const headerCb = document.getElementById('retentionSelectAllCheckbox');
+        if (headerCb) {
+            const allCbs = document.querySelectorAll('.retention-user-checkbox');
+            headerCb.checked = allCbs.length > 0 && count === allCbs.length;
+            headerCb.indeterminate = count > 0 && count < allCbs.length;
+        }
+    }
+
+    function sendEmailToSelected() {
+        if (selectedRetentionUsers.size === 0) {
+            showAlert('사용자를 선택해주세요', 'warning');
+            return;
+        }
+
+        // Store selected users in localStorage
+        const usersArray = Array.from(selectedRetentionUsers.values());
+        localStorage.setItem('preselectedEmailUsers', JSON.stringify(usersArray));
+
+        // Navigate to email page
+        window.location.href = '/admin/email';
+    }
+
+    // Close modal on backdrop click
+    document.getElementById('retentionModal').addEventListener('click', function(e) {
+        if (e.target === this) closeRetentionModal();
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !document.getElementById('retentionModal').classList.contains('hidden')) {
+            closeRetentionModal();
+        }
+    });
+
+    // Store users for select all functionality
+    let currentRetentionUsers = [];
+
+    function renderRetentionUsers(data, type) {
+        const users = data.users || [];
+        const count = users.length;
+        currentRetentionUsers = users;
+
+        // Clear selection when rendering new data
+        selectedRetentionUsers.clear();
+        updateRetentionSelectionUI();
+
+        document.getElementById('retentionTotalBadge').textContent = 'Total: ' + data.totalCount.toLocaleString();
+
+        const isDark = document.documentElement.classList.contains('dark');
+        const badgeClass = isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700';
+
+        // Different columns based on type
+        let thead = '';
+        if (type === 'returning') {
+            thead = `
+                <tr class="border-b border-gray-200 dark:border-gray-700">
+                    <th class="w-10 py-2 px-3">
+                        <input type="checkbox" id="retentionSelectAllCheckbox"
+                               class="rounded border-gray-300 dark:border-gray-600 text-accent-500 focus:ring-accent-500"
+                               onchange="toggleAllRetentionUsers(this.checked, currentRetentionUsers)">
+                    </th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">ID</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">Email</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">이름</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">닉네임</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">Provider</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">가입일</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">참여 이벤트</th>
+                </tr>
+            `;
+        } else {
+            thead = `
+                <tr class="border-b border-gray-200 dark:border-gray-700">
+                    <th class="w-10 py-2 px-3">
+                        <input type="checkbox" id="retentionSelectAllCheckbox"
+                               class="rounded border-gray-300 dark:border-gray-600 text-accent-500 focus:ring-accent-500"
+                               onchange="toggleAllRetentionUsers(this.checked, currentRetentionUsers)">
+                    </th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">ID</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">Email</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">이름</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">닉네임</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">Provider</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">마케팅</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">가입일</th>
+                    <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400 font-medium">미접속 일수</th>
+                </tr>
+            `;
+        }
+        document.getElementById('retentionTableHead').innerHTML = thead;
+
+        let tbody = '';
+        if (!users || users.length === 0) {
+            const colspan = type === 'returning' ? 8 : 9;
+            tbody = `<tr><td colspan="${colspan}" class="py-12">
+                <div class="flex flex-col items-center justify-center text-center">
+                    <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+                        <i data-lucide="users" class="w-6 h-6 text-gray-400 dark:text-gray-500"></i>
+                    </div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">해당하는 유저가 없습니다</p>
+                </div>
+            </td></tr>`;
+        } else {
+            users.forEach(user => {
+                const escapedEmail = (user.email || '').replace(/'/g, "\\'");
+                const escapedName = (user.name || '').replace(/'/g, "\\'");
+                const escapedNickname = (user.nickname || '').replace(/'/g, "\\'");
+                const hasEmail = user.email && user.email.trim() !== '';
+
+                if (type === 'returning') {
+                    tbody += `
+                        <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 ${hasEmail ? 'cursor-pointer' : ''}"
+                            ${hasEmail ? `onclick="toggleRetentionUser('${user.userId}', '${escapedEmail}', '${escapedName}', '${escapedNickname}')"` : ''}>
+                            <td class="py-2 px-3" onclick="event.stopPropagation()">
+                                ${hasEmail ? `<input type="checkbox" class="retention-user-checkbox rounded border-gray-300 dark:border-gray-600 text-accent-500 focus:ring-accent-500"
+                                       data-user-id="${user.userId}"
+                                       onchange="toggleRetentionUser('${user.userId}', '${escapedEmail}', '${escapedName}', '${escapedNickname}')">` : '-'}
+                            </td>
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.userId || '-'}</td>
+                            <td class="py-2 px-3 text-gray-900 dark:text-white">${user.email || '-'}</td>
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.name || '-'}</td>
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.nickname || '-'}</td>
+                            <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs ${badgeClass} rounded">${user.provider || '-'}</span></td>
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.createdDate ? new Date(user.createdDate).toLocaleDateString() : '-'}</td>
+                            <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded">${user.eventCount || 0}회</span></td>
+                        </tr>
+                    `;
+                } else {
+                    tbody += `
+                        <tr class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 ${hasEmail ? 'cursor-pointer' : ''}"
+                            ${hasEmail ? `onclick="toggleRetentionUser('${user.userId}', '${escapedEmail}', '${escapedName}', '${escapedNickname}')"` : ''}>
+                            <td class="py-2 px-3" onclick="event.stopPropagation()">
+                                ${hasEmail ? `<input type="checkbox" class="retention-user-checkbox rounded border-gray-300 dark:border-gray-600 text-accent-500 focus:ring-accent-500"
+                                       data-user-id="${user.userId}"
+                                       onchange="toggleRetentionUser('${user.userId}', '${escapedEmail}', '${escapedName}', '${escapedNickname}')">` : '-'}
+                            </td>
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.userId || '-'}</td>
+                            <td class="py-2 px-3 text-gray-900 dark:text-white">${user.email || '-'}</td>
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.name || '-'}</td>
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.nickname || '-'}</td>
+                            <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs ${badgeClass} rounded">${user.provider || '-'}</span></td>
+                            <td class="py-2 px-3">${user.marketingPolicyAgreement ? '<i data-lucide="check" class="w-4 h-4 text-green-600 dark:text-green-400"></i>' : '<i data-lucide="x" class="w-4 h-4 text-red-500 dark:text-red-400"></i>'}</td>
+                            <td class="py-2 px-3 text-gray-600 dark:text-gray-400">${user.createdDate ? new Date(user.createdDate).toLocaleDateString() : '-'}</td>
+                            <td class="py-2 px-3"><span class="px-2 py-0.5 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded">${user.daysInactive || 0}일</span></td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+        document.getElementById('retentionTableBody').innerHTML = tbody;
+    }
+
+    function getChartColors() {
+        const dark = document.documentElement.classList.contains('dark');
+        return {
+            text: dark ? '#9ca3af' : '#6b7280',
+            grid: dark ? '#374151' : '#f0f0f0',
+            accent: '#677CEE',
+            accentBg: dark ? 'rgba(103, 124, 238, 0.2)' : 'rgba(103, 124, 238, 0.1)',
+            secondary: dark ? '#8198f3' : '#5367d6',
+            tertiary: dark ? '#a5b4fd' : '#8198f3'
+        };
+    }
+
+    const colors = getChartColors();
+
+    // Accent color palette
+    const accentColors = ['#677CEE', '#8198f3', '#a5b4fd', '#c7d2ff', '#5367d6', '#4555bd'];
+
+    // Calculate MAU average
+    const mauAvg = mauData.length > 0 ? mauData.reduce((a, b) => a + b.count, 0) / mauData.length : 0;
+
+    // MAU Chart
+    const mauChart = new Chart(document.getElementById('mauChart'), {
+        type: 'line',
+        data: {
+            labels: mauData.map(d => d.month),
+            datasets: [{
+                label: 'MAU',
+                data: mauData.map(d => d.count),
+                backgroundColor: colors.accentBg,
+                borderColor: colors.accent,
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return context[0].label + ' 월간 활성 사용자';
+                        },
+                        label: function(context) {
+                            return ChartTooltipConfig.formatNumber(context.raw) + '명';
+                        },
+                        afterLabel: function(context) {
+                            const idx = context.dataIndex;
+                            if (idx > 0) {
+                                const prev = mauData[idx - 1].count;
+                                const trend = ChartTooltipConfig.getTrendIndicator(context.raw, prev);
+                                return '전월 대비' + trend;
+                            }
+                            return '';
+                        },
+                        footer: function(context) {
+                            const value = context[0].raw;
+                            const diff = value - mauAvg;
+                            const sign = diff >= 0 ? '+' : '';
+                            return '평균(' + Math.round(mauAvg) + '명) 대비: ' + sign + Math.round(diff) + '명';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: colors.grid },
+                    ticks: { color: colors.text }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: colors.text }
+                }
+            }
+        }
+    });
+
+    // Listen for theme changes
+    window.addEventListener('themeChanged', function() {
+        const newColors = getChartColors();
+
+        // Update MAU chart
+        mauChart.data.datasets[0].backgroundColor = newColors.accentBg;
+        mauChart.options.scales.y.grid.color = newColors.grid;
+        mauChart.options.scales.y.ticks.color = newColors.text;
+        mauChart.options.scales.x.ticks.color = newColors.text;
+        mauChart.update();
+
+        // Update TTV chart if exists
+        if (ttvChart) {
+            ttvChart.options.scales.y.grid.color = newColors.grid;
+            ttvChart.options.scales.y.ticks.color = newColors.text;
+            ttvChart.options.scales.x.ticks.color = newColors.text;
+            ttvChart.update();
+        }
+
+        // Update Stickiness chart if exists
+        if (stickinessChart) {
+            stickinessChart.data.datasets[0].backgroundColor = newColors.accentBg;
+            stickinessChart.options.scales.y.grid.color = newColors.grid;
+            stickinessChart.options.scales.y.ticks.color = newColors.text;
+            stickinessChart.options.scales.x.ticks.color = newColors.text;
+            stickinessChart.update();
+        }
+
+        // Reload cohort and funnel for theme-aware colors
+        loadCohortData(document.getElementById('cohortMonths').value);
+        loadFunnelData();
+    });
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        loadFunnelData();
+        loadTtvData();
+        loadStickinessData();
+        loadCohortData(12);
+    });
+
+    // WAU/MAU Stickiness
+    let stickinessChart = null;
+
+    function loadStickinessData() {
+        document.getElementById('stickinessLoading').classList.remove('hidden');
+        document.getElementById('stickinessContent').classList.add('hidden');
+
+        fetch('/api/v1/admin/statistics/stickiness?months=12')
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    renderStickiness(data.payload);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading stickiness:', error);
+                showToast('스티키니스 데이터를 불러오는데 실패했습니다.', 'error');
+            })
+            .finally(() => {
+                document.getElementById('stickinessLoading').classList.add('hidden');
+                document.getElementById('stickinessContent').classList.remove('hidden');
+            });
+    }
+
+    function renderStickiness(stickinessData) {
+        const colors = getChartColors();
+
+        document.getElementById('stickinessValue').textContent = stickinessData.current_stickiness.toFixed(1) + '%';
+        document.getElementById('stickinessWau').textContent = stickinessData.current_wau.toLocaleString();
+        document.getElementById('stickinessMau').textContent = stickinessData.current_mau.toLocaleString();
+
+        const ctx = document.getElementById('stickinessChart').getContext('2d');
+        if (stickinessChart) stickinessChart.destroy();
+
+        const trend = stickinessData.trend || [];
+        stickinessChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: trend.map(t => t.month),
+                datasets: [
+                    {
+                        label: 'Stickiness (%)',
+                        data: trend.map(t => t.stickiness),
+                        borderColor: colors.accent,
+                        backgroundColor: colors.accentBg,
+                        fill: true,
+                        tension: 0.3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'WAU',
+                        data: trend.map(t => t.wau),
+                        borderColor: colors.secondary,
+                        backgroundColor: 'transparent',
+                        borderDash: [5, 5],
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    },
+                    {
+                        label: 'MAU',
+                        data: trend.map(t => t.mau),
+                        borderColor: colors.tertiary,
+                        backgroundColor: 'transparent',
+                        borderDash: [5, 5],
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            color: colors.text
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                return context[0].label + ' Stickiness 분석';
+                            },
+                            label: function(context) {
+                                const label = context.dataset.label;
+                                const value = context.raw;
+                                if (label === 'Stickiness (%)') {
+                                    return 'Stickiness: ' + value.toFixed(1) + '%';
+                                }
+                                return label + ': ' + ChartTooltipConfig.formatNumber(value) + '명';
+                            },
+                            footer: function(context) {
+                                const idx = context[0].dataIndex;
+                                const data = trend[idx];
+                                if (data.stickiness >= 20) return 'Good! 높은 서비스 중독성';
+                                if (data.stickiness >= 10) return 'Average: 개선 여지 있음';
+                                return 'Warning: 유저 참여 개선 필요';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'Stickiness (%)', color: colors.text },
+                        beginAtZero: true,
+                        max: 100,
+                        grid: { color: colors.grid },
+                        ticks: { color: colors.text }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: { display: true, text: 'Users', color: colors.text },
+                        beginAtZero: true,
+                        grid: { drawOnChartArea: false },
+                        ticks: { color: colors.text }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: colors.text }
+                    }
+                }
+            }
+        });
+    }
+
+    // TTV Distribution
+    let ttvChart = null;
+
+    function loadTtvData() {
+        document.getElementById('ttvLoading').classList.remove('hidden');
+        document.getElementById('ttvContent').classList.add('hidden');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const startDate = urlParams.get('startDate') || '';
+        const endDate = urlParams.get('endDate') || '';
+
+        let url = '/api/v1/admin/statistics/ttv';
+        if (startDate || endDate) {
+            const params = new URLSearchParams();
+            if (startDate) params.append('startDate', startDate);
+            if (endDate) params.append('endDate', endDate);
+            url += '?' + params.toString();
+        }
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    renderTtv(data.payload);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading TTV:', error);
+                showToast('TTV 데이터를 불러오는데 실패했습니다.', 'error');
+            })
+            .finally(() => {
+                document.getElementById('ttvLoading').classList.add('hidden');
+                document.getElementById('ttvContent').classList.remove('hidden');
+            });
+    }
+
+    function renderTtv(ttvData) {
+        const colors = getChartColors();
+
+        document.getElementById('ttvAverage').textContent = ttvData.average_days === 0 ? '당일' : ttvData.average_days.toFixed(1) + ' days';
+        document.getElementById('ttvMedian').textContent = ttvData.median_days === 0 ? '당일' : ttvData.median_days.toFixed(0) + ' days';
+        document.getElementById('ttvActivation').textContent = ttvData.activation_rate.toFixed(1) + '%';
+        document.getElementById('ttvUsersWithEvent').textContent =
+            ttvData.users_with_event.toLocaleString() + ' / ' + ttvData.total_users.toLocaleString();
+
+        const ctx = document.getElementById('ttvChart').getContext('2d');
+        if (ttvChart) ttvChart.destroy();
+
+        const distribution = ttvData.distribution || [];
+
+        ttvChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: distribution.map(d => d.label),
+                datasets: [{
+                    label: 'Users',
+                    data: distribution.map(d => d.count),
+                    backgroundColor: accentColors,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const idx = context.dataIndex;
+                                return `${context.raw.toLocaleString()} users (${distribution[idx].percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: colors.grid },
+                        title: { display: true, text: 'Users', color: colors.text },
+                        ticks: { color: colors.text }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: colors.text }
+                    }
+                }
+            }
+        });
+    }
+
+    // Funnel Analysis
+    function loadFunnelData() {
+        document.getElementById('funnelLoading').classList.remove('hidden');
+        document.getElementById('funnelContent').classList.add('hidden');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const startDate = urlParams.get('startDate') || '';
+        const endDate = urlParams.get('endDate') || '';
+
+        let url = '/api/v1/admin/statistics/funnel';
+        if (startDate || endDate) {
+            const params = new URLSearchParams();
+            if (startDate) params.append('startDate', startDate);
+            if (endDate) params.append('endDate', endDate);
+            url += '?' + params.toString();
+        }
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    renderFunnel(data.payload);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading funnel:', error);
+                showToast('퍼널 데이터를 불러오는데 실패했습니다.', 'error');
+            })
+            .finally(() => {
+                document.getElementById('funnelLoading').classList.add('hidden');
+                document.getElementById('funnelContent').classList.remove('hidden');
+            });
+    }
+
+    function renderFunnel(funnelData) {
+        const container = document.getElementById('funnelChart');
+        const steps = funnelData.steps;
+
+        if (!steps || steps.length === 0) {
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center text-center py-12">
+                    <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+                        <i data-lucide="git-merge" class="w-6 h-6 text-gray-400 dark:text-gray-500"></i>
+                    </div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">퍼널 데이터 없음</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">선택한 기간에 데이터가 부족해요</p>
+                </div>
+            `;
+            lucide.createIcons();
+            return;
+        }
+
+        const maxCount = steps[0].count;
+
+        let html = '<div class="space-y-3">';
+        steps.forEach((step, idx) => {
+            const widthPercent = maxCount > 0 ? (step.count / maxCount) * 100 : 0;
+            const color = accentColors[idx % accentColors.length];
+            const dropoffText = idx > 0 && step.dropoff_rate > 0
+                ? `<span class="text-red-500 dark:text-red-400 ml-2">(-${step.dropoff_rate.toFixed(1)}%)</span>`
+                : '';
+
+            html += `
+                <div>
+                    <div class="flex justify-between items-center mb-1 text-sm">
+                        <span class="font-medium text-gray-900 dark:text-white">${step.label}</span>
+                        <span class="text-gray-600 dark:text-gray-400">
+                            <strong>${step.count.toLocaleString()}</strong>
+                            <span class="text-gray-400 dark:text-gray-500 ml-1">(${step.rate.toFixed(1)}%)</span>
+                            ${dropoffText}
+                        </span>
+                    </div>
+                    <div class="h-8 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
+                        <div class="h-full rounded" style="width: ${widthPercent}%; background-color: ${color};"></div>
+                    </div>
+                </div>
+            `;
+
+            if (idx < steps.length - 1) {
+                html += `<div class="flex justify-center text-gray-300 dark:text-gray-600"><i data-lucide="arrow-down" class="w-4 h-4"></i></div>`;
+            }
+        });
+        html += '</div>';
+        container.innerHTML = html;
+        lucide.createIcons();
+    }
+
+    // Cohort Retention Table
+    function loadCohortData(months) {
+        document.getElementById('cohortLoading').classList.remove('hidden');
+        document.getElementById('cohortContent').classList.add('hidden');
+
+        fetch(`/api/v1/admin/statistics/cohort?months=${months}`)
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                if (data.is_success && data.payload) {
+                    renderCohortTable(data.payload);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading cohort:', error);
+                showToast('코호트 데이터를 불러오는데 실패했습니다.', 'error');
+            })
+            .finally(() => {
+                document.getElementById('cohortLoading').classList.add('hidden');
+                document.getElementById('cohortContent').classList.remove('hidden');
+            });
+    }
+
+    function renderCohortTable(cohortData) {
+        const header = document.getElementById('cohortHeader');
+        const body = document.getElementById('cohortBody');
+        const isDark = document.documentElement.classList.contains('dark');
+
+        let headerHtml = '<tr class="border-b border-gray-200 dark:border-gray-700">';
+        headerHtml += '<th class="text-center py-2 px-2 text-gray-500 dark:text-gray-400 font-medium">가입월</th>';
+        headerHtml += '<th class="text-center py-2 px-2 text-gray-500 dark:text-gray-400 font-medium">가입자</th>';
+        cohortData.periods.forEach(p => {
+            headerHtml += `<th class="text-center py-2 px-2 text-gray-500 dark:text-gray-400 font-medium">${p}</th>`;
+        });
+        headerHtml += '</tr>';
+        header.innerHTML = headerHtml;
+
+        let bodyHtml = '';
+        if (cohortData.cohorts.length === 0) {
+            bodyHtml = `<tr><td colspan="${cohortData.periods.length + 2}" class="py-12">
+                <div class="flex flex-col items-center justify-center text-center">
+                    <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-3">
+                        <i data-lucide="table" class="w-6 h-6 text-gray-400 dark:text-gray-500"></i>
+                    </div>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">코호트 데이터 없음</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">선택한 기간에 분석할 코호트가 없어요</p>
+                </div>
+            </td></tr>`;
+        } else {
+            cohortData.cohorts.forEach(row => {
+                bodyHtml += '<tr class="border-b border-gray-100 dark:border-gray-800">';
+                bodyHtml += `<td class="text-center py-2 px-2 font-medium text-gray-900 dark:text-white">${row.month}</td>`;
+                bodyHtml += `<td class="text-center py-2 px-2 text-gray-600 dark:text-gray-400">${row.size}</td>`;
+                row.retention.forEach((rate, idx) => {
+                    const color = getHeatmapColor(rate, idx === 0, isDark);
+                    const displayValue = rate > 0 ? rate.toFixed(1) + '%' : '-';
+                    const textColor = rate > 50 ? (isDark ? '#fff' : '#fff') : (isDark ? '#a5b4fd' : '#4555bd');
+                    bodyHtml += `<td class="text-center py-2 px-2" style="background-color: ${color}; color: ${textColor};">${displayValue}</td>`;
+                });
+                bodyHtml += '</tr>';
+            });
+        }
+        body.innerHTML = bodyHtml;
+    }
+
+    function getHeatmapColor(rate, isFirst, isDark) {
+        if (rate === 0) return isDark ? 'rgba(103, 124, 238, 0.05)' : 'rgba(103, 124, 238, 0.05)';
+        if (isFirst) return isDark ? 'rgba(103, 124, 238, 0.3)' : 'rgba(103, 124, 238, 0.2)';
+        const intensity = Math.min(rate / 100, 1);
+        return `rgba(103, 124, 238, ${0.1 + intensity * 0.6})`;
+    }
+
+    // Cohort months selector
+    document.getElementById('cohortMonths').addEventListener('change', function() {
+        loadCohortData(this.value);
+    });
+</script>
+</th:block>
+</body>
+</html>

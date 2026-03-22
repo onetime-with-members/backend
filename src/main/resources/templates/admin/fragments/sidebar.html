@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- Mobile backdrop overlay -->
+<div th:fragment="sidebar">
+    <div id="mobileSidebarBackdrop"
+         class="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden hidden"
+         onclick="closeMobileSidebar()"></div>
+
+    <aside id="sidebar"
+           class="fixed inset-y-0 left-0 z-40 w-56 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-transform duration-200 ease-in-out overflow-y-auto
+                  -translate-x-full lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen">
+        <!-- Logo -->
+        <div class="h-14 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700">
+            <a th:href="@{/admin/dashboard}" class="flex items-center gap-2">
+                <div class="w-7 h-7 bg-accent-500 rounded flex items-center justify-center">
+                    <span class="text-white text-sm font-bold">O</span>
+                </div>
+                <span class="font-semibold text-gray-900 dark:text-white">OneTime</span>
+            </a>
+            <!-- Close button (mobile only) -->
+            <button onclick="closeMobileSidebar()"
+                    class="lg:hidden p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    aria-label="사이드바 닫기">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 py-4 px-3 space-y-1">
+            <!-- Dashboard -->
+            <a th:href="@{/admin/dashboard}"
+               th:classappend="${currentPage == 'dashboard'} ? 'bg-accent-50 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'"
+               class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                <span>대시보드</span>
+            </a>
+
+            <!-- Statistics Section -->
+            <div class="pt-4">
+                <p class="px-3 text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">통계</p>
+
+                <a th:href="@{/admin/statistics/users}"
+                   th:classappend="${currentPage == 'users'} ? 'bg-accent-50 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'"
+                   class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                    <span>유저 통계</span>
+                </a>
+
+                <a th:href="@{/admin/statistics/events}"
+                   th:classappend="${currentPage == 'events'} ? 'bg-accent-50 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'"
+                   class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span>이벤트 통계</span>
+                </a>
+
+                <a th:href="@{/admin/statistics/retention}"
+                   th:classappend="${currentPage == 'retention'} ? 'bg-accent-50 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'"
+                   class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                    <i data-lucide="activity" class="w-4 h-4"></i>
+                    <span>리텐션</span>
+                </a>
+
+                <a th:href="@{/admin/statistics/marketing}"
+                   th:classappend="${currentPage == 'marketing'} ? 'bg-accent-50 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'"
+                   class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                    <i data-lucide="target" class="w-4 h-4"></i>
+                    <span>마케팅 타겟</span>
+                </a>
+            </div>
+
+            <!-- Tools Section -->
+            <div class="pt-4">
+                <p class="px-3 text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">도구</p>
+
+                <a th:href="@{/admin/email}"
+                   th:classappend="${currentPage == 'email'} ? 'bg-accent-50 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'"
+                   class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                    <i data-lucide="mail" class="w-4 h-4"></i>
+                    <span>이메일 발송</span>
+                </a>
+
+                <a th:href="@{/admin/banner}"
+                   th:classappend="${currentPage == 'banner'} ? 'bg-accent-50 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'"
+                   class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                    <i data-lucide="image" class="w-4 h-4"></i>
+                    <span>배너 관리</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Footer -->
+        <div class="p-3 border-t border-gray-200 dark:border-gray-700">
+            <div class="text-xs text-gray-400 dark:text-gray-500 text-center">
+                OneTime Admin
+            </div>
+        </div>
+    </aside>
+
+    <script>
+        function openMobileSidebar() {
+            document.getElementById('sidebar').classList.remove('-translate-x-full');
+            document.getElementById('mobileSidebarBackdrop').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileSidebar() {
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('mobileSidebarBackdrop').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    </script>
+</div>
+
+</html>

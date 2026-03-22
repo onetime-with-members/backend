@@ -269,6 +269,8 @@ public class BannerService {
                             )
                     );
         }
+
+        bannerStagings.forEach(BannerStaging::markAsImported);
     }
 
     /**
@@ -296,6 +298,16 @@ public class BannerService {
                 .toList();
 
         bannerStagingRepository.saveAll(bannerStagings);
+    }
+
+    /**
+     * 배너 스테이징 데이터 건수 조회 메서드.
+     *
+     * @return 스테이징 테이블에 저장된 배너 수
+     */
+    @Transactional(readOnly = true)
+    public long getBannerStagingCount() {
+        return bannerStagingRepository.countByIsImportedFalse();
     }
 
     /**

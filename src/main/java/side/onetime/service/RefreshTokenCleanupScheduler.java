@@ -2,7 +2,6 @@ package side.onetime.service;
 
 import java.time.LocalDateTime;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +14,7 @@ import side.onetime.repository.RefreshTokenRepository;
  * Refresh Token 정리 스케줄러
  *
  * - 만료된 토큰 상태 업데이트 (ACTIVE → EXPIRED)
- * - 오래된 비활성 토큰 hard delete (REVOKED/EXPIRED/ROTATED 물리적 삭제)
+ * - Hard delete는 통계(MAU/DAU)에서 last_used_at을 사용하므로 비활성화
  */
 @Slf4j
 @Component
@@ -23,9 +22,6 @@ import side.onetime.repository.RefreshTokenRepository;
 public class RefreshTokenCleanupScheduler {
 
     private final RefreshTokenRepository refreshTokenRepository;
-
-    @Value("${refresh-token.cleanup.retention-days:30}")
-    private int retentionDays;
 
     /**
      * 만료된 토큰 상태 업데이트
@@ -37,18 +33,5 @@ public class RefreshTokenCleanupScheduler {
     public void updateExpiredTokens() {
         int count = refreshTokenRepository.updateExpiredTokens(LocalDateTime.now());
         log.info("[RefreshToken Cleanup] 만료 토큰 상태 업데이트: {}건", count);
-    }
-
-    /**
-     * 오래된 비활성 토큰 hard delete
-     *
-     * REVOKED, EXPIRED, ROTATED 상태이면서 retention-days 이상 지난 토큰을 물리적으로 삭제
-     */
-    @Scheduled(cron = "${refresh-token.cleanup.hard-delete-cron:0 30 3 * * *}")
-    @Transactional
-    public void hardDeleteOldInactiveTokens() {
-        LocalDateTime threshold = LocalDateTime.now().minusDays(retentionDays);
-        int count = refreshTokenRepository.hardDeleteOldInactiveTokens(threshold);
-        log.info("[RefreshToken Cleanup] 오래된 토큰 hard delete: {}건 (retention: {}일)", count, retentionDays);
     }
 }

@@ -35,6 +35,9 @@ public class BarBannerStaging extends BaseEntity {
     @Column(name = "link_url", length = 200)
     private String linkUrl;
 
+    @Column(name = "is_imported", nullable = false)
+    private Boolean isImported;
+
     @Builder
     public BarBannerStaging(Long barBannerId, String contentKor, String contentEng, String backgroundColorCode, String textColorCode, String linkUrl) {
         this.barBannerId = barBannerId;
@@ -43,5 +46,10 @@ public class BarBannerStaging extends BaseEntity {
         this.backgroundColorCode = backgroundColorCode;
         this.textColorCode = textColorCode;
         this.linkUrl = linkUrl;
+        this.isImported = false;
+    }
+
+    public void markAsImported() {
+        this.isImported = true;
     }
 }

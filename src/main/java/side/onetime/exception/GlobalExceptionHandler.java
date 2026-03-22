@@ -1,13 +1,14 @@
 package side.onetime.exception;
 
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
-import jakarta.validation.ConstraintViolationException;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -18,12 +19,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+
+import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import side.onetime.global.common.ApiResponse;
 import side.onetime.global.common.dto.ErrorReasonDto;
 import side.onetime.global.common.status.ErrorStatus;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
@@ -45,6 +48,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ApiResponse<ErrorReasonDto>> handleSecurityException(SecurityException e) {
         logError(e.getMessage(), e);
         return ApiResponse.onFailure(ErrorStatus._UNAUTHORIZED);
+    }
+
+    // Security 인가 관련 처리 (메서드 레벨 @PreAuthorize 등에서 권한 부족 시)
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ApiResponse<ErrorReasonDto>> handleAuthorizationDeniedException(
+            org.springframework.security.authorization.AuthorizationDeniedException e) {
+        logError("AuthorizationDeniedException", e);
+        return ApiResponse.onFailure(ErrorStatus._FORBIDDEN);
     }
 
     // IllegalArgumentException 처리 (잘못된 인자가 전달된 경우)

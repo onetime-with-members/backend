@@ -16,6 +16,7 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 import side.onetime.auth.service.CustomAdminDetailsService;
 import side.onetime.auth.service.CustomUserDetailsService;
+import side.onetime.service.TokenService;
 import side.onetime.util.ClientInfoExtractor;
 import side.onetime.util.JwtUtil;
 
@@ -47,6 +48,9 @@ public abstract class ControllerTestConfig {
 
     @MockBean
     private ClientInfoExtractor clientInfoExtractor;
+
+    @MockBean
+    protected TokenService tokenService;
 
     @BeforeEach
     void setUp(final RestDocumentationContextProvider restDocumentation) {

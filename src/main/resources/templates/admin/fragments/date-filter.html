@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="dateFilter" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 mb-6 transition-colors duration-200">
+    <form id="dateFilterForm" method="get" class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-3">
+        <!-- Quick Presets -->
+        <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-xs text-gray-500 dark:text-gray-400 mr-1">빠른 선택</span>
+            <button type="button" onclick="setDatePreset(7)" class="preset-btn px-2.5 py-1 text-xs border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">7일</button>
+            <button type="button" onclick="setDatePreset(30)" class="preset-btn px-2.5 py-1 text-xs border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">30일</button>
+            <button type="button" onclick="setDatePreset(90)" class="preset-btn px-2.5 py-1 text-xs border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">90일</button>
+            <button type="button" onclick="setDatePreset(365)" class="preset-btn px-2.5 py-1 text-xs border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">1년</button>
+        </div>
+
+        <!-- Date Inputs -->
+        <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-2">
+                <label for="startDateInput" class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">시작일</label>
+                <input type="date" name="startDate" id="startDateInput"
+                       class="px-2 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500 w-full sm:w-auto"
+                       th:value="${startDate}">
+            </div>
+            <div class="flex items-center gap-2">
+                <label for="endDateInput" class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">종료일</label>
+                <input type="date" name="endDate" id="endDateInput"
+                       class="px-2 py-1.5 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-accent-500 w-full sm:w-auto"
+                       th:value="${endDate}">
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="submit"
+                        class="px-4 py-1.5 text-sm bg-accent-500 text-white rounded-md hover:bg-accent-600 transition-colors whitespace-nowrap">
+                    적용
+                </button>
+                <button type="button" onclick="clearDateFilter()"
+                        class="px-4 py-1.5 text-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors whitespace-nowrap">
+                    초기화
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <script>
+    // Global Date Filter State Management
+    (function() {
+        const STORAGE_KEY = 'onetime_admin_date_filter';
+        const startInput = document.getElementById('startDateInput');
+        const endInput = document.getElementById('endDateInput');
+
+        // Load saved filter on page load (if no URL params)
+        function loadSavedFilter() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasUrlDates = urlParams.has('startDate') || urlParams.has('endDate');
+
+            if (!hasUrlDates) {
+                try {
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    if (saved) {
+                        const { startDate, endDate } = JSON.parse(saved);
+                        if (startDate && endDate) {
+                            // Redirect with saved params
+                            const url = new URL(window.location.href);
+                            url.searchParams.set('startDate', startDate);
+                            url.searchParams.set('endDate', endDate);
+                            window.location.href = url.toString();
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    // localStorage unavailable or parse error — fall through to default
+                }
+                // Default: 30 days (정확히 30일 포함)
+                const end = new Date();
+                const start = new Date();
+                start.setDate(end.getDate() - 29);
+                const formatDate = (d) => {
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                };
+                const url = new URL(window.location.href);
+                url.searchParams.set('startDate', formatDate(start));
+                url.searchParams.set('endDate', formatDate(end));
+                window.location.href = url.toString();
+            } else {
+                // Save current URL params to localStorage
+                const startDate = urlParams.get('startDate');
+                const endDate = urlParams.get('endDate');
+                if (startDate && endDate) {
+                    try {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify({ startDate, endDate }));
+                    } catch (e) {
+                        // localStorage write failed — non-critical
+                    }
+                    highlightActivePreset(startDate, endDate);
+                }
+            }
+        }
+
+        // Highlight active preset button
+        function highlightActivePreset(startDate, endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const diffDays = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;  // 포함된 날 수
+
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.classList.remove('bg-accent-500', 'text-white', 'border-accent-500');
+                btn.classList.add('border-gray-200', 'dark:border-gray-600', 'text-gray-600', 'dark:text-gray-400');
+            });
+
+            const presetMap = { 7: 0, 30: 1, 90: 2, 365: 3 };
+            if (presetMap[diffDays] !== undefined) {
+                const activeBtn = document.querySelectorAll('.preset-btn')[presetMap[diffDays]];
+                if (activeBtn) {
+                    activeBtn.classList.remove('border-gray-200', 'dark:border-gray-600', 'text-gray-600', 'dark:text-gray-400');
+                    activeBtn.classList.add('bg-accent-500', 'text-white', 'border-accent-500');
+                }
+            }
+        }
+
+        // Initialize
+        loadSavedFilter();
+
+        // Make functions globally available
+        window.setDatePreset = function(days) {
+            const end = new Date();
+            const start = new Date();
+            start.setDate(end.getDate() - (days - 1));  // 정확히 N일 포함 (오늘 포함)
+
+            const formatDate = (d) => {
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+            startInput.value = formatDate(start);
+            endInput.value = formatDate(end);
+
+            // Save and submit
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    startDate: formatDate(start),
+                    endDate: formatDate(end)
+                }));
+            } catch (e) {
+                // localStorage write failed — non-critical
+            }
+            document.getElementById('dateFilterForm').submit();
+        };
+
+        window.clearDateFilter = function() {
+            try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* non-critical */ }
+            const url = new URL(window.location.href);
+            url.searchParams.delete('startDate');
+            url.searchParams.delete('endDate');
+            window.location.href = url.toString();
+        };
+
+        // Save filter on form submit
+        document.getElementById('dateFilterForm').addEventListener('submit', function() {
+            if (startInput.value && endInput.value) {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                        startDate: startInput.value,
+                        endDate: endInput.value
+                    }));
+                } catch (e) {
+                    // localStorage write failed — non-critical
+                }
+            }
+        });
+    })();
+    </script>
+</div>
+</html>
