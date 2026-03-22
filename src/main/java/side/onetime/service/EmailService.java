@@ -1,34 +1,20 @@
 package side.onetime.service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import side.onetime.domain.AdminUser;
 import side.onetime.domain.EmailLog;
 import side.onetime.domain.EmailTemplate;
 import side.onetime.domain.User;
 import side.onetime.domain.enums.EmailLogStatus;
 import side.onetime.domain.enums.EmailTemplateCode;
-import side.onetime.dto.admin.email.request.CreateEmailTemplateRequest;
-import side.onetime.dto.admin.email.request.EmailEventMessage;
-import side.onetime.dto.admin.email.request.SendEmailRequest;
-import side.onetime.dto.admin.email.request.SendTestEmailRequest;
-import side.onetime.dto.admin.email.request.SendToGroupRequest;
-import side.onetime.dto.admin.email.request.UpdateEmailTemplateRequest;
-import side.onetime.dto.admin.email.response.EmailLogPageResponse;
-import side.onetime.dto.admin.email.response.EmailLogStatsResponse;
-import side.onetime.dto.admin.email.response.EmailTemplateResponse;
-import side.onetime.dto.admin.email.response.SendEmailResponse;
-import side.onetime.dto.admin.email.response.UserEmailDto;
+import side.onetime.dto.admin.email.request.*;
+import side.onetime.dto.admin.email.response.*;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.EmailErrorStatus;
 import side.onetime.global.common.status.ErrorStatus;
@@ -37,6 +23,11 @@ import side.onetime.repository.EmailLogRepository;
 import side.onetime.repository.EmailTemplateRepository;
 import side.onetime.repository.StatisticsRepository;
 import side.onetime.util.AdminAuthorizationUtil;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 이메일 서비스
@@ -47,7 +38,7 @@ import side.onetime.util.AdminAuthorizationUtil;
 @RequiredArgsConstructor
 public class EmailService {
 
-    private final EmailEventPublisher emailEventPublisher;
+    private final ApplicationEventPublisher applicationEventPublisher;
     private final AdminRepository adminRepository;
     private final StatisticsRepository statisticsRepository;
     private final EmailLogRepository emailLogRepository;
@@ -58,13 +49,25 @@ public class EmailService {
      */
     @Transactional
     public SendEmailResponse sendEmail(SendEmailRequest request) {
+        List<EmailLog> emailLogs = new ArrayList<>();
         List<EmailEventMessage.Recipient> recipients = new ArrayList<>();
+        
         for (int i = 0; i < request.to().size(); i++) {
             String email = request.to().get(i);
             Long userId = request.getUserIdAt(i);
 
-            EmailLog emailLog = saveQueuedEmailLog(userId, email, request.subject(),
+            EmailLog emailLog = createQueuedEmailLog(userId, email, request.subject(),
                     request.content(), request.getContentType(), null);
+            emailLogs.add(emailLog);
+        }
+        
+        emailLogRepository.saveAll(emailLogs);
+
+        for (int i = 0; i < emailLogs.size(); i++) {
+            EmailLog emailLog = emailLogs.get(i);
+            String email = request.to().get(i);
+            Long userId = request.getUserIdAt(i);
+            
             recipients.add(new EmailEventMessage.Recipient(
                     emailLog.getId(), email, userId, null, null));
         }
@@ -72,7 +75,7 @@ public class EmailService {
         EmailEventMessage message = EmailEventMessage.of(
                 request.subject(), request.content(), request.getContentType(),
                 null, recipients);
-        emailEventPublisher.publish(message);
+        applicationEventPublisher.publishEvent(message);
 
         log.info("[Email] SQS 발행 완료 - {}건 QUEUED", recipients.size());
         return SendEmailResponse.queued(recipients.size());
@@ -88,8 +91,9 @@ public class EmailService {
         AdminUser admin = adminRepository.findById(adminId)
                 .orElseThrow(() -> new CustomException(ErrorStatus._UNIDENTIFIED_USER));
 
-        EmailLog emailLog = saveQueuedEmailLog(adminId, admin.getEmail(),
+        EmailLog emailLog = createQueuedEmailLog(adminId, admin.getEmail(),
                 request.subject(), request.content(), request.getContentType(), "test");
+        emailLogRepository.save(emailLog);
 
         List<EmailEventMessage.Recipient> recipients = List.of(
                 new EmailEventMessage.Recipient(
@@ -99,7 +103,7 @@ public class EmailService {
         EmailEventMessage message = EmailEventMessage.of(
                 request.subject(), request.content(), request.getContentType(),
                 "test", recipients);
-        emailEventPublisher.publish(message);
+        applicationEventPublisher.publishEvent(message);
 
         log.info("[Email] 테스트 이메일 SQS 발행 완료 - 수신자: {}", admin.getEmail());
         return SendEmailResponse.queued(1);
@@ -118,11 +122,21 @@ public class EmailService {
             return SendEmailResponse.empty();
         }
 
-        List<EmailEventMessage.Recipient> recipients = new ArrayList<>();
+        List<EmailLog> emailLogs = new ArrayList<>();
         for (UserEmailDto user : users) {
-            EmailLog emailLog = saveQueuedEmailLog(user.userId(), user.email(),
+            EmailLog emailLog = createQueuedEmailLog(user.userId(), user.email(),
                     request.subject(), request.content(), request.getContentType(),
                     request.targetGroup());
+            emailLogs.add(emailLog);
+        }
+        
+        emailLogRepository.saveAll(emailLogs);
+
+        List<EmailEventMessage.Recipient> recipients = new ArrayList<>();
+        for (int i = 0; i < users.size(); i++) {
+            UserEmailDto user = users.get(i);
+            EmailLog emailLog = emailLogs.get(i);
+            
             recipients.add(new EmailEventMessage.Recipient(
                     emailLog.getId(), user.email(), user.userId(),
                     user.name(), user.nickname()));
@@ -131,7 +145,7 @@ public class EmailService {
         EmailEventMessage message = EmailEventMessage.of(
                 request.subject(), request.content(), request.getContentType(),
                 request.targetGroup(), recipients);
-        emailEventPublisher.publish(message);
+        applicationEventPublisher.publishEvent(message);
 
         log.info("[Email] 그룹 이메일 SQS 발행 완료 - 그룹: {}, {}건 QUEUED",
                 request.targetGroup(), recipients.size());
@@ -141,9 +155,9 @@ public class EmailService {
     /**
      * QUEUED 상태 이메일 로그 저장
      */
-    private EmailLog saveQueuedEmailLog(Long userId, String recipient, String subject,
+    private EmailLog createQueuedEmailLog(Long userId, String recipient, String subject,
                                          String content, String contentType, String targetGroup) {
-        EmailLog emailLog = EmailLog.builder()
+        return EmailLog.builder()
                 .userId(userId)
                 .recipient(recipient)
                 .subject(subject)
@@ -152,7 +166,6 @@ public class EmailService {
                 .status(EmailLogStatus.QUEUED)
                 .targetGroup(targetGroup)
                 .build();
-        return emailLogRepository.save(emailLog);
     }
 
     /**
@@ -183,9 +196,10 @@ public class EmailService {
         EmailTemplate template = emailTemplateRepository.findByCode(templateCode)
                 .orElseThrow(() -> new CustomException(EmailErrorStatus._EMAIL_TEMPLATE_NOT_FOUND));
 
-        EmailLog emailLog = saveQueuedEmailLog(
+        EmailLog emailLog = createQueuedEmailLog(
                 user.getId(), user.getEmail(), template.getSubject(),
                 template.getContent(), template.getContentType(), templateCode);
+        emailLogRepository.save(emailLog);
 
         List<EmailEventMessage.Recipient> recipients = List.of(
                 new EmailEventMessage.Recipient(
@@ -195,7 +209,7 @@ public class EmailService {
         EmailEventMessage message = EmailEventMessage.of(
                 template.getSubject(), template.getContent(), template.getContentType(),
                 templateCode, recipients);
-        emailEventPublisher.publish(message);
+        applicationEventPublisher.publishEvent(message);
 
         log.info("[Email] 웰컴 이메일 SQS 발행 - userId: {}", user.getId());
     }
