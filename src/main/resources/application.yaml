@@ -32,6 +32,22 @@ spring:
               - email
               - profile
             redirect-uri: ${OAUTH_GOOGLE_REDIRECT_URI}
+          kakao:
+            client-id: ${OAUTH_KAKAO_CLIENT_ID}
+            client-secret: ${OAUTH_KAKAO_CLIENT_SECRET}
+            scope:
+              - profile_nickname
+              - account_email
+            authorization-grant-type: authorization_code
+            redirect-uri: ${OAUTH_KAKAO_REDIRECT_URI}
+            client-name: Kakao
+            client-authentication-method: client_secret_post
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
 
   cloud:
     aws:
@@ -103,3 +119,5 @@ app:
   sync:
     target-url: ${APP_SYNC_TARGET_URL:}
     api-key: ${APP_SYNC_API_KEY:}
+  kakao:
+    calendar-redirect-uri: ${OAUTH_KAKAO_CALENDAR_REDIRECT_URI:http://localhost:3000/kakao/callback}
