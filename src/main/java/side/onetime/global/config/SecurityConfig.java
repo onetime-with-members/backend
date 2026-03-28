@@ -54,6 +54,7 @@ public class SecurityConfig {
 		"/api/v1/schedules/**",         // 스케줄 조회
 		"/api/v1/banners/activated/all",
 		"/api/v1/bar-banners/activated/all",
+		"/api/v1/kakao/authorize-url"
 	};
 	
 	/**
@@ -77,6 +78,7 @@ public class SecurityConfig {
 		"/api/v1/schedules/date/*/filtering",     // 스케줄 필터링
         "/api/v1/banners/staging",
         "/api/v1/bar-banners/staging",
+        "/api/v1/kakao/**",
 	};
 
 	/**
