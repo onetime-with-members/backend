@@ -285,8 +285,14 @@ public class DateUtil {
                 ? parseDate(dateOrDay)
                 : getNextDateForDay(dateOrDay);
 
-        LocalTime time = parseTime(timeStr);
-        return LocalDateTime.of(date, time)
+        LocalDateTime dateTime;
+        if ("24:00".equals(timeStr)) {
+            dateTime = date.plusDays(1).atStartOfDay();
+        } else {
+            dateTime = LocalDateTime.of(date, parseTime(timeStr));
+        }
+
+        return dateTime
                 .atZone(ZoneId.of("Asia/Seoul"))
                 .toOffsetDateTime()
                 .toString();
