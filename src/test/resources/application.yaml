@@ -79,3 +79,5 @@ app:
   sync:
     target-url: "http://localhost:8089"
     api-key: test-sync-api-key
+  kakao:
+    calendar-redirect-uri: "http://localhost:3000/kakao/callback"
