@@ -2,7 +2,9 @@ package side.onetime.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -21,6 +23,7 @@ import side.onetime.repository.EventConfirmationRepository;
 import side.onetime.repository.EventRepository;
 import side.onetime.util.DateUtil;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class KakaoService {
@@ -66,13 +69,18 @@ public class KakaoService {
      * @return 카카오 토큰 응답 (accessToken)
      */
     public KakaoTokenResponse getKakaoToken(String code) {
-        return kakaoAuthClient.getAccessToken(
-                "authorization_code",
-                clientId,
-                calendarRedirectUri,
-                code,
-                clientSecret
-        );
+        try {
+            return kakaoAuthClient.getAccessToken(
+                    "authorization_code",
+                    clientId,
+                    calendarRedirectUri,
+                    code,
+                    clientSecret
+            );
+        } catch (FeignException e) {
+            log.error("[Kakao] 토큰 발급 실패 - status: {}, body: {}", e.status(), e.contentUTF8(), e);
+            throw new CustomException(EventErrorStatus._KAKAO_TOKEN_REQUEST_FAILED);
+        }
     }
 
     /**
@@ -98,12 +106,15 @@ public class KakaoService {
             return kakaoApiClient.createTalkCalendarEvent("Bearer " + request.accessToken(), eventJson);
         } catch (JsonProcessingException e) {
             throw new CustomException(EventErrorStatus._FAILED_SERIALIZE_KAKAO_EVENT);
+        } catch (FeignException e) {
+            log.error("[Kakao] 톡캘린더 일정 생성 실패 - status: {}, body: {}", e.status(), e.contentUTF8(), e);
+            throw new CustomException(EventErrorStatus._KAKAO_CALENDAR_API_FAILED);
         }
     }
 
     /**
      * 카카오 캘린더 API 요청을 위한 DTO를 구성합니다.
-     * 
+     *
      * 확정된 이벤트의 카테고리(날짜/요일)에 따라 시작 시간과 종료 시간을 포맷팅하고,
      * 요일 기반 이벤트의 경우 반복 설정(RRULE)을 추가합니다.
      *

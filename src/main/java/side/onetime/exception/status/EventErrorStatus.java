@@ -18,6 +18,8 @@ public enum EventErrorStatus implements BaseErrorCode {
     _CANNOT_MODIFY_CONFIRMED_EVENT(HttpStatus.CONFLICT, "EVENT-007", "확정된 이벤트는 수정할 수 없습니다."),
     _NOT_FOUND_EVENT_CONFIRMATION(HttpStatus.NOT_FOUND, "EVENT-008", "확정된 이벤트 정보를 찾을 수 없습니다."),
     _FAILED_SERIALIZE_KAKAO_EVENT(HttpStatus.INTERNAL_SERVER_ERROR, "EVENT-009", "카카오 일정 정보를 처리하는 중 오류가 발생했습니다."),
+    _KAKAO_TOKEN_REQUEST_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "EVENT-010", "카카오 토큰 발급에 실패했습니다."),
+    _KAKAO_CALENDAR_API_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "EVENT-011", "카카오 톡캘린더 API 호출에 실패했습니다 ."),
     ;
 
     private final HttpStatus httpStatus;
