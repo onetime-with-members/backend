@@ -19,6 +19,8 @@ import side.onetime.dto.kakao.api.KakaoCalendarEventResponse;
 import side.onetime.dto.kakao.request.CreateKakaoCalendarEventRequest;
 import side.onetime.dto.kakao.request.KakaoTokenRequest;
 import side.onetime.dto.kakao.response.KakaoTokenResponse;
+import side.onetime.exception.CustomException;
+import side.onetime.exception.status.EventErrorStatus;
 import side.onetime.service.KakaoService;
 
 import java.util.List;
@@ -28,8 +30,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(KakaoController.class)
 public class KakaoControllerTest extends ControllerTestConfig {
@@ -49,8 +50,11 @@ public class KakaoControllerTest extends ControllerTestConfig {
                 .accept(MediaType.APPLICATION_JSON));
 
         // then
+        Mockito.verify(kakaoService).getAuthorizeUrl();
+
         resultActions
                 .andExpect(status().isFound())
+                .andExpect(redirectedUrl(authorizeUrl))
                 .andDo(MockMvcRestDocumentationWrapper.document("kakao/get-authorize-url",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
@@ -108,6 +112,42 @@ public class KakaoControllerTest extends ControllerTestConfig {
                                         )
                                         .requestSchema(Schema.schema("KakaoTokenRequestSchema"))
                                         .responseSchema(Schema.schema("KakaoTokenResponseSchema"))
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("[FAILED] 카카오 토큰 발급 - 인가 코드 누락")
+    public void getKakaoToken_Fail_MissingCode() throws Exception {
+        // given
+        KakaoTokenRequest request = new KakaoTokenRequest(null);
+        String requestContent = objectMapper.writeValueAsString(request);
+
+        // when
+        ResultActions resultActions = this.mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/kakao/token")
+                .content(requestContent)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON));
+
+        // then
+        resultActions
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.is_success").value(false))
+                .andExpect(jsonPath("$.code").value("E_BAD_REQUEST"))
+                .andExpect(jsonPath("$.message").value("인가 코드는 필수입니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("kakao/get-token-fail-missing-code",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        ResourceDocumentation.resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Kakao API")
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("응답 데이터").optional()
+                                        )
                                         .build()
                         )
                 ));
@@ -179,5 +219,211 @@ public class KakaoControllerTest extends ControllerTestConfig {
                                 .build()
                 )
         ));
+    }
+
+    @Test
+    @DisplayName("카카오 톡캘린더 이벤트 생성 시 필수값만으로도 동작한다.")
+    public void createCalendarEvent_withRequiredFieldsOnly() throws Exception {
+        // given
+        UUID eventId = UUID.randomUUID();
+        String accessToken = "sample_access_token";
+
+        String kakaoCalendarEventId = "sample_kakao_calendar_event_id";
+        KakaoCalendarEventResponse response = new KakaoCalendarEventResponse(kakaoCalendarEventId);
+
+        Mockito.when(kakaoService.createCalendarEvent(any(CreateKakaoCalendarEventRequest.class))).thenReturn(response);
+
+        CreateKakaoCalendarEventRequest request = new CreateKakaoCalendarEventRequest(
+                accessToken,
+                eventId,
+                null, null, null, null, null
+        );
+        String requestContent = objectMapper.writeValueAsString(request);
+
+        // when & then
+        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/kakao/calendar/confirmation")
+                        .content(requestContent)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.is_success").value(true))
+                .andExpect(jsonPath("$.code").value("201"))
+                .andExpect(jsonPath("$.message").value("카카오 캘린더 일정 생성에 성공했습니다."))
+                .andExpect(jsonPath("$.payload.event_id").value(kakaoCalendarEventId));
+    }
+
+    @Test
+    @DisplayName("[FAILED] 톡캘린더 일정 생성 - 액세스 토큰 누락")
+    public void createCalendarEvent_Fail_MissingAccessToken() throws Exception {
+        // given
+        CreateKakaoCalendarEventRequest request = new CreateKakaoCalendarEventRequest(
+                null,
+                UUID.randomUUID(),
+                "Description",
+                null, null, null, null
+        );
+        String requestContent = objectMapper.writeValueAsString(request);
+
+        // when
+        ResultActions resultActions = this.mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/kakao/calendar/confirmation")
+                .content(requestContent)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON));
+
+        // then
+        resultActions
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.is_success").value(false))
+                .andExpect(jsonPath("$.code").value("E_BAD_REQUEST"))
+                .andExpect(jsonPath("$.message").value("액세스 토큰은 필수입니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("kakao/create-calendar-event-fail-missing-token",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        ResourceDocumentation.resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Kakao API")
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("응답 데이터").optional()
+                                        )
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("[FAILED] 톡캘린더 일정 생성 - 확정 정보를 찾을 수 없음")
+    public void createCalendarEvent_Fail_ConfirmationNotFound() throws Exception {
+        // given
+        UUID eventId = UUID.randomUUID();
+        String accessToken = "sample_access_token";
+
+        Mockito.when(kakaoService.createCalendarEvent(any(CreateKakaoCalendarEventRequest.class)))
+                .thenThrow(new CustomException(EventErrorStatus._NOT_FOUND_EVENT_CONFIRMATION));
+
+        CreateKakaoCalendarEventRequest request = new CreateKakaoCalendarEventRequest(
+                accessToken,
+                eventId,
+                null, null, null, null, null
+        );
+        String requestContent = objectMapper.writeValueAsString(request);
+
+        // when
+        ResultActions resultActions = this.mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/kakao/calendar/confirmation")
+                .content(requestContent)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON));
+
+        // then
+        resultActions
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.is_success").value(false))
+                .andExpect(jsonPath("$.code").value("EVENT-008"))
+                .andExpect(jsonPath("$.message").value("확정된 이벤트 정보를 찾을 수 없습니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("kakao/create-calendar-event-fail-confirmation-not-found",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        ResourceDocumentation.resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Kakao API")
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("응답 데이터").optional()
+                                        )
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("[FAILED] 톡캘린더 일정 생성 - 이벤트를 찾을 수 없음")
+    public void createCalendarEvent_Fail_EventNotFound() throws Exception {
+        // given
+        UUID eventId = UUID.randomUUID();
+        String accessToken = "sample_access_token";
+
+        Mockito.when(kakaoService.createCalendarEvent(any(CreateKakaoCalendarEventRequest.class)))
+                .thenThrow(new CustomException(EventErrorStatus._NOT_FOUND_EVENT));
+
+        CreateKakaoCalendarEventRequest request = new CreateKakaoCalendarEventRequest(
+                accessToken,
+                eventId,
+                null, null, null, null, null
+        );
+        String requestContent = objectMapper.writeValueAsString(request);
+
+        // when
+        ResultActions resultActions = this.mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/kakao/calendar/confirmation")
+                .content(requestContent)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON));
+
+        // then
+        resultActions
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.is_success").value(false))
+                .andExpect(jsonPath("$.code").value("EVENT-001"))
+                .andExpect(jsonPath("$.message").value("이벤트를 찾을 수 없습니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("kakao/create-calendar-event-fail-event-not-found",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        ResourceDocumentation.resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Kakao API")
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("응답 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("응답 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("응답 데이터").optional()
+                                        )
+                                        .build()
+                        )
+                ));
+    }
+
+    @Test
+    @DisplayName("[FAILED] 유효하지 않은 확정 요청을 보낸다.")
+    public void createCalendarEvent_Fail_InvalidRequest() throws Exception {
+        // given
+        UUID eventId = UUID.randomUUID();
+
+        Mockito.when(kakaoService.createCalendarEvent(any(CreateKakaoCalendarEventRequest.class)))
+                .thenThrow(new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST));
+
+        CreateKakaoCalendarEventRequest request = new CreateKakaoCalendarEventRequest(
+                "sample_access_token",
+                eventId,
+                null, null, null, null, null
+        );
+        String requestContent = objectMapper.writeValueAsString(request);
+
+        // when & then
+        mockMvc.perform(RestDocumentationRequestBuilders.post("/api/v1/kakao/calendar/confirmation")
+                        .content(requestContent)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.is_success").value(false))
+                .andExpect(jsonPath("$.code").value("EVENT-006"))
+                .andExpect(jsonPath("$.message").value("유효하지 않은 확정 요청입니다."))
+                .andDo(MockMvcRestDocumentationWrapper.document("kakao/create-calendar-event-fail-invalid-request",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        ResourceDocumentation.resource(
+                                ResourceSnippetParameters.builder()
+                                        .tag("Kakao API")
+                                        .responseFields(
+                                                fieldWithPath("is_success").type(JsonFieldType.BOOLEAN).description("성공 여부"),
+                                                fieldWithPath("code").type(JsonFieldType.STRING).description("에러 코드"),
+                                                fieldWithPath("message").type(JsonFieldType.STRING).description("에러 메시지"),
+                                                fieldWithPath("payload").type(JsonFieldType.NULL).description("응답 데이터").optional()
+                                        )
+                                        .build()
+                        )
+                ));
     }
 }
