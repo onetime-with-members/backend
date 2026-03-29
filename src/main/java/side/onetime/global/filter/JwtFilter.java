@@ -103,10 +103,19 @@ public class JwtFilter extends OncePerRequestFilter {
                 authenticateUser(reissued.accessToken());
                 filterChain.doFilter(request, response);
                 return;
-            } catch (Exception e) {
+            } catch (CustomException e) {
+                if (e.getErrorCode() == TokenErrorStatus._DUPLICATED_REQUEST) {
+                    // 동시 요청으로 인한 중복 재발급 - 다른 요청이 새 토큰을 이미 발급했으므로 쿠키 유지
+                    filterChain.doFilter(request, response);
+                    return;
+                }
                 log.warn("[Admin] 토큰 재발급 실패 - 사유: {}", e.getMessage());
                 CookieUtil.clearAdminTokenCookies(request, response);
                 response.sendRedirect("/admin/login");
+                return;
+            } catch (Exception e) {
+                log.error("[Admin] 토큰 재발급 중 시스템 오류", e);
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 return;
             }
         }
