@@ -43,7 +43,7 @@ spring:
       s3:
         bucket: ${S3_BUCKET_NAME}
       sqs:
-        queue-url: ${AWS_SQS_EMAIL_QUEUE_URL:}
+        queue-url: ${AWS_SQS_EMAIL_QUEUE_URL}
 
 jwt:
   secret: ${JWT_SECRET}
