@@ -100,9 +100,7 @@ public class SecurityConfig {
 		"https://onetime-with-members.com",
 		"https://www.onetime-with-members.com",
 		"https://1-ti.me",
-		"https://dev-app.onetime-with-members.workers.dev",
-		"https://admin.onetime-with-members.workers.dev",
-		"https://dev-admin.onetime-with-members.workers.dev",
+		"https://dev-app.mshong1007.workers.dev",
 		"https://discord.onetime.run",
 	};
 
