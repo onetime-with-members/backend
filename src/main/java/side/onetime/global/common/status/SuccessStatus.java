@@ -113,6 +113,10 @@ public enum SuccessStatus implements BaseCode {
     _CREATE_EMAIL_TEMPLATE(HttpStatus.CREATED, "201", "이메일 템플릿 생성에 성공했습니다."),
     _UPDATE_EMAIL_TEMPLATE(HttpStatus.OK, "200", "이메일 템플릿 수정에 성공했습니다."),
     _DELETE_EMAIL_TEMPLATE(HttpStatus.OK, "200", "이메일 템플릿 삭제에 성공했습니다."),
+    // Kakao
+    _GET_KAKAO_AUTHORIZE_URL(HttpStatus.OK, "200", "카카오 인증 URL 조회에 성공했습니다."),
+    _CREATE_KAKAO_TOKEN(HttpStatus.OK, "200", "카카오 토큰 발급에 성공했습니다."),
+    _CREATE_KAKAO_CALENDAR_EVENT(HttpStatus.CREATED, "201", "카카오 캘린더 일정 생성에 성공했습니다."),
     ;
 
     private final HttpStatus httpStatus;

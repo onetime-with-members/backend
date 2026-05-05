@@ -1,7 +1,6 @@
 package side.onetime.global.config;
 
-import java.util.Arrays;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -17,13 +16,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import lombok.RequiredArgsConstructor;
 import side.onetime.auth.exception.CustomAccessDeniedHandler;
 import side.onetime.auth.exception.CustomAuthenticationEntryPoint;
 import side.onetime.auth.handler.OAuthLoginFailureHandler;
 import side.onetime.auth.handler.OAuthLoginSuccessHandler;
 import side.onetime.global.filter.JwtFilter;
+
+import java.util.Arrays;
 
 @RequiredArgsConstructor
 @Configuration
@@ -54,6 +53,7 @@ public class SecurityConfig {
 		"/api/v1/schedules/**",         // 스케줄 조회
 		"/api/v1/banners/activated/all",
 		"/api/v1/bar-banners/activated/all",
+		"/api/v1/kakao/authorize-url",
 	};
 	
 	/**
@@ -77,6 +77,8 @@ public class SecurityConfig {
 		"/api/v1/schedules/date/*/filtering",     // 스케줄 필터링
         "/api/v1/banners/staging",
         "/api/v1/bar-banners/staging",
+        "/api/v1/kakao/token",
+        "/api/v1/kakao/calendar/confirmation",
 	};
 
 	/**
