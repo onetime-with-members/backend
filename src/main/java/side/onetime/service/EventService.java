@@ -1,67 +1,34 @@
 package side.onetime.service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import lombok.RequiredArgsConstructor;
-import side.onetime.domain.Event;
-import side.onetime.domain.EventConfirmation;
-import side.onetime.domain.EventParticipation;
-import side.onetime.domain.Member;
-import side.onetime.domain.Schedule;
-import side.onetime.domain.Selection;
-import side.onetime.domain.User;
+import side.onetime.domain.*;
 import side.onetime.domain.enums.Category;
 import side.onetime.domain.enums.EventStatus;
 import side.onetime.domain.enums.ParticipationRole;
 import side.onetime.dto.event.request.ConfirmEventRequest;
 import side.onetime.dto.event.request.CreateEventRequest;
 import side.onetime.dto.event.request.ModifyEventRequest;
-import side.onetime.dto.event.response.ConfirmEventResponse;
-import side.onetime.dto.event.response.CreateEventResponse;
-import side.onetime.dto.event.response.GetEventQrCodeResponse;
-import side.onetime.dto.event.response.GetEventResponse;
-import side.onetime.dto.event.response.GetMostPossibleTime;
-import side.onetime.dto.event.response.GetParticipantsResponse;
-import side.onetime.dto.event.response.GetParticipatedEventResponse;
-import side.onetime.dto.event.response.GetParticipatedEventsResponse;
-import side.onetime.dto.event.response.PageCursorInfo;
+import side.onetime.dto.event.response.*;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.EventErrorStatus;
 import side.onetime.exception.status.EventParticipationErrorStatus;
 import side.onetime.exception.status.ScheduleErrorStatus;
 import side.onetime.exception.status.UserErrorStatus;
-import side.onetime.repository.EventConfirmationRepository;
-import side.onetime.repository.EventParticipationRepository;
-import side.onetime.repository.EventRepository;
-import side.onetime.repository.ScheduleBatchRepository;
-import side.onetime.repository.ScheduleRepository;
-import side.onetime.repository.SelectionRepository;
-import side.onetime.repository.UserRepository;
-import side.onetime.util.DateUtil;
-import side.onetime.util.JwtUtil;
-import side.onetime.util.QrUtil;
-import side.onetime.util.S3Util;
-import side.onetime.util.UserAuthorizationUtil;
+import side.onetime.repository.*;
+import side.onetime.util.*;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static side.onetime.util.DateUtil.DAY_ORDER;
 
 
 @Service
@@ -69,9 +36,6 @@ import side.onetime.util.UserAuthorizationUtil;
 public class EventService {
 
     private static final int MAX_MOST_POSSIBLE_TIMES_SIZE = 10;
-    private static final Map<String, Integer> DAY_ORDER = Map.of(
-            "일", 0, "월", 1, "화", 2, "수", 3, "목", 4, "금", 5, "토", 6
-    );
     
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
@@ -220,18 +184,9 @@ public class EventService {
 
         // 2. 시간 유효성 검증: 같은 날짜/요일인 경우에만 startTime < endTime을 검증한다.
         //    날짜/요일이 다르면 시간이 역전되어도 유효하다. (예: 03.03 01:30 ~ 03.04 00:30)
-        if (isSamePeriod && parseTimeSafe(request.startTime()) >= parseTimeSafe(request.endTime())) {
+        if (isSamePeriod && DateUtil.parseTimeMinutes(request.startTime()) >= DateUtil.parseTimeMinutes(request.endTime())) {
             throw new CustomException(EventErrorStatus._INVALID_CONFIRMATION_REQUEST);
         }
-    }
-
-    /**
-     * 시간 문자열을 분 단위 정수로 변환한다. "24:00"은 LocalTime으로 파싱할 수 없으므로 1440으로 처리한다.
-     */
-    private int parseTimeSafe(String time) {
-        if ("24:00".equals(time)) return 1440;
-        LocalTime parsed = DateUtil.parseTime(time);
-        return parsed.getHour() * 60 + parsed.getMinute();
     }
 
     /**
