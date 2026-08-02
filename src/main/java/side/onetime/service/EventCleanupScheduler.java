@@ -6,7 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import side.onetime.domain.Event;
 import side.onetime.repository.EventRepository;
-import side.onetime.util.S3Util;
+import side.onetime.infra.storage.FileStorage;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.List;
 public class EventCleanupScheduler {
 
     private final EventRepository eventRepository;
-    private final S3Util s3Util;
+    private final FileStorage fileStorage;
 
     /**
      * 오래된 이벤트 삭제 스케줄러.
@@ -39,7 +39,7 @@ public class EventCleanupScheduler {
 
             // QR 이미지 삭제
             if (qrFileName != null && !qrFileName.isEmpty()) {
-                s3Util.deleteFile(qrFileName);
+                fileStorage.deleteFile(qrFileName);
             }
             // 이벤트 삭제
             eventRepository.deleteEvent(event);
