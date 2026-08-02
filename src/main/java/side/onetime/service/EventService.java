@@ -14,6 +14,7 @@ import side.onetime.dto.event.request.CreateEventRequest;
 import side.onetime.dto.event.request.ModifyEventRequest;
 import side.onetime.dto.event.response.*;
 import side.onetime.dto.schedule.request.GetFilteredSchedulesRequest;
+import side.onetime.infra.storage.FileStorage;
 import side.onetime.exception.CustomException;
 import side.onetime.exception.status.EventErrorStatus;
 import side.onetime.exception.status.EventParticipationErrorStatus;
@@ -45,7 +46,7 @@ public class EventService {
 	private final EventConfirmationRepository eventConfirmationRepository;
 	private final ScheduleBatchRepository scheduleBatchRepository;
 	private final JwtUtil jwtUtil;
-	private final S3Util s3Util;
+	private final FileStorage fileStorage;
     private final QrUtil qrUtil;
 
     /**
@@ -232,7 +233,7 @@ public class EventService {
     private String generateAndUploadQrCode(UUID eventId) {
         try {
             MultipartFile qrCodeFile = qrUtil.getQrCodeFile(eventId);
-            return s3Util.uploadImage("qr", qrCodeFile);
+            return fileStorage.uploadImage("qr", qrCodeFile);
         } catch (Exception e) {
             throw new CustomException(EventErrorStatus._FAILED_GENERATE_QR_CODE);
         }
@@ -681,7 +682,7 @@ public class EventService {
         EventParticipation eventParticipation = verifyUserHasEventAccess(user, eventId);
 
         eventRepository.deleteEvent(eventParticipation.getEvent());
-        s3Util.deleteFile(eventParticipation.getEvent().getQrFileName()); // QR 이미지 삭제
+        fileStorage.deleteFile(eventParticipation.getEvent().getQrFileName()); // QR 이미지 삭제
     }
 
     /**
@@ -863,7 +864,7 @@ public class EventService {
             throw new CustomException(EventErrorStatus._NOT_FOUND_EVENT_QR_CODE);
         }
 
-        String qrCodeImgUrl = s3Util.getPublicUrl(event.getQrFileName());
+        String qrCodeImgUrl = fileStorage.getPublicUrl(event.getQrFileName());
         return GetEventQrCodeResponse.from(qrCodeImgUrl);
     }
 }

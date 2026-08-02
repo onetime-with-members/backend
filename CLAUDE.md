@@ -12,7 +12,7 @@ OneTime is a Spring Boot-based backend API for a collaborative event scheduling 
 - **Framework**: Spring Boot 3.3.2
 - **Database**: MySQL 8.0 with Spring Data JPA, QueryDSL 5.0
 - **Security**: Spring Security, OAuth2 (Google, Kakao, Naver), JWT (JJWT 0.12.2)
-- **Cloud**: AWS S3 (Spring Cloud AWS 3.1.1), SQS (AWS SDK 2.25.30), CodeDeploy
+- **Cloud**: 이미지 저장소는 `FileStorage` 추상화 (S3 / 서버 로컬 디스크, `storage.type` 으로 선택), SQS (AWS SDK 2.25.30), CodeDeploy
 - **Email**: AWS SQS (비동기 큐) → Batch → AWS SES (발송). 상세: `docs/features/26-01-26-admin-statistics.md`
 - **Documentation**: Spring REST Docs 3.0.0, SpringDoc OpenAPI 2.1.0
 - **Build**: Gradle 8.x
@@ -60,8 +60,9 @@ src/main/java/side/onetime/
 │   ├── filter/          # JwtFilter
 │   └── common/          # ApiResponse<T>, status codes, BaseEntity
 ├── exception/           # CustomException, GlobalExceptionHandler
-├── infra/               # External integrations (Everytime client)
-└── util/                # Utility classes (JwtUtil, S3Util, etc.)
+├── infra/               # External integrations (Everytime client, storage)
+│   └── storage/         # FileStorage 추상화 (S3FileStorage / LocalFileStorage)
+└── util/                # Utility classes (JwtUtil, QrUtil, etc.)
 ```
 
 ## Code Conventions

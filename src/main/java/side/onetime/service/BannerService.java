@@ -26,7 +26,7 @@ import side.onetime.repository.AdminRepository;
 import side.onetime.repository.BannerRepository;
 import side.onetime.repository.BannerStagingRepository;
 import side.onetime.util.AdminAuthorizationUtil;
-import side.onetime.util.S3Util;
+import side.onetime.infra.storage.FileStorage;
 
 @Slf4j
 @Service
@@ -37,7 +37,7 @@ public class BannerService {
     private final AdminRepository adminRepository;
     private final BannerStagingRepository bannerStagingRepository;
     private final RestClient bannerClient;
-    private final S3Util s3Util;
+    private final FileStorage fileStorage;
 	private final BannerSyncProperties bannerSyncProperties;
 
     /**
@@ -321,8 +321,8 @@ public class BannerService {
      */
     private String uploadBannerImage(Long bannerId, MultipartFile imageFile) {
         try {
-            String imageFileName = s3Util.uploadImage("banner/" + bannerId, imageFile);
-            return s3Util.getPublicUrl(imageFileName);
+            String imageFileName = fileStorage.uploadImage("banner/" + bannerId, imageFile);
+            return fileStorage.getPublicUrl(imageFileName);
         } catch (Exception e) {
             throw new CustomException(AdminErrorStatus._FAILED_UPLOAD_BANNER_IMAGE);
         }
@@ -336,8 +336,8 @@ public class BannerService {
     private void deleteExistingBannerImage(String imageUrl) {
         if (imageUrl != null && !imageUrl.isBlank()) {
             try {
-                String imageFileKey = S3Util.extractKey(imageUrl);
-                s3Util.deleteFile(imageFileKey);
+                String imageFileKey = fileStorage.extractKey(imageUrl);
+                fileStorage.deleteFile(imageFileKey);
             } catch (Exception e) {
                 log.warn("❌ 배너 이미지 삭제 예외 발생 - 요청 IMAGE_URI: {}", imageUrl, e);
             }
