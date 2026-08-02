@@ -16,10 +16,14 @@ on:
 
 permissions:
   contents: read
+  packages: write
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
 
 jobs:
   build-and-push:
-    name: Build and Push to ECR
+    name: Build and Push to GHCR
     if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04-arm
     environment: prod
@@ -48,29 +52,25 @@ jobs:
           IMAGE_TAG="${TIMESTAMP}-${SHORT_SHA}"
           echo "tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
 
-      - name: 🔐 AWS 인증 설정
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: 🔐 GHCR 로그인
+        uses: docker/login-action@v3
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
-
-      - name: 🐳 ECR 로그인
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 🏗️ Docker Buildx 설정
         uses: docker/setup-buildx-action@v3
 
-      - name: 📦 Docker 이미지 빌드 및 ECR 푸시
+      - name: 📦 Docker 이미지 빌드 및 GHCR 푸시
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
           platforms: linux/arm64
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/prod/onetime-backend:${{ steps.meta.outputs.tag }}
-            ${{ steps.login-ecr.outputs.registry }}/prod/onetime-backend:latest
+            ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tag }}
+            ${{ env.IMAGE_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -80,17 +80,22 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
     steps:
-      - name: 🔐 AWS 자격 증명 설정
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
-
-      - name: 🚀 서버에 배포 스크립트 실행 (AWS SSM)
+      # 서버가 AWS EC2 에서 Oracle Cloud 로 이전되어 SSM 을 쓸 수 없다. SSH 로 직접 실행한다.
+      - name: 🔑 SSH 키 설정
         run: |
-          aws ssm send-command \
-            --instance-ids "${{ secrets.EC2_INSTANCE_ID }}" \
-            --document-name "AWS-RunShellScript" \
-            --comment "Deploying tag ${{ needs.build-and-push.outputs.image_tag }}" \
-            --parameters "{\"commands\":[\"cd /home/ubuntu/deploy && ./deploy.sh ${{ needs.build-and-push.outputs.image_tag }}\"]}"
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # ssh-keyscan 으로 그때그때 받아오면 중간자를 검증 없이 신뢰하게 된다. 호스트키를 고정한다.
+          printf '%s\n' "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: 🚀 서버에 배포 스크립트 실행 (SSH)
+        env:
+          IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
+        run: |
+          # GHCR 패키지가 private 여도 pull 되도록 토큰을 넘긴다.
+          # public 으로 전환하면 deploy.sh 가 로그인 단계를 건너뛴다.
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "GHCR_USERNAME='${{ github.actor }}' GHCR_TOKEN='${{ secrets.GITHUB_TOKEN }}' /home/ubuntu/deploy/deploy.sh ${IMAGE_TAG}"
