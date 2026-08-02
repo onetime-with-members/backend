@@ -33,6 +33,8 @@ public class S3FileStorage implements FileStorage {
 
     @Override
     public String uploadImage(String directoryName, MultipartFile image) throws IOException {
+        FileStorage.validateImage(image);
+
         String fileName = directoryName + "/" + UUID.randomUUID() + "_" + image.getOriginalFilename();
 
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()

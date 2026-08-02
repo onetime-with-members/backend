@@ -103,6 +103,48 @@ class LocalFileStorageTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> sut.deleteFile("../../etc/passwd"));
+        assertThrows(IllegalArgumentException.class,
+                () -> sut.deleteFile("/etc/passwd"));
+    }
+
+    @Test
+    @DisplayName("루트 자신을 가리키는 키는 거부한다 — 저장소 디렉토리가 지워지면 안 된다")
+    void rejectsKeyResolvingToRoot(@TempDir Path root) {
+        LocalFileStorage sut = storage(root);
+
+        // 베이스 URL 뒤에 아무것도 없는 URL -> 빈 키
+        assertThrows(IllegalArgumentException.class,
+                () -> sut.deleteFile(sut.extractKey(BASE_URL + "/")));
+        // 상쇄되어 루트로 정규화되는 키
+        assertThrows(IllegalArgumentException.class,
+                () -> sut.deleteFile("qr/.."));
+
+        assertTrue(Files.exists(root), "저장소 루트가 살아있어야 한다");
+    }
+
+    @Test
+    @DisplayName("이미지가 아닌 형식은 업로드를 거부한다 — 같은 오리진에서 서빙되므로 저장형 XSS가 된다")
+    void rejectsNonImageUpload(@TempDir Path root) {
+        LocalFileStorage sut = storage(root);
+
+        assertThrows(IllegalArgumentException.class, () -> sut.uploadImage("banner/1",
+                new MockMultipartFile("i", "x.svg", "image/svg+xml", "<svg onload=alert(1)>".getBytes())));
+        assertThrows(IllegalArgumentException.class, () -> sut.uploadImage("banner/1",
+                new MockMultipartFile("i", "x.html", "text/html", "<script>".getBytes())));
+        // content-type을 위조해도 확장자에서 걸린다
+        assertThrows(IllegalArgumentException.class, () -> sut.uploadImage("banner/1",
+                new MockMultipartFile("i", "x.html", "image/png", "<script>".getBytes())));
+    }
+
+    @Test
+    @DisplayName("확장자 없는 QR 이미지는 계속 허용한다 (원본 파일명이 \"qr\")")
+    void allowsExtensionlessQrImage(@TempDir Path root) throws IOException {
+        LocalFileStorage sut = storage(root);
+
+        String key = sut.uploadImage("qr",
+                new MockMultipartFile("qr", "qr", "image/png", "png-bytes".getBytes()));
+
+        assertTrue(Files.exists(root.resolve(key)));
     }
 
     @Test

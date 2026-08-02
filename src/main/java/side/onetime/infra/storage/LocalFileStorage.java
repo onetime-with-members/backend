@@ -41,6 +41,8 @@ public class LocalFileStorage implements FileStorage {
 
     @Override
     public String uploadImage(String directoryName, MultipartFile image) throws IOException {
+        FileStorage.validateImage(image);
+
         String key = directoryName + "/" + UUID.randomUUID() + "_" + sanitize(image.getOriginalFilename());
         Path target = resolve(key);
 
@@ -91,11 +93,18 @@ public class LocalFileStorage implements FileStorage {
     }
 
     /**
-     * 키를 루트 하위 실제 경로로 변환합니다. 루트를 벗어나면 거부합니다. (경로 탈출 방지)
+     * 키를 루트 하위 실제 경로로 변환합니다. 루트를 벗어나거나 루트 자신을 가리키면 거부합니다.
+     *
+     * 모든 파일 조작이 이 메서드를 거치므로, 경로 검증은 여기 한 곳에서만 합니다.
+     * 루트 자신을 막는 이유: 빈 키나 {@code "x/.."} 처럼 상쇄되는 키가 루트로 정규화되면
+     * {@code deleteFile} 이 저장소 디렉토리 자체를 지우려 든다.
      */
     private Path resolve(String key) {
+        if (key == null || key.isBlank()) {
+            throw new IllegalArgumentException("허용되지 않은 파일 경로: " + key);
+        }
         Path target = root.resolve(key).normalize();
-        if (!target.startsWith(root)) {
+        if (!target.startsWith(root) || target.equals(root)) {
             throw new IllegalArgumentException("허용되지 않은 파일 경로: " + key);
         }
         return target;
