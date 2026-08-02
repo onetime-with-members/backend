@@ -1,33 +1,28 @@
 package side.onetime.util;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import side.onetime.domain.enums.Category;
+import side.onetime.dto.event.response.GetMostPossibleTime;
+
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.time.temporal.TemporalAdjusters;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.springframework.stereotype.Component;
-
-import lombok.RequiredArgsConstructor;
-import side.onetime.domain.enums.Category;
-import side.onetime.dto.event.response.GetMostPossibleTime;
-
-@Component
-@RequiredArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class DateUtil {
 
     public static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+
+    public static final Map<String, Integer> DAY_ORDER = Map.of(
+            "일", 0, "월", 1, "화", 2, "수", 3, "목", 4, "금", 5, "토", 6
+    );
 
     /**
      * yyyy.MM.dd 형식의 날짜 문자열을 파싱합니다.
@@ -47,6 +42,18 @@ public class DateUtil {
      */
     public static LocalTime parseTime(String timeStr) {
         return LocalTime.parse(timeStr, TIME_FORMATTER);
+    }
+
+    /**
+     * 시간 문자열을 분 단위 정수로 변환합니다. "24:00"은 LocalTime으로 파싱할 수 없으므로 1440으로 처리합니다.
+     *
+     * @param timeStr 시간 문자열 (HH:mm 형식)
+     * @return 분 단위 정수
+     */
+    public static int parseTimeMinutes(String timeStr) {
+        if ("24:00".equals(timeStr)) return 1440;
+        LocalTime parsed = parseTime(timeStr);
+        return parsed.getHour() * 60 + parsed.getMinute();
     }
 
     /**
@@ -243,5 +250,51 @@ public class DateUtil {
      */
     public static String formatToIsoDate(LocalDate date) {
         return date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
+
+    /**
+     * 한국어 요일명을 바탕으로 현재 시점 기준 가장 가까운(또는 오늘인) 해당 요일의 LocalDate를 반환합니다.
+     *
+     * @param koreanDay 한국어 요일명 (월, 화, 수, 목, 금, 토, 일)
+     * @return 가장 가까운 해당 요일의 LocalDate
+     */
+    public static LocalDate getNextDateForDay(String koreanDay) {
+        DayOfWeek dayOfWeek = switch (koreanDay) {
+            case "월" -> DayOfWeek.MONDAY;
+            case "화" -> DayOfWeek.TUESDAY;
+            case "수" -> DayOfWeek.WEDNESDAY;
+            case "목" -> DayOfWeek.THURSDAY;
+            case "금" -> DayOfWeek.FRIDAY;
+            case "토" -> DayOfWeek.SATURDAY;
+            case "일" -> DayOfWeek.SUNDAY;
+            default -> throw new IllegalArgumentException("지원하지 않는 요일 형식입니다: " + koreanDay);
+        };
+        return LocalDate.now().with(TemporalAdjusters.nextOrSame(dayOfWeek));
+    }
+
+    /**
+     * 날짜 또는 요일을 ISO-8601 형식의 문자열로 변환합니다.
+     *
+     * @param category DATE 또는 DAY 카테고리
+     * @param dateOrDay yyyy.MM.dd 형식의 날짜 또는 한국어 요일 (월, 화...)
+     * @param timeStr HH:mm 형식의 시간
+     * @return ISO-8601 형식의 문자열 (Asia/Seoul 시간대 기준)
+     */
+    public static String formatToIsoDateTime(Category category, String dateOrDay, String timeStr) {
+        LocalDate date = (category == Category.DATE)
+                ? parseDate(dateOrDay)
+                : getNextDateForDay(dateOrDay);
+
+        LocalDateTime dateTime;
+        if ("24:00".equals(timeStr)) {
+            dateTime = date.plusDays(1).atStartOfDay();
+        } else {
+            dateTime = LocalDateTime.of(date, parseTime(timeStr));
+        }
+
+        return dateTime
+                .atZone(ZoneId.of("Asia/Seoul"))
+                .toOffsetDateTime()
+                .toString();
     }
 }

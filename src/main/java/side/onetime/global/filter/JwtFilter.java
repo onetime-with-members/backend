@@ -20,6 +20,7 @@ import side.onetime.auth.service.CustomUserDetailsService;
 import side.onetime.dto.token.request.ReissueTokenRequest;
 import side.onetime.dto.token.response.ReissueTokenResponse;
 import side.onetime.exception.CustomException;
+import side.onetime.exception.status.TokenErrorStatus;
 import side.onetime.service.TokenService;
 import side.onetime.util.ClientInfoExtractor;
 import side.onetime.util.CookieUtil;
@@ -54,63 +55,93 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        String token = null;
-        String refreshToken = null;
-        boolean isAdminRequest = false;
-
-        // 1. API 요청의 Authorization 헤더에서 토큰 추출
-        String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            token = jwtUtil.getTokenFromHeader(authorizationHeader);
-        }
-
-        // 2. 어드민 요청(페이지 + API)의 쿠키에서 토큰 추출
         String requestUri = request.getRequestURI();
-        if (token == null && (requestUri.startsWith("/admin") || requestUri.startsWith("/api/v1/admin"))) {
-            var adminAccessToken = CookieUtil.getAdminAccessToken(request);
-            if (adminAccessToken.isPresent()) {
-                token = adminAccessToken.get();
-                isAdminRequest = true;
-                refreshToken = CookieUtil.getAdminRefreshToken(request).orElse(null);
-            }
+        if (requestUri.startsWith("/admin") || requestUri.startsWith("/api/v1/admin")) {
+            handleAdminRequest(request, response, filterChain);
+        } else {
+            handleApiRequest(request, response, filterChain);
         }
+    }
 
-        if (token == null) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+    /**
+     * 어드민 요청: 쿠키 기반 인증. 액세스 토큰 만료 시 리프레시 토큰으로 자동 재발급.
+     */
+    private void handleAdminRequest(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
-        try {
-            jwtUtil.validateToken(token);
-            authenticateUser(token);
-            filterChain.doFilter(request, response);
+        String accessToken = CookieUtil.getAdminAccessToken(request).orElse(null);
+        String refreshToken = CookieUtil.getAdminRefreshToken(request).orElse(null);
 
-        } catch (CustomException e) {
-            // 어드민 요청이고 리프레시 토큰이 있으면 자동 재발급 시도
-            if (isAdminRequest && refreshToken != null) {
-                try {
-                    String userIp = clientInfoExtractor.extractClientIp(request);
-                    String userAgent = clientInfoExtractor.extractUserAgent(request);
-                    ReissueTokenResponse reissued = tokenService.reissueToken(
-                            new ReissueTokenRequest(refreshToken), userIp, userAgent
-                    );
-
-                    // 새 토큰으로 쿠키 갱신
-                    CookieUtil.setAdminTokenCookies(request, response, reissued.accessToken(), reissued.refreshToken());
-
-                    // 새 액세스 토큰으로 인증
-                    authenticateUser(reissued.accessToken());
-                    filterChain.doFilter(request, response);
-                    return;
-
-                } catch (Exception reissueEx) {
-                    log.warn("[Admin] 토큰 재발급 실패 - 사유: {}", reissueEx.getMessage());
-                    // 재발급 실패 시 로그인 페이지로 리다이렉트
+        // 액세스 토큰이 유효하면 바로 통과
+        if (accessToken != null) {
+            try {
+                jwtUtil.validateToken(accessToken);
+                authenticateUser(accessToken);
+                filterChain.doFilter(request, response);
+                return;
+            } catch (CustomException e) {
+                // 만료된 경우에만 리프레시 토큰으로 재발급 시도, 그 외(서명 위조, 변조 등)는 즉시 거부
+                if (e.getErrorCode() != TokenErrorStatus._TOKEN_EXPIRED) {
+                    log.warn("[Admin] 액세스 토큰 검증 실패 (만료 외) - 사유: {}", e.getMessage());
+                    CookieUtil.clearAdminTokenCookies(request, response);
                     response.sendRedirect("/admin/login");
                     return;
                 }
             }
+        }
 
+        // 리프레시 토큰으로 재발급 시도
+        if (refreshToken != null) {
+            try {
+                String userIp = clientInfoExtractor.extractClientIp(request);
+                String userAgent = clientInfoExtractor.extractUserAgent(request);
+                ReissueTokenResponse reissued = tokenService.reissueToken(
+                        new ReissueTokenRequest(refreshToken), userIp, userAgent
+                );
+
+                CookieUtil.setAdminTokenCookies(request, response, reissued.accessToken(), reissued.refreshToken());
+                authenticateUser(reissued.accessToken());
+                filterChain.doFilter(request, response);
+                return;
+            } catch (CustomException e) {
+                if (e.getErrorCode() == TokenErrorStatus._DUPLICATED_REQUEST) {
+                    // 동시 요청으로 인한 중복 재발급 - 다른 요청이 새 토큰을 이미 발급했으므로 쿠키 유지
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                log.warn("[Admin] 토큰 재발급 실패 - 사유: {}", e.getMessage());
+                CookieUtil.clearAdminTokenCookies(request, response);
+                response.sendRedirect("/admin/login");
+                return;
+            } catch (Exception e) {
+                log.error("[Admin] 토큰 재발급 중 시스템 오류", e);
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                return;
+            }
+        }
+
+        // 토큰 없음 → Spring Security가 처리 (로그인 페이지로 리다이렉트)
+        filterChain.doFilter(request, response);
+    }
+
+    /**
+     * 일반 API 요청: Authorization 헤더 기반 인증.
+     */
+    private void handleApiRequest(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+
+        String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String token = jwtUtil.getTokenFromHeader(authorizationHeader);
+        try {
+            jwtUtil.validateToken(token);
+            authenticateUser(token);
+            filterChain.doFilter(request, response);
+        } catch (CustomException e) {
             log.error("JWT 필터 예외 발생 - 요청 URI: {}, 메서드: {}", request.getRequestURI(), request.getMethod());
             writeErrorResponse(response, e);
         }

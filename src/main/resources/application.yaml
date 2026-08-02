@@ -32,6 +32,22 @@ spring:
               - email
               - profile
             redirect-uri: ${OAUTH_GOOGLE_REDIRECT_URI}
+          kakao:
+            client-id: ${OAUTH_KAKAO_CLIENT_ID}
+            client-secret: ${OAUTH_KAKAO_CLIENT_SECRET}
+            scope:
+              - profile_nickname
+              - account_email
+            authorization-grant-type: authorization_code
+            redirect-uri: ${OAUTH_KAKAO_REDIRECT_URI}
+            client-name: Kakao
+            client-authentication-method: client_secret_post
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
 
   cloud:
     aws:
@@ -43,7 +59,15 @@ spring:
       s3:
         bucket: ${S3_BUCKET_NAME}
       sqs:
-        queue-url: ${AWS_SQS_EMAIL_QUEUE_URL:}
+        queue-url: ${AWS_SQS_EMAIL_QUEUE_URL}
+
+# 이미지 저장소. s3(기본) 또는 local 중 선택합니다.
+# local 은 파일을 서버 디스크에 두고 nginx 가 public-base-url 로 정적 서빙합니다.
+storage:
+  type: ${STORAGE_TYPE:s3}
+  local:
+    root: ${FILE_STORAGE_PATH:/srv/onetime/files}
+    public-base-url: ${FILE_PUBLIC_BASE_URL:}
 
 jwt:
   secret: ${JWT_SECRET}
@@ -103,3 +127,5 @@ app:
   sync:
     target-url: ${APP_SYNC_TARGET_URL:}
     api-key: ${APP_SYNC_API_KEY:}
+  kakao:
+    calendar-redirect-uri: ${OAUTH_KAKAO_CALENDAR_REDIRECT_URI:http://localhost:3000/kakao/callback}
