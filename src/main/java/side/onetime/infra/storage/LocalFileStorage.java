@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -29,6 +28,11 @@ public class LocalFileStorage implements FileStorage {
             @Value("${storage.local.root}") String root,
             @Value("${storage.local.public-base-url}") String publicBaseUrl
     ) {
+        // 비어 있으면 getPublicUrl 이 루트 상대 경로를 뱉어 QR/배너 링크가 조용히 깨진다. 기동 시점에 막는다.
+        if (publicBaseUrl == null || publicBaseUrl.isBlank()) {
+            throw new IllegalStateException(
+                    "storage.type=local 인 경우 storage.local.public-base-url(FILE_PUBLIC_BASE_URL)이 필요합니다.");
+        }
         this.root = Path.of(root).toAbsolutePath().normalize();
         this.publicBaseUrl = publicBaseUrl.endsWith("/")
                 ? publicBaseUrl.substring(0, publicBaseUrl.length() - 1)
@@ -56,19 +60,25 @@ public class LocalFileStorage implements FileStorage {
      * 퍼블릭 URL에서 키를 추출합니다.
      *
      * 마이그레이션 이전에 저장된 S3 형식 URL도 처리할 수 있도록,
-     * 베이스 URL의 경로 접두사가 있으면 떼어내고 없으면 경로 전체를 키로 봅니다.
+     * 베이스 URL 접두사가 있으면 떼어내고 없으면 호스트 뒤 경로 전체를 키로 봅니다.
+     *
+     * URL 파서를 쓰지 않고 문자열로 자릅니다. 업로드 원본 파일명에 공백이나 한글이
+     * 그대로 들어가는데({@code "스크린샷 2025-09-12.png"}), 그런 URL은 URI 파서가 거부합니다.
      */
     @Override
     public String extractKey(String publicUrl) {
-        String path = URI.create(publicUrl).getPath();
-        if (path == null || path.length() <= 1) {
+        if (publicUrl == null || publicUrl.isBlank()) {
             throw new IllegalArgumentException("유효하지 않은 파일 URL : " + publicUrl);
         }
-        String basePath = URI.create(publicBaseUrl).getPath();
-        if (!basePath.isEmpty() && path.startsWith(basePath + "/")) {
-            path = path.substring(basePath.length() + 1);
+        if (publicUrl.startsWith(publicBaseUrl + "/")) {
+            return publicUrl.substring(publicBaseUrl.length() + 1);
         }
-        return path.startsWith("/") ? path.substring(1) : path;
+        int schemeEnd = publicUrl.indexOf("://");
+        int pathStart = publicUrl.indexOf('/', schemeEnd < 0 ? 0 : schemeEnd + 3);
+        if (pathStart < 0 || pathStart == publicUrl.length() - 1) {
+            throw new IllegalArgumentException("유효하지 않은 파일 URL : " + publicUrl);
+        }
+        return publicUrl.substring(pathStart + 1);
     }
 
     @Override

@@ -64,6 +64,39 @@ class LocalFileStorageTest {
     }
 
     @Test
+    @DisplayName("공백과 한글이 든 파일명도 업로드 -> URL -> 키 왕복이 성립한다")
+    void roundTripWithSpaceAndHangulFilename(@TempDir Path root) throws IOException {
+        LocalFileStorage sut = storage(root);
+        MockMultipartFile image = new MockMultipartFile(
+                "image", "스크린샷 2025-09-12 오후 7.31.54.png", "image/png", "x".getBytes());
+
+        String key = sut.uploadImage("banner/8", image);
+        String url = sut.getPublicUrl(key);
+
+        // URI 파서를 쓰면 여기서 터진다. 실제 배너 파일명이 이 형태다.
+        assertEquals(key, sut.extractKey(url));
+        assertTrue(Files.exists(root.resolve(key)));
+
+        sut.deleteFile(sut.extractKey(url));
+        assertFalse(Files.exists(root.resolve(key)));
+    }
+
+    @Test
+    @DisplayName("public-base-url이 비어 있으면 기동 시점에 실패한다")
+    void failsFastWhenPublicBaseUrlMissing(@TempDir Path root) {
+        assertThrows(IllegalStateException.class,
+                () -> new LocalFileStorage(root.toString(), "  "));
+    }
+
+    @Test
+    @DisplayName("없는 파일 삭제는 예외 없이 통과한다 (S3 동작과 동일)")
+    void deleteMissingFileIsNoop(@TempDir Path root) {
+        LocalFileStorage sut = storage(root);
+
+        sut.deleteFile("qr/does-not-exist");
+    }
+
+    @Test
     @DisplayName("루트를 벗어나는 키는 거부한다")
     void rejectsPathTraversal(@TempDir Path root) {
         LocalFileStorage sut = storage(root);
