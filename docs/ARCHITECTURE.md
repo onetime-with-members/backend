@@ -154,11 +154,20 @@ flowchart TB
 | MyBatis | 도메인 객체 간 관계 매핑 불편, 엔티티 상태 관리 부재 |
 | Spring JDBC 단독 | ORM 장점 포기, 보일러플레이트 증가 |
 
-### AWS S3 + ZXing (QR 코드)
+### 이미지 저장소 (FileStorage) + ZXing (QR 코드)
 
-**왜 S3인가:** 이벤트별 QR 코드 이미지와 관리자 배너 이미지를 저장한다. 정적 파일 서빙에 최적화되어 있고, CloudFront 연동 시 글로벌 배포가 가능하다.
+**왜 추상화인가:** 이벤트별 QR 코드 이미지와 관리자 배너 이미지의 저장소를 `side.onetime.infra.storage.FileStorage` 뒤로 숨긴다. `storage.type` 프로퍼티로 구현체를 고른다.
 
-**왜 ZXing인가:** Java 네이티브 QR 코드 생성 라이브러리 중 가장 성숙하고, 별도 외부 서비스 없이 서버에서 직접 QR을 생성하여 S3에 업로드한다.
+| `storage.type` | 구현체 | 저장 위치 | 서빙 |
+|----------------|--------|-----------|------|
+| `s3` (기본값) | `S3FileStorage` | AWS S3 버킷 | `https://{bucket}.s3.{region}.amazonaws.com/{key}` |
+| `local` | `LocalFileStorage` | 서버 디스크 (`storage.local.root`) | nginx 정적 서빙 (`storage.local.public-base-url`) |
+
+`local` 모드는 AWS 이탈을 위해 추가했다. 실데이터가 7MB 수준이라 오브젝트 스토리지를 유지할 이유가 약하고, 외부 벤더 의존을 하나 줄인다. 단 파일이 서버와 운명을 같이하므로 백업에 포함해야 한다.
+
+관련 환경 변수: `STORAGE_TYPE`, `FILE_STORAGE_PATH`, `FILE_PUBLIC_BASE_URL`
+
+**왜 ZXing인가:** Java 네이티브 QR 코드 생성 라이브러리 중 가장 성숙하고, 별도 외부 서비스 없이 서버에서 직접 QR을 생성하여 저장소에 업로드한다.
 
 | 탈락 후보 | 이유 |
 |-----------|------|
@@ -551,7 +560,7 @@ flowchart LR
 | Spring Data JPA | Boot 관리 | DB 접근 |
 | QueryDSL | 5.0.0 (Jakarta) | 동적 쿼리 |
 | JJWT | 0.12.2 | JWT 생성/검증 |
-| Spring Cloud AWS | 3.1.1 | S3, 인프라 |
+| Spring Cloud AWS | 3.1.1 | S3(`storage.type=s3`), 인프라 |
 | Spring Cloud OpenFeign | 4.1.4 | HTTP 클라이언트 |
 | SpringDoc OpenAPI | 2.1.0 | Swagger UI |
 | Spring REST Docs | 3.0.0 | API 문서 생성 |
